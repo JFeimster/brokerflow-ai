@@ -1,5 +1,5 @@
-brokerflow-ai/
-  README.md
+`brokerflow-ai/`
+  `README.md`
   agents.md
   package.json
   index.html
@@ -7,10 +7,10 @@ brokerflow-ai/
   styles.css
   script.js
 
-  /knowledge/
-    README.md
-    /core/
-      broker-intake-workflow-examples.md
+  `/knowledge/`
+    `README.md`
+    `/core/`
+      `broker-intake-workflow-examples.md`
       loan-document-checklist-templates.md
       crm-pipeline-stage-definitions.md
       lender-matching-rules-framework.md

@@ -1,6 +1,6 @@
 `brokerflow-ai/`
-  `README.md`
-  agents.md
+- `README.md`
+- `agents.md`
   package.json
   index.html
   agents.html

@@ -1,11 +1,11 @@
 `brokerflow-ai/`
-- `README.md`
-- `agents.md`
-  package.json
-  index.html
-  agents.html
-  styles.css
-  script.js
+  `README.md`
+  `agents.md`
+  `package.json`
+  `index.html`
+  `agents.html`
+  `styles.css`
+  `script.js`
 
   `/knowledge/`
     `README.md`

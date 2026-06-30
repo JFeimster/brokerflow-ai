@@ -5,6 +5,18 @@
 # BrokerFlow AI
 This folder holds the marketing + documentation site for **BrokerFlow AI**, the public face of the Loan Broker Automation Architect GPT. It is a content-first site: every page is authored in Markdown under `pages/`, then rendered by the front-end in the repo root (`index.html`, `styles.css`, `script.js`) and deployed to **brokerflow-ai.vercel.app**.
 > Compliance note: BrokerFlow AI **recommends, drafts, prepares, routes, and logs**. It never approves, declines, qualifies, guarantees, underwrites, or funds. All site copy uses review-safe language ("potential fit", "ready for broker review", "possible lender match", "based on information provided") and never says "approved", "guaranteed", "qualified", or "eligible".
+
+---
+
+| Site | URL |
+| --- | --- |
+| Web | https://brokerflow-ai.vercel.app/ | 
+| ChatGPT | https://chatgpt.com/g/g-6a214c8c41d48191bebafa39c853412f-loan-broker-automation-architect |
+| Notion | https://github.com/JFeimster/brokerflow-ai/ |
+| Vercel | https://vercel.com/jason-feimsters-projects/brokerflow-ai |
+| GitHub | https://github.com/JFeimster/brokerflow-ai/ | 
+
+
 ## Folder structure
 ```
 site/

@@ -1,0 +1,692 @@
+openapi: 3.1.0
+info:
+  title: Loan Broker CRM Actions (API Key - Custom Header)
+  version: 1.0.0
+  description: >
+    API-key (custom header) actions for the Loan Broker Automation Architect GPT.
+    These endpoints read from and write to a CRM or pipeline backend so the GPT
+    can keep borrower records, deal stages, notes, tasks, and document requests
+    in sync. The GPT may recommend, draft, prepare, route, and log, but must
+    never approve, decline, qualify, guarantee, underwrite, or fund. Decision
+    bearing stages route to human review.
+servers:
+  - url: https://api.your-crm.example.com
+    description: Replace with your CRM or pipeline API base URL.
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: Contacts
+    description: Create or update borrower and contact records.
+  - name: Deals
+    description: Create, update, advance, and read funding opportunities.
+  - name: Notes
+    description: Append notes and conversation summaries to a deal.
+  - name: Tasks
+    description: Create human follow-up tasks.
+  - name: Documents
+    description: Record missing-document requests.
+  - name: Search
+    description: Look up existing records to avoid duplicates.
+# ===== Paths =====
+paths:
+  /contacts/upsert:
+    post:
+      operationId: upsertContact
+      tags:
+        - Contacts
+      summary: Create or update a borrower or contact
+      description: >
+        Create or update a borrower record, matching on the provided key to
+        avoid duplicates. Never write decision language (approved, qualified,
+        eligible) into contact fields.
+      security:
+        - ApiKeyAuth: []
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactUpsertRequest"
+            examples:
+              upsert:
+                value:
+                  match_on: email
+                  contact:
+                    first_name: Jordan
+                    last_name: Avery
+                    business_name: Avery Logistics LLC
+                    email: jordan@averylogistics.example.com
+                    phone: "+15555550142"
+                    source: website_intake
+                    tags:
+                      - new_lead
+                      - needs_review
+      responses:
+        "200":
+          description: Contact created or updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordWriteResponse"
+        "400":
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid API key header.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /deals/upsert:
+    post:
+      operationId: upsertDeal
+      tags:
+        - Deals
+      summary: Create or update a funding opportunity
+      description: >
+        Create or update the deal tied to a contact. The stage field is limited
+        to review-safe stages; decision-bearing stages must be set by a human.
+      security:
+        - ApiKeyAuth: []
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DealUpsertRequest"
+            examples:
+              upsert:
+                value:
+                  match_on: deal_id
+                  deal:
+                    contact_id: cON_10293
+                    amount_requested: 75000
+                    product_interest: working_capital
+                    stage: ready_for_broker_review
+                    human_review_required: true
+                    summary: Potential fit based on information provided; ready for broker review.
+      responses:
+        "200":
+          description: Deal created or updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordWriteResponse"
+        "400":
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid API key header.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /deals/{deal_id}/stage:
+    patch:
+      operationId: advanceDealStage
+      tags:
+        - Deals
+      summary: Advance a deal to a review-safe stage
+      description: >
+        Move a deal forward to a review checkpoint only. Blocked targets
+        (submitted_to_lender, funded, not_moving_forward, closed) require a
+        human and are rejected with a 400.
+      security:
+        - ApiKeyAuth: []
+      x-openai-isConsequential: true
+      parameters:
+        - name: deal_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StageChangeRequest"
+            examples:
+              advance:
+                value:
+                  target_stage: lender_submission_pending_review
+                  reason: All documents received; prepared package ready for broker review.
+                  human_review_required: true
+      responses:
+        "200":
+          description: Stage updated or queued for review.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordWriteResponse"
+        "400":
+          description: Invalid or blocked stage.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid API key header.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /deals/{deal_id}/notes:
+    post:
+      operationId: addDealNote
+      tags:
+        - Notes
+      summary: Add a note or conversation summary
+      description: >
+        Append a timestamped note to a deal. Use factual, review-safe language
+        only.
+      security:
+        - ApiKeyAuth: []
+      x-openai-isConsequential: true
+      parameters:
+        - name: deal_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteRequest"
+            examples:
+              summary:
+                value:
+                  type: conversation_summary
+                  body: Borrower confirmed 14 months in business and about 40k monthly revenue. Possible lender match pending broker review.
+                  author: brokerflow-ai
+      responses:
+        "200":
+          description: Note created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordWriteResponse"
+        "400":
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid API key header.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /tasks:
+    post:
+      operationId: createFollowUpTask
+      tags:
+        - Tasks
+      summary: Create a human follow-up task
+      description: >
+        Queue a task for a human owner. Use this to route any decision-adjacent
+        work to broker review.
+      security:
+        - ApiKeyAuth: []
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskRequest"
+            examples:
+              review:
+                value:
+                  deal_id: dEAL_55012
+                  title: "Broker review: confirm lender match and next steps"
+                  owner_email: broker@moonshinecapital.example.com
+                  due_at: "2026-07-01T16:00:00Z"
+                  priority: high
+                  human_review_required: true
+      responses:
+        "200":
+          description: Task created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordWriteResponse"
+        "400":
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid API key header.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /deals/{deal_id}/document-requests:
+    post:
+      operationId: recordMissingDocuments
+      tags:
+        - Documents
+      summary: Record a missing-document request
+      description: >
+        Log which documents are outstanding and optionally move the deal to
+        docs_missing. Do not include raw document contents.
+      security:
+        - ApiKeyAuth: []
+      x-openai-isConsequential: true
+      parameters:
+        - name: deal_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentRequestRequest"
+            examples:
+              missing:
+                value:
+                  missing:
+                    - bank_statements
+                    - business_tax_return
+                    - voided_check
+                  note: Requested from borrower; deal set to docs_missing.
+                  set_stage: docs_missing
+      responses:
+        "200":
+          description: Document request recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordWriteResponse"
+        "400":
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid API key header.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /deals/{deal_id}:
+    get:
+      operationId: getDealStatus
+      tags:
+        - Deals
+      summary: Read current deal status
+      description: Read current stage, amount, owner, and open task count. Read-only.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: deal_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deal status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DealStatusResponse"
+        "401":
+          description: Missing or invalid API key header.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Deal not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /search:
+    get:
+      operationId: searchRecords
+      tags:
+        - Search
+      summary: Search contacts or deals
+      description: Look up records before writing to avoid duplicates. Read-only.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - contact
+              - deal
+      responses:
+        "200":
+          description: Search results.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+        "401":
+          description: Missing or invalid API key header.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+# ===== Components =====
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: >
+        Configure in GPT Builder as Authentication > API Key, with Auth Type
+        Custom and Custom Header Name X-Api-Key. The key is sent as:
+        X-Api-Key: <CRM_API_KEY>.
+  schemas:
+    PipelineStage:
+      type: string
+      description: Full set of pipeline stages (used in read responses).
+      enum:
+        - new_lead
+        - contacted
+        - application_sent
+        - application_received
+        - docs_missing
+        - ready_for_broker_review
+        - lender_submission_pending_review
+        - submitted_to_lender
+        - lender_response_received
+        - borrower_follow_up_needed
+        - funded
+        - not_moving_forward
+        - renewal_follow_up
+        - stale
+        - closed
+    ReviewSafeStage:
+      type: string
+      description: >
+        Stages the GPT may set. Decision-bearing stages (submitted_to_lender,
+        funded, not_moving_forward, closed, lender_response_received) are
+        intentionally excluded and must be set by a human.
+      enum:
+        - new_lead
+        - contacted
+        - application_sent
+        - application_received
+        - docs_missing
+        - ready_for_broker_review
+        - lender_submission_pending_review
+        - borrower_follow_up_needed
+        - renewal_follow_up
+        - stale
+    DocumentType:
+      type: string
+      enum:
+        - bank_statements
+        - business_tax_return
+        - personal_tax_return
+        - driver_license
+        - voided_check
+        - debt_schedule
+        - profit_and_loss
+        - balance_sheet
+        - application
+        - other
+    Contact:
+      type: object
+      additionalProperties: true
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        business_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        source:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+        - email
+    ContactUpsertRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        match_on:
+          type: string
+          enum:
+            - email
+            - phone
+            - contact_id
+          default: email
+        contact:
+          $ref: "#/components/schemas/Contact"
+      required:
+        - contact
+    Deal:
+      type: object
+      additionalProperties: true
+      properties:
+        deal_id:
+          type: string
+        contact_id:
+          type: string
+        amount_requested:
+          type: number
+          minimum: 0
+        product_interest:
+          type: string
+        stage:
+          $ref: "#/components/schemas/ReviewSafeStage"
+        human_review_required:
+          type: boolean
+          default: true
+        summary:
+          type: string
+      required:
+        - contact_id
+    DealUpsertRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        match_on:
+          type: string
+          enum:
+            - deal_id
+            - contact_id
+          default: deal_id
+        deal:
+          $ref: "#/components/schemas/Deal"
+      required:
+        - deal
+    StageChangeRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        target_stage:
+          $ref: "#/components/schemas/ReviewSafeStage"
+        reason:
+          type: string
+        human_review_required:
+          type: boolean
+          default: true
+      required:
+        - target_stage
+    NoteRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+            - conversation_summary
+            - broker_note
+            - system_note
+            - status_note
+        body:
+          type: string
+        author:
+          type: string
+          default: brokerflow-ai
+      required:
+        - body
+    TaskRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        deal_id:
+          type: string
+        title:
+          type: string
+        owner_email:
+          type: string
+          format: email
+        due_at:
+          type: string
+          format: date-time
+        priority:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+            - urgent
+        human_review_required:
+          type: boolean
+          default: true
+      required:
+        - title
+    DocumentRequestRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        missing:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentType"
+        note:
+          type: string
+        set_stage:
+          $ref: "#/components/schemas/ReviewSafeStage"
+      required:
+        - missing
+    RecordWriteResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - received
+            - accepted
+            - queued
+            - processed
+        message:
+          type: string
+        record_id:
+          type: string
+        deal_id:
+          type: string
+        stage:
+          type: string
+        pending_review:
+          type: boolean
+      required:
+        - status
+    DealStatusResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - processed
+        deal_id:
+          type: string
+        stage:
+          $ref: "#/components/schemas/PipelineStage"
+        amount_requested:
+          type: number
+        owner_email:
+          type: string
+          format: email
+        open_tasks:
+          type: integer
+          minimum: 0
+      required:
+        - deal_id
+        - stage
+    SearchResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - processed
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            properties:
+              contact_id:
+                type: string
+              deal_id:
+                type: string
+              name:
+                type: string
+      required:
+        - results
+    ErrorResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - error
+            - invalid_request
+            - failed
+            - unauthorized
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+        - status
+        - message

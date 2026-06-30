@@ -1,8 +1,9 @@
-<img width="2172" height="724" alt="Image" src="https://github.com/user-attachments/assets/37d37330-e76b-4c6c-81c4-5d061430c6af" />
+# BrokerFlow AI
 
 ---
 
-# BrokerFlow AI — Site
+<img width="2172" height="724" alt="Image" src="https://github.com/user-attachments/assets/37d37330-e76b-4c6c-81c4-5d061430c6af" />
+
 This folder holds the marketing + documentation site for **BrokerFlow AI**, the public face of the Loan Broker Automation Architect GPT. It is a content-first site: every page is authored in Markdown under `pages/`, then rendered by the front-end in the repo root (`index.html`, `styles.css`, `script.js`) and deployed to **brokerflow-ai.vercel.app**.
 > Compliance note: BrokerFlow AI **recommends, drafts, prepares, routes, and logs**. It never approves, declines, qualifies, guarantees, underwrites, or funds. All site copy uses review-safe language ("potential fit", "ready for broker review", "possible lender match", "based on information provided") and never says "approved", "guaranteed", "qualified", or "eligible".
 ## Folder structure

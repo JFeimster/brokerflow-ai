@@ -1,0 +1,66 @@
+BrokerFlow AI — Proprietary License
+
+Copyright (c) 2026 Moonshine Capital / Distilled Funding.
+All rights reserved.
+
+1. Definitions
+   "Software" means the BrokerFlow AI repository, including all source code,
+   documentation, schemas, templates, knowledge files, configuration, and
+   associated assets contained herein.
+   "Owner" means Moonshine Capital / Distilled Funding and its authorized
+   representatives.
+   "You" means any individual or entity accessing the Software.
+
+2. Ownership
+   The Software is the confidential and proprietary property of the Owner and
+   is protected by copyright and other intellectual property laws. No title to
+   or ownership of the Software is transferred by access to or possession of it.
+
+3. Grant of Use
+   No license, right, or permission to use, copy, modify, merge, publish,
+   distribute, sublicense, or sell any portion of the Software is granted
+   except by a separate written agreement signed by the Owner. Absent such an
+   agreement, all use is prohibited.
+
+4. Restrictions
+   You may not, without the Owner's prior written consent:
+     (a) copy, reproduce, or distribute the Software or any part of it;
+     (b) modify, adapt, translate, or create derivative works of the Software;
+     (c) reverse engineer, decompile, or disassemble the Software except to the
+         extent expressly permitted by applicable law;
+     (d) remove, alter, or obscure any proprietary notices; or
+     (e) use the Software to build a competing product or service.
+
+5. Confidentiality
+   The Software contains trade secrets and confidential information of the
+   Owner. You agree to maintain its confidentiality and to use at least a
+   reasonable degree of care to prevent unauthorized disclosure or use.
+
+6. No Warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+7. Limitation of Liability
+   IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
+   FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+8. Compliance & Financial Services Notice
+   The Software supports loan-broker operations but does not make lending,
+   underwriting, legal, tax, or compliance decisions. Nothing in the Software
+   constitutes a commitment to lend or a guarantee of funding. The Owner and
+   its users are solely responsible for compliance with all applicable laws and
+   regulations.
+
+9. Termination
+   Any rights extended under a separate agreement terminate automatically upon
+   breach of these terms. Upon termination, You must cease all use and destroy
+   all copies of the Software in your possession or control.
+
+10. Governing Law
+    This License is governed by the laws of the jurisdiction in which the Owner
+    is established, without regard to conflict-of-law principles.
+
+For licensing inquiries, contact the Owner.

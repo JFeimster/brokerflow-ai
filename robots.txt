@@ -1,0 +1,22 @@
+# robots.txt — BrokerFlow AI
+# https://brokerflow-ai.vercel.app
+# Public marketing/documentation site. Crawling of public pages is welcome.
+
+User-agent: *
+Allow: /
+
+# Keep the embeddable widget out of search results.
+# It is meant to be framed inside Wix/host sites, not indexed standalone.
+Disallow: /embed
+Disallow: /embed.html
+
+# Block common machine/config paths from crawl (defense-in-depth; these are
+# not served as public HTML, but we exclude them explicitly).
+Disallow: /404
+Disallow: /.env
+Disallow: /.env.example
+Disallow: /package.json
+Disallow: /vercel.json
+
+# Reference to the sitemap for well-behaved crawlers.
+Sitemap: https://brokerflow-ai.vercel.app/sitemap.xml

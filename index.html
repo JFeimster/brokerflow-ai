@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrokerFlow AI — The Loan Broker Automation Architect GPT</title>
+  <meta name="description" content="BrokerFlow AI captures borrower intake, builds document checklists, fires alerts, and routes every funding decision to a human. Built for small-business loan brokers." />
+  <meta property="og:title" content="BrokerFlow AI — Loan Broker Automation Architect GPT" />
+  <meta property="og:description" content="Capture cleaner deals, automate the busywork, and keep every funding decision in human hands." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://brokerflow-ai.vercel.app" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark">BF</span>
+        <span class="brand-name">BrokerFlow&nbsp;AI</span>
+      </a>
+      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="primary-nav">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#calculator">ROI Calculator</a>
+        <a href="#faq">FAQ</a>
+        <a class="btn btn-small" href="#cta">Open the GPT</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-inner">
+        <p class="eyebrow">For small-business loan brokers</p>
+        <h1>Automate the busywork.<br />Keep the decisions human.</h1>
+        <p class="lead">
+          BrokerFlow AI is your Loan Broker Automation Architect — a Custom GPT that
+          captures borrower intake, builds document checklists, fires internal alerts,
+          and routes every funding decision to a real person on your team.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-large" href="#cta">Open the GPT</a>
+          <a class="btn btn-large btn-ghost" href="#how-it-works">See how it works</a>
+        </div>
+        <p class="hero-note">No approvals by AI. Ever. A human always decides funding.</p>
+      </div>
+    </section>
+
+    <!-- TRUST BAR -->
+    <section class="trust-bar">
+      <div class="container">
+        <p>Built on the same registry-and-workflow patterns powering Moonshine Capital &amp; Distilled Funding.</p>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="section">
+      <div class="container">
+        <h2 class="section-title">Everything a broker needs at intake</h2>
+        <p class="section-intro">Six things the GPT handles so you can focus on closing.</p>
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-icon">📥</div>
+            <h3>Borrower Intake</h3>
+            <p>Turns a conversation into clean, structured deal data — ready for review.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">📄</div>
+            <h3>Document Checklists</h3>
+            <p>Generates the right document list and requests what's missing via secure links.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🔔</div>
+            <h3>Internal Alerts</h3>
+            <p>Notifies your team and creates review tasks at every decision point.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🔁</div>
+            <h3>Smart Follow-ups</h3>
+            <p>Launches pre-approved borrower, partner, and renewal sequences.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🧮</div>
+            <h3>Built-in Calculators</h3>
+            <p>Estimates time saved, automation ROI, and internal triage readiness.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🛡️</div>
+            <h3>Human-Reviewed</h3>
+            <p>Routes every funding decision to a person — no AI approvals, ever.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how-it-works" class="section section-alt">
+      <div class="container">
+        <h2 class="section-title">How it works</h2>
+        <ol class="steps">
+          <li><span class="step-num">1</span>
+            <div><h3>Chat</h3><p>You or a borrower share the details in plain language.</p></div>
+          </li>
+          <li><span class="step-num">2</span>
+            <div><h3>Capture</h3><p>The GPT structures the data and calls a secure Action.</p></div>
+          </li>
+          <li><span class="step-num">3</span>
+            <div><h3>Automate</h3><p>A workflow creates records, alerts, and reminders.</p></div>
+          </li>
+          <li><span class="step-num">4</span>
+            <div><h3>Review</h3><p>A human review task is created automatically.</p></div>
+          </li>
+          <li><span class="step-num">5</span>
+            <div><h3>Decide</h3><p>A broker makes the funding call — always.</p></div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ROI CALCULATOR -->
+    <section id="calculator" class="section">
+      <div class="container">
+        <h2 class="section-title">How much time could you save?</h2>
+        <p class="section-intro">A rough estimate — adjust the inputs to your business.</p>
+        <div class="calculator">
+          <form id="roi-form" class="calc-form">
+            <div class="calc-field">
+              <label for="leads">Leads per week</label>
+              <input type="number" id="leads" name="leads" min="0" value="15" />
+            </div>
+            <div class="calc-field">
+              <label for="tasks">Automated tasks per lead</label>
+              <input type="number" id="tasks" name="tasks" min="0" value="4" />
+            </div>
+            <div class="calc-field">
+              <label for="minutes">Minutes per task</label>
+              <input type="number" id="minutes" name="minutes" min="0" value="8" />
+            </div>
+            <button type="submit" class="btn">Calculate</button>
+          </form>
+          <div class="calc-result" id="roi-result" aria-live="polite">
+            <p class="calc-headline"><span id="hours-week">8.0</span> hrs/week saved</p>
+            <p class="calc-sub">≈ <span id="hours-year">400</span> hours per year</p>
+            <p class="calc-disclaimer">Rough estimate for illustration only.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="section section-alt">
+      <div class="container">
+        <h2 class="section-title">Frequently asked questions</h2>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>Does the AI approve or decline loans?</summary>
+            <p>No. The GPT never approves, declines, qualifies, or guarantees funding. It captures and routes everything to a human who makes the decision.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Is my borrowers' sensitive data safe?</summary>
+            <p>Raw documents never pass through the GPT. It uses secure upload links and metadata only, and routes sensitive handling to human-controlled tools.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What tools does it connect to?</summary>
+            <p>It connects to your workflows in n8n, Zapier, or Make, which can update your CRM, send alerts, and schedule reminders.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Do I need to code?</summary>
+            <p>No. The GPT and its Actions are configured from ready-made schemas and templates. You connect a webhook and go.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="cta" class="cta">
+      <div class="container">
+        <h2>Start capturing cleaner deals today</h2>
+        <p>Open the Loan Broker Automation Architect GPT and let it handle the busywork.</p>
+        <a class="btn btn-large" href="#" rel="noopener" data-cta="open-gpt">Open the GPT</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Moonshine Capital / Distilled Funding. All rights reserved.</p>
+      <nav class="footer-nav">
+        <a href="agents.html">The Agent</a>
+        <a href="#features">Features</a>
+        <a href="#faq">FAQ</a>
+        <a href="#top">Back to top</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

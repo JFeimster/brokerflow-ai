@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loan Broker Automation Architect GPT — BrokerFlow AI</title>
+  <meta name="description" content="Overview of the Loan Broker Automation Architect GPT: what it does, how it works, and the guardrails that keep every funding decision in human hands." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="agents-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">BF</span>
+        <span class="brand-name">BrokerFlow&nbsp;AI</span>
+      </a>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#guardrails">Guardrails</a>
+        <a href="#how-it-works">How It Works</a>
+        <a class="btn btn-small" href="#cta">Open the GPT</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="agent-hero">
+      <div class="container">
+        <p class="eyebrow">Agent Overview</p>
+        <h1>Loan Broker Automation Architect GPT</h1>
+        <p class="lead">
+          A front-end assistant for small-business loan brokers. It captures intake,
+          builds document checklists, fires internal alerts, and routes every funding
+          decision to a human — so brokers move faster without giving up control.
+        </p>
+        <div class="pill-row">
+          <span class="pill">Intake</span>
+          <span class="pill">Documents</span>
+          <span class="pill">Follow-ups</span>
+          <span class="pill">Routing</span>
+          <span class="pill">Human-reviewed</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="principle">
+      <div class="container">
+        <blockquote>
+          The GPT can <strong>recommend, draft, prepare, route, and log</strong> —
+          but it never <strong>approves, declines, qualifies, guarantees, underwrites,
+          or funds</strong> a borrower. Every funding decision routes to a human.
+        </blockquote>
+      </div>
+    </section>
+
+    <section id="capabilities" class="section">
+      <div class="container">
+        <h2>What It Does</h2>
+        <div class="card-grid">
+          <article class="card">
+            <h3>Borrower Intake</h3>
+            <p>Collects business and funding details into structured data and submits it for broker review.</p>
+          </article>
+          <article class="card">
+            <h3>Document Help</h3>
+            <p>Generates checklists and requests missing documents through secure links — never raw files.</p>
+          </article>
+          <article class="card">
+            <h3>Alerts &amp; Tasks</h3>
+            <p>Notifies the team and creates manual review tasks at every decision point.</p>
+          </article>
+          <article class="card">
+            <h3>Follow-ups</h3>
+            <p>Starts pre-approved borrower, partner, and renewal sequences.</p>
+          </article>
+          <article class="card">
+            <h3>Calculators</h3>
+            <p>Estimates time saved, automation ROI, and internal triage readiness.</p>
+          </article>
+          <article class="card">
+            <h3>Routing</h3>
+            <p>Prepares "possible lender match" suggestions for a human to confirm.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="guardrails" class="section section-alt">
+      <div class="container">
+        <h2>Guardrails</h2>
+        <p class="section-intro">The GPT will never do any of the following on its own:</p>
+        <ul class="guardrail-list">
+          <li>Approve, decline, qualify, or guarantee a borrower</li>
+          <li>Submit a package to a lender without human confirmation</li>
+          <li>State terms, rates, or offers as final</li>
+          <li>Make legal, tax, or compliance determinations</li>
+          <li>Handle raw sensitive documents or full personal data</li>
+          <li>Move money or expose internal credentials</li>
+        </ul>
+        <p class="note">Instead, it uses possible-fit language and routes the decision to a human review task.</p>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="section">
+      <div class="container">
+        <h2>How It Works</h2>
+        <ol class="steps">
+          <li><span class="step-num">1</span> You chat with the GPT and share borrower details.</li>
+          <li><span class="step-num">2</span> The GPT structures the data and calls a secure Action.</li>
+          <li><span class="step-num">3</span> A workflow (n8n / Zapier / Make) creates records and alerts.</li>
+          <li><span class="step-num">4</span> A review task is created for a human.</li>
+          <li><span class="step-num">5</span> A broker makes the funding decision.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="cta" class="cta">
+      <div class="container">
+        <h2>Ready to put it to work?</h2>
+        <p>Open the Loan Broker Automation Architect GPT and start capturing cleaner deals today.</p>
+        <a class="btn btn-large" href="#" rel="noopener">Open the GPT</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Moonshine Capital / Distilled Funding. All rights reserved.</p>
+      <nav class="footer-nav">
+        <a href="index.html">Home</a>
+        <a href="agents.html">Agent</a>
+        <a href="#guardrails">Guardrails</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

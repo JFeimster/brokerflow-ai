@@ -1,0 +1,70 @@
+# ============================================================
+# BrokerFlow AI — .gitignore
+# ============================================================
+
+# ----- Dependencies -----
+node_modules/
+.pnp/
+.pnp.js
+.yarn/
+jspm_packages/
+
+# ----- Package manager logs -----
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ----- Environment & secrets -----
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+*.pem
+*.key
+secrets.json
+
+# ----- Build & output -----
+dist/
+build/
+out/
+.cache/
+.temp/
+.tmp/
+
+# ----- Vercel -----
+.vercel/
+.vercel.json.local
+
+# ----- Logs -----
+logs/
+*.log
+
+# ----- Testing & coverage -----
+coverage/
+.nyc_output/
+
+# ----- Editor & IDE -----
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# ----- OS junk -----
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ----- Misc -----
+*.local
+.history/

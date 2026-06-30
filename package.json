@@ -1,0 +1,47 @@
+{
+  "name": "brokerflow-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The operating library and landing experience behind the Loan Broker Automation Architect GPT — borrower intake, document routing, alerts, and human-reviewed funding decisions.",
+  "keywords": [
+    "brokerflow",
+    "loan-broker",
+    "custom-gpt",
+    "automation",
+    "business-funding",
+    "moonshine-capital",
+    "distilled-funding"
+  ],
+  "author": "Moonshine Capital / Distilled Funding",
+  "license": "UNLICENSED",
+  "homepage": "https://brokerflow-ai.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/brokerflow-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/brokerflow-ai/issues"
+  },
+  "type": "module",
+  "main": "script.js",
+  "scripts": {
+    "dev": "serve .",
+    "start": "serve .",
+    "build": "echo \"Static site — no build step required\" && exit 0",
+    "preview": "serve .",
+    "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
+    "lint": "echo \"No linter configured for static site\" && exit 0"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "serve": "^14.2.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "not dead",
+    "> 0.5%"
+  ]
+}

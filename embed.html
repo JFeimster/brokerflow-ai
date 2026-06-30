@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrokerFlow AI — Embed Widget</title>
+  <meta name="description" content="Embeddable BrokerFlow AI widget — a compact, self-contained card that introduces the Loan Broker Automation Architect GPT and links users to it." />
+
+  <!--
+    SELF-CONTAINED EMBED
+    - All CSS and JS are inline so this file works inside an iframe, Wix HTML embed,
+      or any CMS block with no external dependencies.
+    - Set the GPT link via the data-gpt-url attribute on <body> (or edit GPT_URL below).
+    - Recommended iframe usage:
+        <iframe src="https://brokerflow-ai.vercel.app/embed.html"
+                style="width:100%;max-width:420px;height:560px;border:0;"
+                title="BrokerFlow AI"></iframe>
+  -->
+
+  <style>
+    :root {
+      --bf-bg: #0f1115;
+      --bf-surface: #1f232c;
+      --bf-border: #2a2f3a;
+      --bf-text: #e8eaed;
+      --bf-muted: #a3aab8;
+      --bf-primary: #4f8cff;
+      --bf-primary-dark: #356ae0;
+      --bf-accent: #36d399;
+      --bf-warning: #f5c451;
+      --bf-radius: 14px;
+      --bf-radius-sm: 8px;
+      --bf-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: var(--bf-font);
+      color: var(--bf-text);
+    }
+
+    .bf-widget {
+      max-width: 420px;
+      margin: 0 auto;
+      background: var(--bf-bg);
+      border: 1px solid var(--bf-border);
+      border-radius: var(--bf-radius);
+      padding: 1.6rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .bf-head {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+    .bf-mark {
+      display: grid;
+      place-items: center;
+      width: 36px; height: 36px;
+      background: var(--bf-primary);
+      color: #fff;
+      border-radius: var(--bf-radius-sm);
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+    .bf-name { font-weight: 700; font-size: 1.05rem; }
+    .bf-tag {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--bf-muted);
+      font-weight: 500;
+    }
+
+    .bf-title {
+      font-size: 1.25rem;
+      line-height: 1.25;
+      margin: 0 0 0.5rem;
+    }
+    .bf-lead {
+      color: var(--bf-muted);
+      font-size: 0.95rem;
+      margin: 0 0 1.1rem;
+    }
+
+    .bf-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.2rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+    .bf-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      font-size: 0.9rem;
+      color: var(--bf-text);
+    }
+    .bf-check {
+      flex: none;
+      color: var(--bf-accent);
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .bf-cta {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: var(--bf-primary);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.85rem 1rem;
+      border: none;
+      border-radius: var(--bf-radius-sm);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 180ms ease, transform 180ms ease;
+    }
+    .bf-cta:hover { background: var(--bf-primary-dark); transform: translateY(-1px); }
+
+    .bf-note {
+      margin: 0.9rem 0 0;
+      font-size: 0.78rem;
+      color: var(--bf-warning);
+      text-align: center;
+    }
+
+    .bf-foot {
+      margin-top: 1.1rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--bf-border);
+      font-size: 0.72rem;
+      color: var(--bf-muted);
+      text-align: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+
+<body data-gpt-url="#">
+
+  <div class="bf-widget" role="region" aria-label="BrokerFlow AI">
+    <div class="bf-head">
+      <span class="bf-mark">BF</span>
+      <span>
+        <span class="bf-name">BrokerFlow&nbsp;AI</span>
+        <span class="bf-tag">Loan Broker Automation Architect GPT</span>
+      </span>
+    </div>
+
+    <h2 class="bf-title">Capture cleaner deals. Keep decisions human.</h2>
+    <p class="bf-lead">
+      An AI intake assistant for small-business loan brokers — it structures borrower
+      details, builds document checklists, and routes every funding decision to a person.
+    </p>
+
+    <ul class="bf-list">
+      <li><span class="bf-check">✓</span> Structured borrower intake in minutes</li>
+      <li><span class="bf-check">✓</span> Smart document checklists &amp; reminders</li>
+      <li><span class="bf-check">✓</span> Automatic team alerts &amp; review tasks</li>
+      <li><span class="bf-check">✓</span> No AI approvals — a human always decides</li>
+    </ul>
+
+    <a class="bf-cta" id="bf-cta" href="#" target="_blank" rel="noopener" data-cta="embed-open-gpt">
+      Open the GPT
+    </a>
+
+    <p class="bf-note">No approvals by AI. A licensed human reviews every funding decision.</p>
+
+    <p class="bf-foot">© <span id="bf-year"></span> Moonshine Capital / Distilled Funding</p>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      // Configure the destination GPT URL here, or via <body data-gpt-url="...">.
+      var GPT_URL = "https://chat.openai.com/g/your-gpt-id";
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Year
+        var yearEl = document.getElementById("bf-year");
+        if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+        // Resolve the GPT URL (body attribute overrides the default constant)
+        var bodyUrl = document.body.getAttribute("data-gpt-url");
+        var url = (bodyUrl && bodyUrl !== "#") ? bodyUrl : GPT_URL;
+
+        // Wire the CTA
+        var cta = document.getElementById("bf-cta");
+        if (cta && url) {
+          cta.setAttribute("href", url);
+          cta.addEventListener("click", function () {
+            // Replace with your analytics call if desired.
+            if (window.console && typeof console.info === "function") {
+              console.info("[BrokerFlow] Embed CTA clicked");
+            }
+          });
+        }
+
+        // Optional: auto-resize when embedded via iframe that listens for postMessage.
+        try {
+          if (window.parent && window.parent !== window) {
+            var height = document.querySelector(".bf-widget").offsetHeight + 40;
+            window.parent.postMessage(
+              { type: "brokerflow-embed-height", height: height },
+              "*"
+            );
+          }
+        } catch (e) {
+          /* no-op if cross-origin restrictions apply */
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

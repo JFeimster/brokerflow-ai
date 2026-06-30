@@ -1,0 +1,1082 @@
+openapi: 3.1.0
+
+info:
+  title: Loan Broker No-Auth Webhooks
+  version: 1.0.0
+  description: >
+    No-auth webhook API for sending loan broker automation events to n8n,
+    Zapier, Make, Airtable, Google Sheets, CRMs, or other workflow tools.
+    These endpoints are designed for intake, document follow-up, CRM updates,
+    lender match review routing, referral partner updates, and pipeline summaries.
+    No endpoint should be used to approve, decline, guarantee, or underwrite a borrower.
+
+servers:
+  - url: https://example.com
+    description: Replace with your webhook base URL.
+
+security: []
+
+tags:
+  - name: Lead Intake
+    description: Create or update borrower and deal records from new leads.
+  - name: Documents
+    description: Send document checklist and missing document updates.
+  - name: Deal Status
+    description: Send CRM or pipeline status updates.
+  - name: Lender Review
+    description: Route possible lender matches for human broker review.
+  - name: Referral Partners
+    description: Notify or update referral partner workflows.
+  - name: Pipeline
+    description: Request or send pipeline summary events.
+  - name: Health
+    description: Simple connectivity check.
+
+paths:
+  /health:
+    get:
+      operationId: checkWebhookHealth
+      tags:
+        - Health
+      summary: Check webhook availability
+      description: Simple no-auth health check endpoint for testing connectivity.
+      security: []
+      responses:
+        "200":
+          description: Webhook service is reachable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthCheckResponse"
+              examples:
+                ok:
+                  value:
+                    status: ok
+                    message: Webhook endpoint is reachable.
+
+  /lead-intake:
+    post:
+      operationId: sendLeadIntakeWebhook
+      tags:
+        - Lead Intake
+      summary: Send a new borrower lead intake event
+      description: >
+        Sends a new lead or updated lead intake record to an external automation workflow.
+        This should create or update CRM records, assign ownership, create tasks,
+        and start document/request follow-up. This does not determine approval,
+        eligibility, qualification, or funding outcome.
+      security: []
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        description: Borrower lead intake payload.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadIntakeRequest"
+            examples:
+              newLead:
+                value:
+                  event_type: lead_intake
+                  event_id: evt_10001
+                  source_system: website_form
+                  submitted_at: "2026-06-30T14:25:00-04:00"
+                  lead_source: Google Ads
+                  broker_owner:
+                    name: Jane Broker
+                    email: jane@example.com
+                    phone: "+15555550101"
+                  borrower:
+                    first_name: Sam
+                    last_name: Rivera
+                    email: sam@example.com
+                    phone: "+15555550123"
+                    preferred_contact_method: sms
+                  business:
+                    legal_business_name: Rivera Logistics LLC
+                    dba_name: Rivera Logistics
+                    industry: Transportation
+                    state: NY
+                    monthly_revenue: 85000
+                    time_in_business_months: 38
+                  funding_request:
+                    product_type: working_capital
+                    funding_amount_requested: 75000
+                    use_of_funds: Equipment repairs and payroll
+                    urgency: within_7_days
+                  review:
+                    requires_human_review: true
+                    review_reason: New lead needs broker review before lender submission.
+      responses:
+        "200":
+          description: Lead intake webhook received.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "202":
+          description: Lead intake webhook accepted for processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "400":
+          description: Invalid lead intake payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /document-checklist:
+    post:
+      operationId: sendDocumentChecklistWebhook
+      tags:
+        - Documents
+      summary: Send document checklist or missing document event
+      description: >
+        Sends document checklist, uploaded document, or missing document updates
+        to an external automation workflow. This can trigger borrower reminders,
+        folder creation, internal tasks, or CRM updates. Sensitive document contents
+        should not be included directly in the payload.
+      security: []
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        description: Document checklist or missing document payload.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentChecklistRequest"
+            examples:
+              missingDocs:
+                value:
+                  event_type: document_checklist_update
+                  event_id: evt_20001
+                  source_system: crm
+                  submitted_at: "2026-06-30T14:30:00-04:00"
+                  deal_id: deal_12345
+                  borrower:
+                    first_name: Sam
+                    last_name: Rivera
+                    email: sam@example.com
+                    phone: "+15555550123"
+                    preferred_contact_method: sms
+                  business:
+                    legal_business_name: Rivera Logistics LLC
+                    state: NY
+                  documents:
+                    - document_type: bank_statements
+                      display_name: Last 4 months of business bank statements
+                      status: missing
+                      required: true
+                    - document_type: driver_license
+                      display_name: Owner driver's license
+                      status: received
+                      required: true
+                    - document_type: voided_check
+                      display_name: Voided business check
+                      status: missing
+                      required: false
+                  reminder:
+                    send_borrower_reminder: true
+                    reminder_channel: sms
+                    reminder_message: Please upload the missing documents so your file can move to broker review.
+                  review:
+                    requires_human_review: true
+                    review_reason: File should not be submitted until required documents are reviewed.
+      responses:
+        "200":
+          description: Document checklist webhook received.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "202":
+          description: Document checklist webhook accepted for processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "400":
+          description: Invalid document checklist payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /deal-status:
+    post:
+      operationId: sendDealStatusWebhook
+      tags:
+        - Deal Status
+      summary: Send a deal status update event
+      description: >
+        Sends a deal status update to an external workflow for CRM updates,
+        borrower updates, task creation, team notifications, or pipeline tracking.
+        Status language should avoid approval, eligibility, qualification, or guarantee claims.
+      security: []
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        description: Deal status update payload.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DealStatusRequest"
+            examples:
+              readyForReview:
+                value:
+                  event_type: deal_status_update
+                  event_id: evt_30001
+                  source_system: n8n
+                  submitted_at: "2026-06-30T14:35:00-04:00"
+                  deal_id: deal_12345
+                  previous_status: docs_missing
+                  new_status: ready_for_broker_review
+                  status_note: Required documents appear to be received. Broker should manually review before lender submission.
+                  borrower:
+                    first_name: Sam
+                    last_name: Rivera
+                    email: sam@example.com
+                    phone: "+15555550123"
+                  business:
+                    legal_business_name: Rivera Logistics LLC
+                    state: NY
+                  assigned_to:
+                    name: Jane Broker
+                    email: jane@example.com
+                  next_task:
+                    task_name: Review file before possible lender submission
+                    due_at: "2026-07-01T10:00:00-04:00"
+                    priority: high
+                  review:
+                    requires_human_review: true
+                    review_reason: Human review required before any lender submission or borrower terms discussion.
+      responses:
+        "200":
+          description: Deal status webhook received.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "202":
+          description: Deal status webhook accepted for processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "400":
+          description: Invalid deal status payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /lender-match-review:
+    post:
+      operationId: sendLenderMatchReviewWebhook
+      tags:
+        - Lender Review
+      summary: Send possible lender matches for broker review
+      description: >
+        Sends preliminary lender match suggestions to an external workflow for
+        human broker review. This endpoint must not be used to approve, decline,
+        guarantee, underwrite, or confirm borrower eligibility. Suggested matches
+        are only possible fits based on provided fields.
+      security: []
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        description: Preliminary lender match review payload.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LenderMatchReviewRequest"
+            examples:
+              possibleMatches:
+                value:
+                  event_type: lender_match_review
+                  event_id: evt_40001
+                  source_system: crm
+                  submitted_at: "2026-06-30T14:40:00-04:00"
+                  deal_id: deal_12345
+                  borrower:
+                    first_name: Sam
+                    last_name: Rivera
+                    email: sam@example.com
+                    phone: "+15555550123"
+                  business:
+                    legal_business_name: Rivera Logistics LLC
+                    industry: Transportation
+                    state: NY
+                    monthly_revenue: 85000
+                    time_in_business_months: 38
+                  funding_request:
+                    product_type: working_capital
+                    funding_amount_requested: 75000
+                    use_of_funds: Equipment repairs and payroll
+                    urgency: within_7_days
+                  possible_lender_matches:
+                    - lender_name: Example Capital
+                      product_type: working_capital
+                      match_reason: May be a potential fit based on revenue, industry, and requested amount.
+                      broker_notes: Review current lender guidelines before submission.
+                      confidence_level: medium
+                    - lender_name: Sample Funding Group
+                      product_type: revenue_based_financing
+                      match_reason: May be worth broker review based on time in business and funding use.
+                      broker_notes: Confirm document package and restrictions before submission.
+                      confidence_level: low
+                  review:
+                    requires_human_review: true
+                    review_reason: Broker must manually review possible lender matches before submission.
+      responses:
+        "200":
+          description: Lender match review webhook received.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "202":
+          description: Lender match review webhook accepted for processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "400":
+          description: Invalid lender match review payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /referral-partner-event:
+    post:
+      operationId: sendReferralPartnerWebhook
+      tags:
+        - Referral Partners
+      summary: Send a referral partner update event
+      description: >
+        Sends referral partner events to an external workflow for attribution,
+        status updates, task creation, partner notifications, or commission tracking.
+        Do not include sensitive borrower documents or underwriting conclusions.
+      security: []
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        description: Referral partner event payload.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReferralPartnerEventRequest"
+            examples:
+              partnerUpdate:
+                value:
+                  event_type: referral_partner_event
+                  event_id: evt_50001
+                  source_system: crm
+                  submitted_at: "2026-06-30T14:45:00-04:00"
+                  deal_id: deal_12345
+                  referral_partner:
+                    partner_id: partner_789
+                    name: ABC Consulting
+                    contact_name: Morgan Lee
+                    email: morgan@example.com
+                    phone: "+15555550999"
+                  borrower:
+                    first_name: Sam
+                    last_name: Rivera
+                    email: sam@example.com
+                    phone: "+15555550123"
+                  business:
+                    legal_business_name: Rivera Logistics LLC
+                    state: NY
+                  partner_update:
+                    update_type: status_update
+                    message: The referred file is now ready for broker review.
+                    send_partner_notification: true
+                  review:
+                    requires_human_review: true
+                    review_reason: Review partner-facing message before sending if it includes deal details.
+      responses:
+        "200":
+          description: Referral partner webhook received.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "202":
+          description: Referral partner webhook accepted for processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "400":
+          description: Invalid referral partner payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /pipeline-summary:
+    post:
+      operationId: sendPipelineSummaryWebhook
+      tags:
+        - Pipeline
+      summary: Send or request a pipeline summary event
+      description: >
+        Sends pipeline summary details or requests a workflow to generate a summary
+        for brokers, processors, or operations teams. Useful for daily deal tracking,
+        missing document counts, stale lead cleanup, and follow-up task reminders.
+      security: []
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        description: Pipeline summary payload.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PipelineSummaryRequest"
+            examples:
+              dailySummary:
+                value:
+                  event_type: pipeline_summary
+                  event_id: evt_60001
+                  source_system: crm
+                  submitted_at: "2026-06-30T17:00:00-04:00"
+                  summary_period:
+                    start_date: "2026-06-30"
+                    end_date: "2026-06-30"
+                  broker_owner:
+                    name: Jane Broker
+                    email: jane@example.com
+                  summary:
+                    total_new_leads: 12
+                    ready_for_broker_review: 4
+                    docs_missing: 6
+                    lender_submission_pending_review: 2
+                    stale_leads_over_7_days: 3
+                    funded_today: 1
+                  requested_actions:
+                    - Create follow-up tasks for leads missing documents.
+                    - Notify broker about files ready for review.
+                    - Flag stale leads for pipeline cleanup.
+      responses:
+        "200":
+          description: Pipeline summary webhook received.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "202":
+          description: Pipeline summary webhook accepted for processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "400":
+          description: Invalid pipeline summary payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthCheckResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          examples:
+            - ok
+        message:
+          type: string
+          examples:
+            - Webhook endpoint is reachable.
+      required:
+        - status
+        - message
+
+    WebhookAcceptedResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - received
+            - accepted
+            - queued
+            - processed
+        message:
+          type: string
+        event_id:
+          type: string
+        external_record_id:
+          type: string
+          description: Optional ID created by the receiving workflow or CRM.
+      required:
+        - status
+        - message
+
+    ErrorResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - error
+            - invalid_request
+            - failed
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+        - status
+        - message
+
+    BaseWebhookEvent:
+      type: object
+      additionalProperties: true
+      properties:
+        event_type:
+          type: string
+          description: Type of webhook event being sent.
+        event_id:
+          type: string
+          description: Unique ID for idempotency and tracking.
+        source_system:
+          type: string
+          description: System where the event originated.
+          examples:
+            - website_form
+            - crm
+            - n8n
+            - zapier
+            - make
+            - google_sheets
+            - airtable
+        submitted_at:
+          type: string
+          format: date-time
+          description: Date and time the event was submitted.
+      required:
+        - event_type
+        - source_system
+
+    Contact:
+      type: object
+      additionalProperties: true
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+      required:
+        - name
+
+    BrokerOwner:
+      allOf:
+        - $ref: "#/components/schemas/Contact"
+
+    AssignedTo:
+      allOf:
+        - $ref: "#/components/schemas/Contact"
+
+    Borrower:
+      type: object
+      additionalProperties: true
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        full_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        preferred_contact_method:
+          type: string
+          enum:
+            - email
+            - sms
+            - phone
+            - no_preference
+      required:
+        - email
+
+    Business:
+      type: object
+      additionalProperties: true
+      properties:
+        legal_business_name:
+          type: string
+        dba_name:
+          type: string
+        industry:
+          type: string
+        state:
+          type: string
+        city:
+          type: string
+        monthly_revenue:
+          type: number
+          minimum: 0
+        annual_revenue:
+          type: number
+          minimum: 0
+        time_in_business_months:
+          type: integer
+          minimum: 0
+        credit_score_range:
+          type: string
+          description: Use ranges only, not sensitive credit report data.
+          enum:
+            - unknown
+            - under_500
+            - 500_549
+            - 550_599
+            - 600_649
+            - 650_699
+            - 700_plus
+      required:
+        - legal_business_name
+
+    FundingRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        product_type:
+          type: string
+          enum:
+            - working_capital
+            - revenue_based_financing
+            - term_loan
+            - line_of_credit
+            - equipment_financing
+            - invoice_financing
+            - sba_review
+            - other
+        funding_amount_requested:
+          type: number
+          minimum: 0
+        use_of_funds:
+          type: string
+        urgency:
+          type: string
+          enum:
+            - asap
+            - within_7_days
+            - within_30_days
+            - flexible
+            - unknown
+      required:
+        - funding_amount_requested
+
+    HumanReview:
+      type: object
+      additionalProperties: true
+      properties:
+        requires_human_review:
+          type: boolean
+          default: true
+        review_reason:
+          type: string
+        reviewed_by:
+          type: string
+        reviewed_at:
+          type: string
+          format: date-time
+      required:
+        - requires_human_review
+
+    LeadIntakeRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseWebhookEvent"
+        - type: object
+          additionalProperties: true
+          properties:
+            event_type:
+              type: string
+              const: lead_intake
+            lead_source:
+              type: string
+            campaign:
+              type: string
+            deal_id:
+              type: string
+            broker_owner:
+              $ref: "#/components/schemas/BrokerOwner"
+            borrower:
+              $ref: "#/components/schemas/Borrower"
+            business:
+              $ref: "#/components/schemas/Business"
+            funding_request:
+              $ref: "#/components/schemas/FundingRequest"
+            tags:
+              type: array
+              items:
+                type: string
+            review:
+              $ref: "#/components/schemas/HumanReview"
+          required:
+            - borrower
+            - business
+            - funding_request
+            - review
+
+    DocumentChecklistRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseWebhookEvent"
+        - type: object
+          additionalProperties: true
+          properties:
+            event_type:
+              type: string
+              const: document_checklist_update
+            deal_id:
+              type: string
+            borrower:
+              $ref: "#/components/schemas/Borrower"
+            business:
+              $ref: "#/components/schemas/Business"
+            documents:
+              type: array
+              items:
+                $ref: "#/components/schemas/DocumentItem"
+            reminder:
+              $ref: "#/components/schemas/DocumentReminder"
+            review:
+              $ref: "#/components/schemas/HumanReview"
+          required:
+            - deal_id
+            - borrower
+            - documents
+            - review
+
+    DocumentItem:
+      type: object
+      additionalProperties: true
+      properties:
+        document_type:
+          type: string
+          enum:
+            - bank_statements
+            - business_tax_return
+            - personal_tax_return
+            - driver_license
+            - voided_check
+            - debt_schedule
+            - profit_and_loss
+            - balance_sheet
+            - application
+            - other
+        display_name:
+          type: string
+        status:
+          type: string
+          enum:
+            - missing
+            - requested
+            - received
+            - reviewed
+            - rejected_needs_reupload
+            - not_required
+        required:
+          type: boolean
+        file_url:
+          type: string
+          format: uri
+          description: Optional secure file link. Do not include raw document contents.
+        notes:
+          type: string
+      required:
+        - document_type
+        - status
+        - required
+
+    DocumentReminder:
+      type: object
+      additionalProperties: true
+      properties:
+        send_borrower_reminder:
+          type: boolean
+        reminder_channel:
+          type: string
+          enum:
+            - email
+            - sms
+            - both
+            - internal_only
+        reminder_message:
+          type: string
+        next_reminder_at:
+          type: string
+          format: date-time
+
+    DealStatusRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseWebhookEvent"
+        - type: object
+          additionalProperties: true
+          properties:
+            event_type:
+              type: string
+              const: deal_status_update
+            deal_id:
+              type: string
+            previous_status:
+              type: string
+            new_status:
+              type: string
+              enum:
+                - new_lead
+                - contacted
+                - application_sent
+                - application_received
+                - docs_missing
+                - ready_for_broker_review
+                - lender_submission_pending_review
+                - submitted_to_lender
+                - lender_response_received
+                - borrower_follow_up_needed
+                - funded
+                - not_moving_forward
+                - renewal_follow_up
+                - stale
+                - closed
+            status_note:
+              type: string
+            borrower:
+              $ref: "#/components/schemas/Borrower"
+            business:
+              $ref: "#/components/schemas/Business"
+            assigned_to:
+              $ref: "#/components/schemas/AssignedTo"
+            next_task:
+              $ref: "#/components/schemas/Task"
+            review:
+              $ref: "#/components/schemas/HumanReview"
+          required:
+            - deal_id
+            - new_status
+            - review
+
+    Task:
+      type: object
+      additionalProperties: true
+      properties:
+        task_name:
+          type: string
+        due_at:
+          type: string
+          format: date-time
+        priority:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+            - urgent
+        task_owner:
+          $ref: "#/components/schemas/Contact"
+        notes:
+          type: string
+      required:
+        - task_name
+
+    LenderMatchReviewRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseWebhookEvent"
+        - type: object
+          additionalProperties: true
+          properties:
+            event_type:
+              type: string
+              const: lender_match_review
+            deal_id:
+              type: string
+            borrower:
+              $ref: "#/components/schemas/Borrower"
+            business:
+              $ref: "#/components/schemas/Business"
+            funding_request:
+              $ref: "#/components/schemas/FundingRequest"
+            possible_lender_matches:
+              type: array
+              items:
+                $ref: "#/components/schemas/PossibleLenderMatch"
+            review:
+              $ref: "#/components/schemas/HumanReview"
+          required:
+            - deal_id
+            - borrower
+            - business
+            - funding_request
+            - possible_lender_matches
+            - review
+
+    PossibleLenderMatch:
+      type: object
+      additionalProperties: true
+      properties:
+        lender_name:
+          type: string
+        product_type:
+          type: string
+        match_reason:
+          type: string
+          description: Use possible-fit language only. Do not claim approval or eligibility.
+        broker_notes:
+          type: string
+        confidence_level:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+      required:
+        - lender_name
+        - match_reason
+        - confidence_level
+
+    ReferralPartnerEventRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseWebhookEvent"
+        - type: object
+          additionalProperties: true
+          properties:
+            event_type:
+              type: string
+              const: referral_partner_event
+            deal_id:
+              type: string
+            referral_partner:
+              $ref: "#/components/schemas/ReferralPartner"
+            borrower:
+              $ref: "#/components/schemas/Borrower"
+            business:
+              $ref: "#/components/schemas/Business"
+            partner_update:
+              $ref: "#/components/schemas/PartnerUpdate"
+            review:
+              $ref: "#/components/schemas/HumanReview"
+          required:
+            - referral_partner
+            - partner_update
+            - review
+
+    ReferralPartner:
+      type: object
+      additionalProperties: true
+      properties:
+        partner_id:
+          type: string
+        name:
+          type: string
+        contact_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+      required:
+        - name
+
+    PartnerUpdate:
+      type: object
+      additionalProperties: true
+      properties:
+        update_type:
+          type: string
+          enum:
+            - new_referral_received
+            - status_update
+            - docs_missing
+            - ready_for_review
+            - funded_notice
+            - renewal_notice
+            - commission_tracking
+            - general_update
+        message:
+          type: string
+        send_partner_notification:
+          type: boolean
+      required:
+        - update_type
+        - message
+
+    PipelineSummaryRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseWebhookEvent"
+        - type: object
+          additionalProperties: true
+          properties:
+            event_type:
+              type: string
+              const: pipeline_summary
+            summary_period:
+              $ref: "#/components/schemas/SummaryPeriod"
+            broker_owner:
+              $ref: "#/components/schemas/BrokerOwner"
+            summary:
+              $ref: "#/components/schemas/PipelineSummary"
+            requested_actions:
+              type: array
+              items:
+                type: string
+          required:
+            - summary_period
+            - summary
+
+    SummaryPeriod:
+      type: object
+      additionalProperties: false
+      properties:
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+      required:
+        - start_date
+        - end_date
+
+    PipelineSummary:
+      type: object
+      additionalProperties: true
+      properties:
+        total_new_leads:
+          type: integer
+          minimum: 0
+        ready_for_broker_review:
+          type: integer
+          minimum: 0
+        docs_missing:
+          type: integer
+          minimum: 0
+        lender_submission_pending_review:
+          type: integer
+          minimum: 0
+        stale_leads_over_7_days:
+          type: integer
+          minimum: 0
+        funded_today:
+          type: integer
+          minimum: 0
+        notes:
+          type: string

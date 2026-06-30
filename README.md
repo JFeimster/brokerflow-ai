@@ -1,193 +1,62 @@
-# BrokerFlow AI
-
-**The operating library and landing experience behind the Loan Broker Automation Architect GPT.**
-
-BrokerFlow AI is a structured repository plus a lightweight web front-end (deployed on Vercel at `brokerflow-ai.vercel.app`) that powers a Custom GPT for small-business loan brokers. It captures borrower intake, routes documents, fires internal alerts, and keeps every funding decision in human hands.
-
----
-
-## 🎯 What This Is
-
-This repo serves two purposes:
-
-1. **An operating library** — actions, schemas, workflows, SOPs, templates, and knowledge files that define how the Loan Broker Automation Architect GPT behaves and integrates with your tools.
-2. **A web front-end** — a simple landing page (`index.html`, `styles.css`, `script.js`) that introduces the GPT, explains what it does, and links users to it.
-
----
-
-## 🧭 Core Principle
-
-> The GPT can **recommend, draft, prepare, route, and log** — but it must **never approve, decline, qualify, guarantee, underwrite, or fund** a borrower.
-
-Every funding decision routes to a human review step. This rule governs the entire repo.
-
----
-
-## 🗂️ Complete Repository Structure
-
-    brokerflow-ai/
-    │
-    ├── README.md                                    ← you are here
-    ├── agents.md                                    ← GPT instructions / agent definition (Markdown)
-    ├── agents.html                                  ← human-readable agent overview (web)
-    ├── package.json                                 ← project metadata and scripts
-    ├── index.html                                   ← landing page
-    ├── styles.css                                   ← landing page styles
-    ├── script.js                                    ← landing page interactivity
-    │
-    ├── actions/                                     ← Custom GPT Actions, organized by auth type
-    │   ├── README.md
-    │   ├── actions-authentication-decision-guide.md
-    │   │
-    │   ├── no-auth/                                 ← public endpoints, no credentials
-    │   │   ├── README.md
-    │   │   ├── actions-no-auth-overview.md
-    │   │   ├── actions-no-auth-webhook-patterns.md
-    │   │   ├── actions-no-auth-borrower-intake-actions.md
-    │   │   ├── actions-no-auth-document-actions.md
-    │   │   ├── actions-no-auth-internal-alert-actions.md
-    │   │   ├── actions-no-auth-followup-actions.md
-    │   │   ├── actions-no-auth-calculator-actions.md
-    │   │   ├── actions-no-auth-schema-examples.md
-    │   │   ├── actions-no-auth-testing-checklist.md
-    │   │   └── actions-no-auth-risk-guardrails.md
-    │   │
-    │   ├── api-key/                                 ← Basic / Bearer / Custom header auth
-    │   │   └── README.md
-    │   │
-    │   └── oauth/                                   ← user-authorized access
-    │       └── README.md
-    │
-    ├── schemas/                                     ← reusable OpenAPI schema templates
-    │   └── README.md
-    │
-    ├── workflows/                                   ← n8n / Zapier / Make automations
-    │   └── README.md
-    │
-    ├── sops/                                        ← standard operating procedures
-    │   └── README.md
-    │
-    ├── templates/                                   ← message and record templates
-    │   └── README.md
-    │
-    └── knowledge/                                   ← GPT knowledge files
-        └── README.md
-
----
-
-## 📁 Folder Reference
-
-| Folder | Purpose | Entry Point |
-|--------|---------|-------------|
-| `actions/` | Every Custom GPT Action, grouped by authentication type | `actions/README.md` |
-| `actions/no-auth/` | Public-webhook Actions (intake, alerts, docs, follow-ups, calculators) | `actions/no-auth/README.md` |
-| `actions/api-key/` | Single-backend Actions using a shared API key | `actions/api-key/README.md` |
-| `actions/oauth/` | Per-user authorized Actions (Google, HubSpot, etc.) | `actions/oauth/README.md` |
-| `schemas/` | Reusable OpenAPI 3.1.0 schema templates | `schemas/README.md` |
-| `workflows/` | Automations that run after an Action fires | `workflows/README.md` |
-| `sops/` | Human playbooks, especially the review gates | `sops/README.md` |
-| `templates/` | Pre-approved messages and record layouts | `templates/README.md` |
-| `knowledge/` | Reference files uploaded to the GPT | `knowledge/README.md` |
-
----
-
-## 🌐 Front-End Files
-
-| File | Role |
-|------|------|
-| `index.html` | Landing page markup — hero, features, how-it-works, CTA to the GPT |
-| `styles.css` | Brand styling, layout, responsive design |
-| `script.js` | Interactivity — nav, smooth scroll, FAQ toggles, CTA tracking |
-| `agents.html` | Human-readable overview of the GPT (what it does and its guardrails) |
-| `agents.md` | The GPT's instruction set / agent definition |
-| `package.json` | Metadata, dependencies, and dev/build scripts |
-
----
-
-## 🚀 Quick Start
-
-1. **Clone the repo**
-
-       git clone https://github.com/your-org/brokerflow-ai.git
-       cd brokerflow-ai
-
-2. **Install (front-end tooling, optional)**
-
-       npm install
-
-3. **Run locally**
-
-       npm run dev
-
-4. **Deploy** — push to your connected Vercel project, or:
-
-       npm run build
-
----
-
-## 🤖 The GPT
-
-The Loan Broker Automation Architect GPT is configured from `agents.md`:
-
-- **Role:** front-end assistant for borrower intake, document collection, follow-ups, and routing.
-- **Actions:** defined in `/actions`, with schemas in `/schemas`.
-- **Knowledge:** uploaded from `/knowledge`.
-- **Behavior:** governed by `agents.md` and the safety contract in `actions/no-auth/actions-no-auth-risk-guardrails.md`.
-
----
-
-## 🔌 How the Pieces Fit
-
-    User ↔ Custom GPT (agents.md + knowledge/)
-            │
-            ▼
-       Actions (/actions + /schemas)
-            │  webhook
-            ▼
-       Workflows (/workflows: n8n / Zapier / Make)
-            │
-            ▼
-       CRM + Alerts + Reminders
-            │
-            ▼
-       Human Review (/sops)  ← all funding decisions
-
-Templates (`/templates`) supply the wording sent at every borrower-facing step.
-
----
-
-## 🛡️ Safety & Compliance
-
-- No approvals, declines, terms, or guarantees without a human.
-- No raw sensitive documents in payloads — secure links and metadata only.
-- Possible-fit language only in borrower-facing content.
-- Full safety contract: `actions/no-auth/actions-no-auth-risk-guardrails.md`.
-
----
-
-## 🧩 Tech Stack
-
-- **Front-end:** Vanilla HTML / CSS / JS (no framework required)
-- **Hosting:** Vercel
-- **Automation:** n8n, Zapier, or Make (webhook-driven)
-- **GPT:** OpenAI Custom GPT with Actions
-
----
-
-## 📄 License
-
-Proprietary — © Moonshine Capital / Distilled Funding. All rights reserved unless otherwise noted.
-
----
-
-## 🔗 Related Docs
-
-- Agent definition → `agents.md`
-- Actions library → `actions/README.md`
-- Workflows → `workflows/README.md`
-- SOPs → `sops/README.md`
-- Knowledge → `knowledge/README.md`
-
----
-
-*BrokerFlow AI — the operating library behind the Loan Broker Automation Architect GPT.*
+# BrokerFlow AI — Site
+This folder holds the marketing + documentation site for **BrokerFlow AI**, the public face of the Loan Broker Automation Architect GPT. It is a content-first site: every page is authored in Markdown under `pages/`, then rendered by the front-end in the repo root (`index.html`, `styles.css`, `script.js`) and deployed to **brokerflow-ai.vercel.app**.
+> Compliance note: BrokerFlow AI **recommends, drafts, prepares, routes, and logs**. It never approves, declines, qualifies, guarantees, underwrites, or funds. All site copy uses review-safe language ("potential fit", "ready for broker review", "possible lender match", "based on information provided") and never says "approved", "guaranteed", "qualified", or "eligible".
+## Folder structure
+```
+site/
+  README.md            This file — site overview, design system, and authoring rules
+  pages/
+    home.md            Landing page: hero, value prop, how it works, demo, CTA
+    agents.md          The GPT agent: role, guardrails, what it does and won't do
+    actions.md         Connected actions: CRM sync, pipeline, documents, tasks
+    knowledge.md       Knowledge base: how BrokerFlow reasons and what it knows
+    workflows.md       Automations: n8n, Zapier, Make recipes and triggers
+```
+## Audience
+- Independent loan brokers and small brokerages who want an AI operations layer.
+- Funding shops (e.g. Moonshine Capital / Distilled Funding) standardizing intake and CRM hygiene.
+- Partners evaluating whether BrokerFlow fits their lender-submission process.
+## Design system
+The site uses a premium dark AI/SaaS aesthetic. Page copy here is layout-aware: each page maps to the standard section flow and references these tokens so the front-end stays consistent.
+### Color tokens
+| Token | Value | Use |
+| --- | --- | --- |
+| bg | `#070A12` | Page background |
+| surface | `#101827` | Cards, panels |
+| surface2 | `#151F32` | Nested panels, code, table rows |
+| text | `#F8FAFC` | Primary text |
+| muted | `#94A3B8` | Secondary text, captions |
+| primary | `#7C3AED` | Primary buttons, key accents |
+| secondary | `#06B6D4` | Links, secondary accents |
+| hot | `#F97316` | Highlights, badges |
+| success | `#22C55E` | Positive states, checks |
+| border | `rgba(148,163,184,0.18)` | Hairline borders |
+### Standard landing flow
+Every page composes from this section order (omit sections that do not apply):
+1. Hero — one-line promise + primary CTA
+2. Built For — who it is for
+3. What It Does — core capabilities
+4. How It Works — step sequence
+5. Demo / Embed — interactive preview or video
+6. Use Cases — concrete scenarios
+7. Pricing / Access — how to get it
+8. Proof — real results only (no fabricated metrics or logos)
+9. FAQ — common questions
+10. Footer — links, legal, compliance line
+## Authoring rules
+- Mobile-first: write short paragraphs and scannable lists; assume narrow viewports first.
+- Real proof only: never invent testimonials, client names, metrics, or partner logos.
+- Review-safe language everywhere: no approval/guarantee/qualification claims.
+- Front matter (optional) per page: `title`, `description`, `slug`, `order` for SEO + nav.
+- Keep one `# H1` per page (the page title); use `##` for sections and `###` for sub-sections.
+- Link between pages with relative paths, e.g. `[Actions](./actions.md)`.
+## SEO
+- Each page should declare a `title` (<= 60 chars) and `description` (<= 155 chars).
+- Use descriptive section headings; they become the page outline and anchor links.
+- Canonical domain: `https://brokerflow-ai.vercel.app`.
+## Build & deploy
+- Pages are Markdown; the root front-end renders them. No build step is required for content edits.
+- Preview locally by opening `index.html`, or run the dev flow described in the root `README.md`.
+- Deploys are handled by Vercel on push to the default branch.
+## License
+Proprietary / UNLICENSED. © Moonshine Capital / Distilled Funding. Internal and partner use only.

@@ -3,7 +3,7 @@
   "version": 2,
   "outputDirectory": ".",
   "git": {
-    "deploymentEnabled": true
+    "deploymentEnabled": false
   },
   "cleanUrls": true,
   "trailingSlash": false,

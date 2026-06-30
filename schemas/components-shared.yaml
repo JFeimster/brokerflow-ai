@@ -1,0 +1,561 @@
+openapi: 3.1.0
+# =====================================================================
+# SHARED COMPONENT LIBRARY - REFERENCE ONLY
+# ---------------------------------------------------------------------
+# This file is NOT meant to be imported into the GPT Actions builder as-is.
+# GPT Actions requires each action schema to be self-contained, so copy the
+# pieces you need from here into openapi-no-auth-webhooks.yaml,
+# openapi-api-key-bearer.yaml, openapi-api-key-custom-header.yaml, or
+# openapi-oauth-default-post.yaml. This is the single source of truth for
+# enums, entities, request wrappers, responses, and security schemes.
+#
+# Core principle: the GPT may recommend, draft, prepare, route, and log, but
+# must never approve, decline, qualify, guarantee, underwrite, or fund.
+# Decision-bearing work always routes to human review.
+# =====================================================================
+info:
+  title: BrokerFlow AI Shared Component Library
+  version: 1.0.0
+  description: >
+    Canonical, reusable OpenAPI components shared across every BrokerFlow AI
+    action schema. Reference only - copy components into a self-contained
+    schema file before importing into the GPT builder.
+paths: {}
+components:
+  # ===== Security schemes (copy ONE per action file) =====
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: >
+        API Key tier, Bearer. GPT Builder: Authentication > API Key > Bearer.
+        Sent as: Authorization: Bearer <CRM_API_KEY>.
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: >
+        API Key tier, custom header. GPT Builder: Authentication > API Key >
+        Custom, Custom Header Name X-Api-Key. Sent as: X-Api-Key: <CRM_API_KEY>.
+    OAuth2:
+      type: oauth2
+      description: >
+        OAuth tier. GPT Builder: Authentication > OAuth, Token Exchange Method
+        Default (POST request). Replace placeholder URLs with your provider.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.your-crm.example.com/oauth/authorize
+          tokenUrl: https://auth.your-crm.example.com/oauth/token
+          refreshUrl: https://auth.your-crm.example.com/oauth/token
+          scopes:
+            contacts.write: Create and update borrower and contact records.
+            deals.read: Read deal status.
+            deals.write: Create, update, and advance deals to review-safe stages.
+            tasks.write: Create human follow-up tasks.
+            documents.write: Record missing-document requests.
+  schemas:
+    # ===== Enums =====
+    PipelineStage:
+      type: string
+      description: Full set of pipeline stages (used in read responses).
+      enum:
+        - new_lead
+        - contacted
+        - application_sent
+        - application_received
+        - docs_missing
+        - ready_for_broker_review
+        - lender_submission_pending_review
+        - submitted_to_lender
+        - lender_response_received
+        - borrower_follow_up_needed
+        - funded
+        - not_moving_forward
+        - renewal_follow_up
+        - stale
+        - closed
+    ReviewSafeStage:
+      type: string
+      description: >
+        Stages the GPT may set. Decision-bearing stages (submitted_to_lender,
+        funded, not_moving_forward, closed, lender_response_received) are
+        intentionally excluded and must be set by a human.
+      enum:
+        - new_lead
+        - contacted
+        - application_sent
+        - application_received
+        - docs_missing
+        - ready_for_broker_review
+        - lender_submission_pending_review
+        - borrower_follow_up_needed
+        - renewal_follow_up
+        - stale
+    ProductType:
+      type: string
+      enum:
+        - working_capital
+        - revenue_based_financing
+        - term_loan
+        - line_of_credit
+        - equipment_financing
+        - invoice_financing
+        - sba_review
+        - other
+    DocumentType:
+      type: string
+      enum:
+        - bank_statements
+        - business_tax_return
+        - personal_tax_return
+        - driver_license
+        - voided_check
+        - debt_schedule
+        - profit_and_loss
+        - balance_sheet
+        - application
+        - other
+    # ===== Webhook envelope (no-auth tier) =====
+    BaseWebhookEvent:
+      type: object
+      additionalProperties: true
+      properties:
+        event_type:
+          type: string
+        event_id:
+          type: string
+        source_system:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+      required:
+        - event_type
+        - event_id
+    WebhookAcceptedResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - received
+            - accepted
+            - queued
+            - processed
+        message:
+          type: string
+        event_id:
+          type: string
+      required:
+        - status
+    HealthCheckResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        time:
+          type: string
+          format: date-time
+      required:
+        - status
+    # ===== Entities =====
+    Contact:
+      type: object
+      additionalProperties: true
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        business_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        source:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+        - email
+    Borrower:
+      type: object
+      additionalProperties: true
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+      required:
+        - first_name
+        - last_name
+    Business:
+      type: object
+      additionalProperties: true
+      properties:
+        legal_name:
+          type: string
+        dba:
+          type: string
+        ein:
+          type: string
+        industry:
+          type: string
+        time_in_business_months:
+          type: integer
+          minimum: 0
+        monthly_revenue:
+          type: number
+          minimum: 0
+        state:
+          type: string
+      required:
+        - legal_name
+    FundingRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        amount_requested:
+          type: number
+          minimum: 0
+        product_type:
+          $ref: "#/components/schemas/ProductType"
+        use_of_funds:
+          type: string
+      required:
+        - amount_requested
+    HumanReview:
+      type: object
+      additionalProperties: true
+      properties:
+        required:
+          type: boolean
+          default: true
+        reason:
+          type: string
+        assigned_to_email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum:
+            - pending
+            - in_review
+            - completed
+      required:
+        - required
+    Deal:
+      type: object
+      additionalProperties: true
+      properties:
+        deal_id:
+          type: string
+        contact_id:
+          type: string
+        amount_requested:
+          type: number
+          minimum: 0
+        product_interest:
+          type: string
+        stage:
+          $ref: "#/components/schemas/ReviewSafeStage"
+        human_review_required:
+          type: boolean
+          default: true
+        summary:
+          type: string
+      required:
+        - contact_id
+    Task:
+      type: object
+      additionalProperties: true
+      properties:
+        task_id:
+          type: string
+        title:
+          type: string
+        owner_email:
+          type: string
+          format: email
+        due_at:
+          type: string
+          format: date-time
+        priority:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+            - urgent
+        status:
+          type: string
+          enum:
+            - open
+            - in_progress
+            - done
+      required:
+        - title
+    DocumentItem:
+      type: object
+      additionalProperties: true
+      properties:
+        type:
+          $ref: "#/components/schemas/DocumentType"
+        status:
+          type: string
+          enum:
+            - requested
+            - received
+            - verified
+            - rejected
+        note:
+          type: string
+      required:
+        - type
+    DocumentReminder:
+      type: object
+      additionalProperties: true
+      properties:
+        deal_id:
+          type: string
+        missing:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentType"
+        last_reminded_at:
+          type: string
+          format: date-time
+        channel:
+          type: string
+          enum:
+            - email
+            - sms
+      required:
+        - deal_id
+        - missing
+    PossibleLenderMatch:
+      type: object
+      additionalProperties: true
+      properties:
+        lender_name:
+          type: string
+        product_type:
+          $ref: "#/components/schemas/ProductType"
+        confidence:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+        rationale:
+          type: string
+        requires_human_review:
+          type: boolean
+          default: true
+      required:
+        - lender_name
+    # ===== Request wrappers (API key / OAuth tiers) =====
+    ContactUpsertRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        match_on:
+          type: string
+          enum:
+            - email
+            - phone
+            - contact_id
+          default: email
+        contact:
+          $ref: "#/components/schemas/Contact"
+      required:
+        - contact
+    DealUpsertRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        match_on:
+          type: string
+          enum:
+            - deal_id
+            - contact_id
+          default: deal_id
+        deal:
+          $ref: "#/components/schemas/Deal"
+      required:
+        - deal
+    StageChangeRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        target_stage:
+          $ref: "#/components/schemas/ReviewSafeStage"
+        reason:
+          type: string
+        human_review_required:
+          type: boolean
+          default: true
+      required:
+        - target_stage
+    NoteRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+            - conversation_summary
+            - broker_note
+            - system_note
+            - status_note
+        body:
+          type: string
+        author:
+          type: string
+          default: brokerflow-ai
+      required:
+        - body
+    TaskRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        deal_id:
+          type: string
+        title:
+          type: string
+        owner_email:
+          type: string
+          format: email
+        due_at:
+          type: string
+          format: date-time
+        priority:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+            - urgent
+        human_review_required:
+          type: boolean
+          default: true
+      required:
+        - title
+    DocumentRequestRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        missing:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentType"
+        note:
+          type: string
+        set_stage:
+          $ref: "#/components/schemas/ReviewSafeStage"
+      required:
+        - missing
+    # ===== Responses =====
+    RecordWriteResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - received
+            - accepted
+            - queued
+            - processed
+        message:
+          type: string
+        record_id:
+          type: string
+        deal_id:
+          type: string
+        stage:
+          type: string
+        pending_review:
+          type: boolean
+      required:
+        - status
+    DealStatusResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - processed
+        deal_id:
+          type: string
+        stage:
+          $ref: "#/components/schemas/PipelineStage"
+        amount_requested:
+          type: number
+        owner_email:
+          type: string
+          format: email
+        open_tasks:
+          type: integer
+          minimum: 0
+      required:
+        - deal_id
+        - stage
+    SearchResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - processed
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            properties:
+              contact_id:
+                type: string
+              deal_id:
+                type: string
+              name:
+                type: string
+      required:
+        - results
+    ErrorResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum:
+            - error
+            - invalid_request
+            - failed
+            - unauthorized
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+        - status
+        - message

@@ -1,7 +1,7 @@
 {
   "id": "brokerflow-action-expansion-registry",
-  "version": "1.4.0",
-  "updated_for_batch": "deal-desk-broker-ops",
+  "version": "1.5.0",
+  "updated_for_batch": "revenue-agency",
   "base_url": "https://brokerflow-ai.vercel.app",
   "auth_type": "none",
   "batches": [
@@ -9,18 +9,19 @@
     { "batch_id": "lender-matching-routing", "status": "generated", "schema_file": "schemas/no-auth-lender-matching-routing.schema.yaml", "docs_file": "actions/no-auth/lender-matching-routing-actions.md", "testing_checklist": "docs/lender-matching-routing-testing-checklist.md" },
     { "batch_id": "document-checklist", "status": "generated", "schema_file": "schemas/no-auth-document-checklist.schema.yaml", "docs_file": "actions/no-auth/document-checklist-actions.md", "testing_checklist": "docs/document-checklist-testing-checklist.md" },
     { "batch_id": "followup-workflow", "status": "generated", "schema_file": "schemas/no-auth-followup-workflow.schema.yaml", "docs_file": "actions/no-auth/followup-workflow-actions.md", "testing_checklist": "docs/followup-workflow-testing-checklist.md" },
+    { "batch_id": "deal-desk-broker-ops", "status": "generated", "schema_file": "schemas/no-auth-deal-desk-broker-ops.schema.yaml", "docs_file": "actions/no-auth/deal-desk-broker-ops-actions.md", "testing_checklist": "docs/deal-desk-broker-ops-testing-checklist.md" },
     {
-      "batch_id": "deal-desk-broker-ops",
+      "batch_id": "revenue-agency",
       "status": "generated",
-      "schema_file": "schemas/no-auth-deal-desk-broker-ops.schema.yaml",
-      "docs_file": "actions/no-auth/deal-desk-broker-ops-actions.md",
-      "testing_checklist": "docs/deal-desk-broker-ops-testing-checklist.md",
+      "schema_file": "schemas/no-auth-revenue-agency.schema.yaml",
+      "docs_file": "actions/no-auth/revenue-agency-actions.md",
+      "testing_checklist": "docs/revenue-agency-testing-checklist.md",
       "actions": [
-        { "action_id": "ops_021", "operationId": "createDealDeskSummary", "endpoint_path": "/api/no-auth/create-internal-summary", "method": "POST", "action_type": "create_deal_desk_summary", "launch_priority": "P1" },
-        { "action_id": "ops_022", "operationId": "generateBrokerCallPrep", "endpoint_path": "/api/no-auth/generate-broker-call-prep", "method": "POST", "action_type": "generate_broker_call_prep", "launch_priority": "P1" },
-        { "action_id": "ops_023", "operationId": "createInternalBrokerTask", "endpoint_path": "/api/no-auth/create-internal-broker-task", "method": "POST", "action_type": "create_internal_broker_task", "launch_priority": "P1" },
-        { "action_id": "ops_024", "operationId": "generateLenderSubmissionNotes", "endpoint_path": "/api/no-auth/generate-lender-submission-notes", "method": "POST", "action_type": "generate_lender_submission_notes", "launch_priority": "P1" },
-        { "action_id": "ops_025", "operationId": "createFundingScenarioMemo", "endpoint_path": "/api/no-auth/create-funding-scenario-memo", "method": "POST", "action_type": "create_funding_scenario_memo", "launch_priority": "P1" }
+        { "action_id": "revenue_026", "operationId": "packageAutomationOffer", "endpoint_path": "/api/no-auth/package-automation-offer", "method": "POST", "action_type": "package_automation_offer", "launch_priority": "P1" },
+        { "action_id": "revenue_027", "operationId": "generateBrokerAutomationAudit", "endpoint_path": "/api/no-auth/generate-automation-audit", "method": "POST", "action_type": "generate_broker_automation_audit", "launch_priority": "P1" },
+        { "action_id": "revenue_028", "operationId": "createAgencyClientRoadmap", "endpoint_path": "/api/no-auth/create-agency-client-roadmap", "method": "POST", "action_type": "create_agency_client_roadmap", "launch_priority": "P1" },
+        { "action_id": "revenue_029", "operationId": "recommendPaidServicePath", "endpoint_path": "/api/no-auth/recommend-paid-service-path", "method": "POST", "action_type": "recommend_paid_service_path", "launch_priority": "P1" },
+        { "action_id": "revenue_030", "operationId": "createImplementationScope", "endpoint_path": "/api/no-auth/create-project-scope", "method": "POST", "action_type": "create_implementation_scope", "launch_priority": "P1" }
       ]
     }
   ]

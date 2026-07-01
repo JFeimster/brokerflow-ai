@@ -1,0 +1,75 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow AI Deal Desk + Broker Ops Actions
+  version: 1.0.0
+  description: No-auth GPT Actions for internal summaries, call prep, internal tasks, lender notes, and funding scenario memos.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+paths:
+  /api/no-auth/create-internal-summary:
+    post:
+      operationId: createDealDeskSummary
+      summary: Create deal desk summary
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DealDeskRequest' } } } }
+      responses: { '200': { description: Summary created. } }
+  /api/no-auth/generate-broker-call-prep:
+    post:
+      operationId: generateBrokerCallPrep
+      summary: Generate broker call prep
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DealDeskRequest' } } } }
+      responses: { '200': { description: Call prep generated. } }
+  /api/no-auth/create-internal-broker-task:
+    post:
+      operationId: createInternalBrokerTask
+      summary: Create internal broker task
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DealDeskRequest' } } } }
+      responses: { '200': { description: Task created. } }
+  /api/no-auth/generate-lender-submission-notes:
+    post:
+      operationId: generateLenderSubmissionNotes
+      summary: Generate lender submission notes
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DealDeskRequest' } } } }
+      responses: { '200': { description: Notes generated. } }
+  /api/no-auth/create-funding-scenario-memo:
+    post:
+      operationId: createFundingScenarioMemo
+      summary: Create funding scenario memo
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DealDeskRequest' } } } }
+      responses: { '200': { description: Memo created. } }
+components:
+  schemas:
+    DealDeskRequest:
+      type: object
+      required: [source, action_type]
+      additionalProperties: false
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type:
+          type: string
+          enum: [create_deal_desk_summary, generate_broker_call_prep, create_internal_broker_task, generate_lender_submission_notes, create_funding_scenario_memo]
+        lead_id: { type: string }
+        scenario_id: { type: string }
+        business_name: { type: string }
+        contact_name: { type: string }
+        borrower_name: { type: string }
+        borrower_type: { type: string }
+        primary_route: { type: string }
+        loan_purpose: { type: string }
+        requested_amount: { type: number }
+        state: { type: string }
+        monthly_revenue: { type: number }
+        time_in_business_months: { type: integer }
+        credit_score_range: { type: string }
+        fit_tier: { type: string }
+        fit_score: { type: number }
+        missing_information:
+          type: array
+          items: { type: string }
+        missing_documents:
+          type: array
+          items: { type: string }
+        risk_flags:
+          type: array
+          items: { type: string }
+        notes: { type: string }
+        shared_secret: { type: string }

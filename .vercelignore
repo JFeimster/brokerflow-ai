@@ -1,0 +1,12 @@
+api/no-auth/qualify-funding-lead.js
+api/no-auth/score-borrower-readiness.js
+api/no-auth/detect-missing-funding-info.js
+api/no-auth/classify-funding-scenario.js
+api/no-auth/normalize-broker-lead.js
+api/no-auth/rank-lender-options.js
+api/no-auth/generate-lender-shortlist.js
+api/no-auth/flag-manual-review-required.js
+api/no-auth/*documents.js
+api/no-auth/generate-document-checklist.js
+api/no-auth/*submission-packet.js
+api/no-auth/summarize-funding-file.js

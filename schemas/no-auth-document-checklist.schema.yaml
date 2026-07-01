@@ -1,0 +1,100 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow AI Document + Checklist Actions
+  version: 1.0.0
+  description: No-auth BrokerFlow GPT Actions for document checklists, document audits, missing document detection, borrower packet assembly, and funding-file summaries.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+paths:
+  /api/no-auth/generate-document-checklist:
+    post:
+      operationId: generateDocumentChecklist
+      summary: Generate document checklist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DocumentRequest' }
+      responses:
+        '200': { description: Checklist generated. }
+  /api/no-auth/audit-submitted-documents:
+    post:
+      operationId: auditSubmittedDocuments
+      summary: Audit submitted documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DocumentRequest' }
+      responses:
+        '200': { description: Submitted documents audited. }
+  /api/no-auth/detect-missing-documents:
+    post:
+      operationId: detectMissingDocuments
+      summary: Detect missing documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DocumentRequest' }
+      responses:
+        '200': { description: Missing documents detected. }
+  /api/no-auth/create-borrower-submission-packet:
+    post:
+      operationId: createBorrowerSubmissionPacket
+      summary: Create borrower submission packet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DocumentRequest' }
+      responses:
+        '200': { description: Borrower packet created for internal review. }
+  /api/no-auth/summarize-funding-file:
+    post:
+      operationId: summarizeFundingFile
+      summary: Summarize funding file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DocumentRequest' }
+      responses:
+        '200': { description: Funding file summarized. }
+components:
+  schemas:
+    SubmittedDocument:
+      type: object
+      properties:
+        document_type: { type: string }
+        status: { type: string }
+        filename: { type: string }
+        notes: { type: string }
+    DocumentRequest:
+      type: object
+      required: [source, action_type]
+      additionalProperties: false
+      properties:
+        source:
+          type: string
+          enum: [custom_gpt, website, internal_tool, webhook_test]
+        action_type:
+          type: string
+          enum: [generate_document_checklist, audit_submitted_documents, detect_missing_documents, create_borrower_submission_packet, summarize_funding_file]
+        scenario_id: { type: string }
+        borrower_type: { type: string }
+        loan_purpose: { type: string }
+        primary_route: { type: string }
+        scenario_type: { type: string }
+        requested_amount: { type: number }
+        state: { type: string }
+        monthly_revenue: { type: number }
+        annual_revenue: { type: number }
+        time_in_business_months: { type: integer }
+        credit_score_range: { type: string }
+        urgency: { type: string }
+        submitted_documents:
+          type: array
+          items: { $ref: '#/components/schemas/SubmittedDocument' }
+        notes: { type: string }
+        shared_secret: { type: string }

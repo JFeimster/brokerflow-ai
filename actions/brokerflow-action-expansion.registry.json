@@ -1,44 +1,27 @@
 {
   "id": "brokerflow-action-expansion-registry",
-  "version": "1.3.0",
-  "updated_for_batch": "followup-workflow",
+  "version": "1.4.0",
+  "updated_for_batch": "deal-desk-broker-ops",
   "base_url": "https://brokerflow-ai.vercel.app",
   "auth_type": "none",
   "batches": [
+    { "batch_id": "lead-intake-qualification", "status": "generated", "schema_file": "schemas/no-auth-lead-intake-qualification.schema.yaml", "docs_file": "actions/no-auth/lead-intake-qualification-actions.md", "testing_checklist": "docs/lead-intake-qualification-testing-checklist.md" },
+    { "batch_id": "lender-matching-routing", "status": "generated", "schema_file": "schemas/no-auth-lender-matching-routing.schema.yaml", "docs_file": "actions/no-auth/lender-matching-routing-actions.md", "testing_checklist": "docs/lender-matching-routing-testing-checklist.md" },
+    { "batch_id": "document-checklist", "status": "generated", "schema_file": "schemas/no-auth-document-checklist.schema.yaml", "docs_file": "actions/no-auth/document-checklist-actions.md", "testing_checklist": "docs/document-checklist-testing-checklist.md" },
+    { "batch_id": "followup-workflow", "status": "generated", "schema_file": "schemas/no-auth-followup-workflow.schema.yaml", "docs_file": "actions/no-auth/followup-workflow-actions.md", "testing_checklist": "docs/followup-workflow-testing-checklist.md", "router_file": "api/no-auth/followup-workflow-actions.js" },
     {
-      "batch_id": "lead-intake-qualification",
+      "batch_id": "deal-desk-broker-ops",
       "status": "generated",
-      "schema_file": "schemas/no-auth-lead-intake-qualification.schema.yaml",
-      "docs_file": "actions/no-auth/lead-intake-qualification-actions.md",
-      "testing_checklist": "docs/lead-intake-qualification-testing-checklist.md"
-    },
-    {
-      "batch_id": "lender-matching-routing",
-      "status": "generated",
-      "schema_file": "schemas/no-auth-lender-matching-routing.schema.yaml",
-      "docs_file": "actions/no-auth/lender-matching-routing-actions.md",
-      "testing_checklist": "docs/lender-matching-routing-testing-checklist.md"
-    },
-    {
-      "batch_id": "document-checklist",
-      "status": "generated",
-      "schema_file": "schemas/no-auth-document-checklist.schema.yaml",
-      "docs_file": "actions/no-auth/document-checklist-actions.md",
-      "testing_checklist": "docs/document-checklist-testing-checklist.md"
-    },
-    {
-      "batch_id": "followup-workflow",
-      "status": "generated",
-      "schema_file": "schemas/no-auth-followup-workflow.schema.yaml",
-      "docs_file": "actions/no-auth/followup-workflow-actions.md",
-      "testing_checklist": "docs/followup-workflow-testing-checklist.md",
-      "router_file": "api/no-auth/followup-workflow-actions.js",
+      "schema_file": "schemas/no-auth-deal-desk-broker-ops.schema.yaml",
+      "docs_file": "actions/no-auth/deal-desk-broker-ops-actions.md",
+      "testing_checklist": "docs/deal-desk-broker-ops-testing-checklist.md",
+      "router_file": "api/no-auth/ops-router.js",
       "actions": [
-        { "action_id": "workflow_016", "operationId": "createBrokerFollowUpPlan", "endpoint_path": "/api/no-auth/create-broker-follow-up-plan", "method": "POST", "action_type": "create_broker_follow_up_plan", "launch_priority": "P1" },
-        { "action_id": "workflow_017", "operationId": "generateBorrowerFollowUpMessage", "endpoint_path": "/api/no-auth/generate-borrower-follow-up-message", "method": "POST", "action_type": "generate_borrower_follow_up_message", "launch_priority": "P1" },
-        { "action_id": "workflow_018", "operationId": "createStalledDealRecoveryPlan", "endpoint_path": "/api/no-auth/create-stalled-deal-recovery-plan", "method": "POST", "action_type": "create_stalled_deal_recovery_plan", "launch_priority": "P1" },
-        { "action_id": "workflow_019", "operationId": "createDeclinedLeadReactivationPlan", "endpoint_path": "/api/no-auth/create-declined-lead-reactivation-plan", "method": "POST", "action_type": "create_declined_lead_reactivation_plan", "launch_priority": "P1" },
-        { "action_id": "workflow_020", "operationId": "generateReferralPartnerFollowUp", "endpoint_path": "/api/no-auth/generate-referral-partner-follow-up", "method": "POST", "action_type": "generate_referral_partner_follow_up", "launch_priority": "P1" }
+        { "action_id": "ops_021", "operationId": "createDealDeskSummary", "endpoint_path": "/api/no-auth/create-internal-summary", "method": "POST", "action_type": "create_deal_desk_summary", "launch_priority": "P1" },
+        { "action_id": "ops_022", "operationId": "generateBrokerCallPrep", "endpoint_path": "/api/no-auth/generate-broker-call-prep", "method": "POST", "action_type": "generate_broker_call_prep", "launch_priority": "P1" },
+        { "action_id": "ops_023", "operationId": "createInternalBrokerTask", "endpoint_path": "/api/no-auth/create-internal-broker-task", "method": "POST", "action_type": "create_internal_broker_task", "launch_priority": "P1" },
+        { "action_id": "ops_024", "operationId": "generateLenderSubmissionNotes", "endpoint_path": "/api/no-auth/generate-lender-submission-notes", "method": "POST", "action_type": "generate_lender_submission_notes", "launch_priority": "P1" },
+        { "action_id": "ops_025", "operationId": "createFundingScenarioMemo", "endpoint_path": "/api/no-auth/create-funding-scenario-memo", "method": "POST", "action_type": "create_funding_scenario_memo", "launch_priority": "P1" }
       ]
     }
   ]

@@ -1,7 +1,7 @@
 {
   "id": "brokerflow-action-expansion-registry",
-  "version": "1.1.0",
-  "updated_for_batch": "lender-matching-routing",
+  "version": "1.2.0",
+  "updated_for_batch": "document-checklist",
   "base_url": "https://brokerflow-ai.vercel.app",
   "auth_type": "none",
   "batches": [
@@ -10,29 +10,27 @@
       "status": "generated",
       "schema_file": "schemas/no-auth-lead-intake-qualification.schema.yaml",
       "docs_file": "actions/no-auth/lead-intake-qualification-actions.md",
-      "testing_checklist": "docs/lead-intake-qualification-testing-checklist.md",
-      "actions": [
-        { "action_id": "lead_001", "operationId": "qualifyFundingLead", "endpoint_path": "/api/no-auth/qualify-funding-lead", "method": "POST", "action_type": "qualify_funding_lead", "launch_priority": "P1" },
-        { "action_id": "lead_002", "operationId": "scoreBorrowerReadiness", "endpoint_path": "/api/no-auth/score-borrower-readiness", "method": "POST", "action_type": "score_borrower_readiness", "launch_priority": "P1" },
-        { "action_id": "lead_003", "operationId": "detectMissingFundingInfo", "endpoint_path": "/api/no-auth/detect-missing-funding-info", "method": "POST", "action_type": "detect_missing_funding_info", "launch_priority": "P1" },
-        { "action_id": "lead_004", "operationId": "classifyFundingScenario", "endpoint_path": "/api/no-auth/classify-funding-scenario", "method": "POST", "action_type": "classify_funding_scenario", "launch_priority": "P1" },
-        { "action_id": "lead_005", "operationId": "normalizeBrokerLead", "endpoint_path": "/api/no-auth/normalize-broker-lead", "method": "POST", "action_type": "normalize_broker_lead", "launch_priority": "P1" }
-      ]
+      "testing_checklist": "docs/lead-intake-qualification-testing-checklist.md"
     },
     {
       "batch_id": "lender-matching-routing",
       "status": "generated",
       "schema_file": "schemas/no-auth-lender-matching-routing.schema.yaml",
       "docs_file": "actions/no-auth/lender-matching-routing-actions.md",
-      "testing_checklist": "docs/lender-matching-routing-testing-checklist.md",
-      "optional_shared_secret_env": "LENDER_MATCHING_ROUTING_SHARED_SECRET",
-      "optional_webhook_env": "LENDER_MATCHING_ROUTING_WEBHOOK_URL",
+      "testing_checklist": "docs/lender-matching-routing-testing-checklist.md"
+    },
+    {
+      "batch_id": "document-checklist",
+      "status": "generated",
+      "schema_file": "schemas/no-auth-document-checklist.schema.yaml",
+      "docs_file": "actions/no-auth/document-checklist-actions.md",
+      "testing_checklist": "docs/document-checklist-testing-checklist.md",
       "actions": [
-        { "action_id": "lender_006", "operationId": "routeLenderFitScenario", "endpoint_path": "/api/no-auth/lender-fit-routing", "method": "POST", "action_type": "lender_fit_routing", "status": "existing", "launch_priority": "P1" },
-        { "action_id": "lender_007", "operationId": "requestLenderMatchReview", "endpoint_path": "/api/no-auth/lender-match-review", "method": "POST", "action_type": "lender_match_review", "status": "existing", "launch_priority": "P1" },
-        { "action_id": "lender_008", "operationId": "rankLenderOptions", "endpoint_path": "/api/no-auth/rank-lender-options", "method": "POST", "action_type": "rank_lender_options", "status": "added", "launch_priority": "P1" },
-        { "action_id": "lender_009", "operationId": "generateLenderShortlist", "endpoint_path": "/api/no-auth/generate-lender-shortlist", "method": "POST", "action_type": "generate_lender_shortlist", "status": "added", "launch_priority": "P1" },
-        { "action_id": "lender_010", "operationId": "flagManualReviewRequired", "endpoint_path": "/api/no-auth/flag-manual-review-required", "method": "POST", "action_type": "flag_manual_review_required", "status": "added", "launch_priority": "P1" }
+        { "action_id": "doc_011", "operationId": "generateDocumentChecklist", "endpoint_path": "/api/no-auth/generate-document-checklist", "method": "POST", "action_type": "generate_document_checklist", "launch_priority": "P1" },
+        { "action_id": "doc_012", "operationId": "auditSubmittedDocuments", "endpoint_path": "/api/no-auth/audit-submitted-documents", "method": "POST", "action_type": "audit_submitted_documents", "launch_priority": "P1" },
+        { "action_id": "doc_013", "operationId": "detectMissingDocuments", "endpoint_path": "/api/no-auth/detect-missing-documents", "method": "POST", "action_type": "detect_missing_documents", "launch_priority": "P1" },
+        { "action_id": "doc_014", "operationId": "createBorrowerSubmissionPacket", "endpoint_path": "/api/no-auth/create-borrower-submission-packet", "method": "POST", "action_type": "create_borrower_submission_packet", "launch_priority": "P1" },
+        { "action_id": "doc_015", "operationId": "summarizeFundingFile", "endpoint_path": "/api/no-auth/summarize-funding-file", "method": "POST", "action_type": "summarize_funding_file", "launch_priority": "P1" }
       ]
     }
   ]

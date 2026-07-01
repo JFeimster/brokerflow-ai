@@ -15,3 +15,7 @@ api/no-auth/generate-borrower-follow-up-message.js
 api/no-auth/create-stalled-deal-recovery-plan.js
 api/no-auth/create-declined-lead-reactivation-plan.js
 api/no-auth/generate-referral-partner-follow-up.js
+api/no-auth/create-internal-*.js
+api/no-auth/generate-broker-*.js
+api/no-auth/generate-lender-*.js
+api/no-auth/create-funding-*.js

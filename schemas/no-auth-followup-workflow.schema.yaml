@@ -1,0 +1,73 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow AI Follow-up + Workflow Actions
+  version: 1.0.0
+  description: No-auth GPT Actions for follow-up plans, borrower message drafts, stalled-deal recovery, declined-lead reactivation, and referral partner follow-up.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+paths:
+  /api/no-auth/create-broker-follow-up-plan:
+    post:
+      operationId: createBrokerFollowUpPlan
+      summary: Create broker follow-up plan
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/FollowupRequest' } } } }
+      responses: { '200': { description: Follow-up plan created. } }
+  /api/no-auth/generate-borrower-follow-up-message:
+    post:
+      operationId: generateBorrowerFollowUpMessage
+      summary: Generate borrower follow-up message
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/FollowupRequest' } } } }
+      responses: { '200': { description: Borrower message drafted. } }
+  /api/no-auth/create-stalled-deal-recovery-plan:
+    post:
+      operationId: createStalledDealRecoveryPlan
+      summary: Create stalled deal recovery plan
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/FollowupRequest' } } } }
+      responses: { '200': { description: Recovery plan created. } }
+  /api/no-auth/create-declined-lead-reactivation-plan:
+    post:
+      operationId: createDeclinedLeadReactivationPlan
+      summary: Create declined lead reactivation plan
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/FollowupRequest' } } } }
+      responses: { '200': { description: Reactivation plan created. } }
+  /api/no-auth/generate-referral-partner-follow-up:
+    post:
+      operationId: generateReferralPartnerFollowUp
+      summary: Generate referral partner follow-up
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/FollowupRequest' } } } }
+      responses: { '200': { description: Referral follow-up drafted. } }
+components:
+  schemas:
+    FollowupRequest:
+      type: object
+      required: [source, action_type]
+      additionalProperties: false
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type:
+          type: string
+          enum: [create_broker_follow_up_plan, generate_borrower_follow_up_message, create_stalled_deal_recovery_plan, create_declined_lead_reactivation_plan, generate_referral_partner_follow_up]
+        lead_id: { type: string }
+        scenario_id: { type: string }
+        contact_name: { type: string }
+        borrower_name: { type: string }
+        business_name: { type: string }
+        primary_route: { type: string }
+        loan_purpose: { type: string }
+        fit_tier: { type: string }
+        qualification_tier: { type: string }
+        requested_amount: { type: number }
+        state: { type: string }
+        urgency: { type: string }
+        missing_information:
+          type: array
+          items: { type: string }
+        missing_documents:
+          type: array
+          items: { type: string }
+        last_contact_days: { type: integer }
+        decline_reason: { type: string }
+        referral_partner_name: { type: string }
+        tone: { type: string }
+        notes: { type: string }
+        shared_secret: { type: string }

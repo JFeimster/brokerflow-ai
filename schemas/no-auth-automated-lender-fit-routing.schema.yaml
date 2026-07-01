@@ -1,0 +1,178 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow AI No-Auth Automated Lender Fit Routing Action
+  version: 1.0.0
+  description: Scores, ranks, and routes a borrower or business funding scenario to an internal workflow path. This action does not approve, decline, underwrite, price, fund, or submit borrowers.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+    description: Production Vercel deployment
+  - url: http://localhost:3000
+    description: Local development
+paths:
+  /api/no-auth/lender-fit-routing:
+    post:
+      operationId: routeLenderFitScenario
+      summary: Route a funding scenario to an automated lender-fit path
+      description: Returns a route, fit score, fit tier, missing information, and downstream workflow actions.
+      tags:
+        - No Auth
+        - Lender Fit Routing
+        - Automation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LenderFitRoutingRequest"
+      responses:
+        "200":
+          description: Scenario routed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LenderFitRoutingSuccessResponse"
+        "400":
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "405":
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    LenderFitRoutingRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - source
+        - action_type
+        - borrower_type
+        - loan_purpose
+        - requested_amount
+        - state
+      properties:
+        source:
+          type: string
+          enum: [custom_gpt, website, internal_tool, webhook_test]
+          default: custom_gpt
+        action_type:
+          type: string
+          enum: [lender_fit_routing]
+          default: lender_fit_routing
+        scenario_id:
+          type: string
+          maxLength: 120
+        requester_name:
+          type: string
+          maxLength: 120
+        borrower_type:
+          type: string
+          enum: [individual, business, real_estate_investor, commercial_borrower, referral_partner_lead, unknown]
+        loan_purpose:
+          type: string
+          enum: [business_working_capital, equipment_financing, commercial_real_estate, residential_purchase, residential_refinance, debt_consolidation, bridge_loan, construction, invoice_financing, sba_review, personal_loan, other]
+        requested_amount:
+          type: number
+          minimum: 1
+        state:
+          type: string
+          minLength: 2
+          maxLength: 40
+        credit_score_range:
+          type: string
+          enum: [unknown, below_580, 580_619, 620_659, 660_699, 700_739, 740_plus]
+          default: unknown
+        monthly_revenue:
+          type: number
+          minimum: 0
+        annual_revenue:
+          type: number
+          minimum: 0
+        time_in_business_months:
+          type: integer
+          minimum: 0
+        property_type:
+          type: string
+          enum: [single_family, multifamily, condo, townhouse, mixed_use, commercial, land, construction, not_applicable, unknown, other]
+        occupancy_type:
+          type: string
+          enum: [primary_residence, second_home, investment_property, owner_occupied_business, tenant_occupied, vacant, not_applicable, unknown]
+        collateral_available:
+          type: boolean
+        urgency:
+          type: string
+          enum: [low, normal, high, same_day]
+          default: normal
+        consent_to_contact:
+          type: boolean
+        notes:
+          type: string
+          maxLength: 4000
+        shared_secret:
+          type: string
+          description: Optional lightweight shared secret if enabled in Vercel.
+    LenderFitRoutingSuccessResponse:
+      type: object
+      required:
+        - success
+        - routing_id
+        - primary_route
+        - secondary_routes
+        - fit_score
+        - fit_tier
+        - automation_actions
+        - missing_information
+        - next_step
+      properties:
+        success:
+          type: boolean
+          const: true
+        routing_id:
+          type: string
+        primary_route:
+          type: string
+          enum: [business_working_capital, equipment_financing, commercial_real_estate, residential_mortgage, bridge_or_private_lending, sba_or_bank_review, debt_consolidation, manual_exception]
+        secondary_routes:
+          type: array
+          items:
+            type: string
+        fit_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        fit_tier:
+          type: string
+          enum: [strong_fit, possible_fit, weak_fit, insufficient_information]
+        automation_actions:
+          type: array
+          items:
+            type: string
+        missing_information:
+          type: array
+          items:
+            type: string
+        next_step:
+          type: string
+          enum: [trigger_workflow, collect_missing_information, manual_exception_queue]
+    ErrorResponse:
+      type: object
+      required: [success, error, message]
+      properties:
+        success:
+          type: boolean
+          const: false
+        error:
+          type: string
+        message:
+          type: string

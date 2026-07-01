@@ -28,7 +28,12 @@
     { "source": "/api/no-auth/generate-broker-call-prep", "destination": "/api/no-auth/ops-router" },
     { "source": "/api/no-auth/create-internal-broker-task", "destination": "/api/no-auth/ops-router" },
     { "source": "/api/no-auth/generate-lender-submission-notes", "destination": "/api/no-auth/ops-router" },
-    { "source": "/api/no-auth/create-funding-scenario-memo", "destination": "/api/no-auth/ops-router" }
+    { "source": "/api/no-auth/create-funding-scenario-memo", "destination": "/api/no-auth/ops-router" },
+    { "source": "/api/no-auth/package-automation-offer", "destination": "/api/no-auth/ops-router" },
+    { "source": "/api/no-auth/generate-automation-audit", "destination": "/api/no-auth/ops-router" },
+    { "source": "/api/no-auth/create-agency-client-roadmap", "destination": "/api/no-auth/ops-router" },
+    { "source": "/api/no-auth/recommend-paid-service-path", "destination": "/api/no-auth/ops-router" },
+    { "source": "/api/no-auth/create-project-scope", "destination": "/api/no-auth/ops-router" }
   ],
   "redirects": [
     { "source": "/home", "destination": "/", "permanent": true },

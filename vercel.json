@@ -2,12 +2,15 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "outputDirectory": ".",
-  "git": {
-    "deploymentEnabled": true
-  },
+  "git": { "deploymentEnabled": true },
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/api/no-auth/qualify-funding-lead", "destination": "/api/no-auth/lead-intake-actions" },
+    { "source": "/api/no-auth/score-borrower-readiness", "destination": "/api/no-auth/lead-intake-actions" },
+    { "source": "/api/no-auth/detect-missing-funding-info", "destination": "/api/no-auth/lead-intake-actions" },
+    { "source": "/api/no-auth/classify-funding-scenario", "destination": "/api/no-auth/lead-intake-actions" },
+    { "source": "/api/no-auth/normalize-broker-lead", "destination": "/api/no-auth/lead-intake-actions" },
     { "source": "/api/no-auth/rank-lender-options", "destination": "/api/no-auth/lender-routing-actions" },
     { "source": "/api/no-auth/generate-lender-shortlist", "destination": "/api/no-auth/lender-routing-actions" },
     { "source": "/api/no-auth/flag-manual-review-required", "destination": "/api/no-auth/lender-routing-actions" },
@@ -18,52 +21,8 @@
     { "source": "/api/no-auth/summarize-funding-file", "destination": "/api/no-auth/document-checklist-actions" }
   ],
   "redirects": [
-    {
-      "source": "/home",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/agent",
-      "destination": "/agents",
-      "permanent": true
-    },
-    {
-      "source": "/widget",
-      "destination": "/embed",
-      "permanent": true
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" },
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
-      ]
-    },
-    {
-      "source": "/embed.html",
-      "headers": [
-        { "key": "X-Frame-Options", "value": "ALLOWALL" },
-        { "key": "Content-Security-Policy", "value": "frame-ancestors *;" },
-        { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.(css|js)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.(png|jpg|jpeg|svg|ico|webp|woff2)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=604800, immutable" }
-      ]
-    }
+    { "source": "/home", "destination": "/", "permanent": true },
+    { "source": "/agent", "destination": "/agents", "permanent": true },
+    { "source": "/widget", "destination": "/embed", "permanent": true }
   ]
 }

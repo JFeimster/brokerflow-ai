@@ -1,0 +1,59 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow AI Revenue Actions
+  version: 1.0.0
+  description: No-auth GPT Actions for offers, audits, roadmaps, service paths, and scopes.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+paths:
+  /api/no-auth/package-automation-offer:
+    post:
+      operationId: packageAutomationOffer
+      summary: Package automation offer
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RevenueRequest' } } } }
+      responses: { '200': { description: Offer packaged. } }
+  /api/no-auth/generate-automation-audit:
+    post:
+      operationId: generateBrokerAutomationAudit
+      summary: Generate automation audit
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RevenueRequest' } } } }
+      responses: { '200': { description: Audit generated. } }
+  /api/no-auth/create-agency-client-roadmap:
+    post:
+      operationId: createAgencyClientRoadmap
+      summary: Create client roadmap
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RevenueRequest' } } } }
+      responses: { '200': { description: Roadmap created. } }
+  /api/no-auth/recommend-paid-service-path:
+    post:
+      operationId: recommendPaidServicePath
+      summary: Recommend service path
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RevenueRequest' } } } }
+      responses: { '200': { description: Path recommended. } }
+  /api/no-auth/create-project-scope:
+    post:
+      operationId: createImplementationScope
+      summary: Create project scope
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RevenueRequest' } } } }
+      responses: { '200': { description: Scope created. } }
+components:
+  schemas:
+    RevenueRequest:
+      type: object
+      required: [source, action_type]
+      additionalProperties: false
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type:
+          type: string
+          enum: [package_automation_offer, generate_broker_automation_audit, create_agency_client_roadmap, recommend_paid_service_path, create_implementation_scope]
+        client_type: { type: string }
+        current_tools: { type: array, items: { type: string } }
+        pain_points: { type: array, items: { type: string } }
+        monthly_lead_volume: { type: integer }
+        team_size: { type: integer }
+        target_offer: { type: string }
+        budget_range: { type: string }
+        implementation_timeline: { type: string }
+        notes: { type: string }
+        shared_secret: { type: string }

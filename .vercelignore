@@ -1,0 +1,7 @@
+api/no-auth/rank-lender-options.js
+api/no-auth/generate-lender-shortlist.js
+api/no-auth/flag-manual-review-required.js
+api/no-auth/*documents.js
+api/no-auth/generate-document-checklist.js
+api/no-auth/*submission-packet.js
+api/no-auth/summarize-funding-file.js

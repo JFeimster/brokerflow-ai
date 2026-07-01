@@ -102,7 +102,7 @@ components:
           maxLength: 40
         credit_score_range:
           type: string
-          enum: [unknown, below_580, 580_619, 620_659, 660_699, 700_739, 740_plus]
+          enum: [unknown, below_580, "580_619", "620_659", "660_699", "700_739", 740_plus]
           default: unknown
         monthly_revenue:
           type: number

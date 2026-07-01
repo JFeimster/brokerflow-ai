@@ -10,3 +10,8 @@ api/no-auth/*documents.js
 api/no-auth/generate-document-checklist.js
 api/no-auth/*submission-packet.js
 api/no-auth/summarize-funding-file.js
+api/no-auth/create-broker-follow-up-plan.js
+api/no-auth/generate-borrower-follow-up-message.js
+api/no-auth/create-stalled-deal-recovery-plan.js
+api/no-auth/create-declined-lead-reactivation-plan.js
+api/no-auth/generate-referral-partner-follow-up.js

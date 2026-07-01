@@ -1,0 +1,50 @@
+{
+  "name": "BrokerFlow - No-Auth Lender Match Review",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lender-match-review",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-lender-match-review",
+      "name": "Webhook - Lender Match Review",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ { success: true, received: true, review_request_id: $json.review_request_id || null } }"
+      },
+      "id": "respond-ok",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [480, 0]
+    }
+  ],
+  "connections": {
+    "Webhook - Lender Match Review": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    "brokerflow",
+    "lender-match-review",
+    "no-auth"
+  ]
+}

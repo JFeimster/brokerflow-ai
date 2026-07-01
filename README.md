@@ -16,6 +16,20 @@ This folder holds the marketing + documentation site for **BrokerFlow AI**, the 
 | Vercel | https://vercel.com/jason-feimsters-projects/brokerflow-ai |
 | GitHub | https://github.com/JFeimster/brokerflow-ai/ | 
 
+## Action packs
+
+BrokerFlow also contains no-auth GPT Action packs for intake, scoring, routing, workflow triggers, and controlled review queues.
+
+| Action | Operation ID | Vercel endpoint | Schema |
+| --- | --- | --- | --- |
+| Lender Match Review | `requestLenderMatchReview` | `POST /api/no-auth/lender-match-review` | `schemas/no-auth-lender-match-review.schema.yaml` |
+| Automated Lender Fit Routing | `routeLenderFitScenario` | `POST /api/no-auth/lender-fit-routing` | `schemas/no-auth-automated-lender-fit-routing.schema.yaml` |
+
+### Automation boundary
+
+The lender-fit routing action is automation-first: it can score/rank a scenario, select a route, create queue/workflow payloads, send alerts, and trigger downstream automation.
+
+Human review should only block final regulated steps: approval, denial, underwriting, formal pricing, funding, or lender submission. The lender-match review action exists for cases where a manual queue is required.
 
 ## Folder structure
 ```

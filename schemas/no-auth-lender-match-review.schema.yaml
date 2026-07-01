@@ -1,0 +1,172 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow AI No-Auth Lender Match Review Action
+  version: 1.0.0
+  description: Creates a controlled lender-match review request. This action does not approve, decline, underwrite, price, fund, or submit borrowers.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+    description: Production Vercel deployment
+  - url: http://localhost:3000
+    description: Local development
+paths:
+  /api/no-auth/lender-match-review:
+    post:
+      operationId: requestLenderMatchReview
+      summary: Request lender match review
+      description: Queues a structured funding scenario for manual review when required.
+      tags:
+        - No Auth
+        - Lender Match Review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LenderMatchReviewRequest"
+      responses:
+        "200":
+          description: Review request queued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LenderMatchReviewSuccessResponse"
+        "400":
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "405":
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    LenderMatchReviewRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - source
+        - action_type
+        - requester_name
+        - borrower_type
+        - loan_purpose
+        - requested_amount
+        - state
+        - human_review_required
+      properties:
+        source:
+          type: string
+          enum: [custom_gpt, website, internal_tool, webhook_test]
+          default: custom_gpt
+        action_type:
+          type: string
+          enum: [lender_match_review]
+          default: lender_match_review
+        requester_name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        borrower_type:
+          type: string
+          enum: [individual, business, real_estate_investor, commercial_borrower, referral_partner_lead, unknown]
+        borrower_name:
+          type: string
+          maxLength: 160
+        business_name:
+          type: string
+          maxLength: 180
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          maxLength: 60
+        loan_purpose:
+          type: string
+          enum: [business_working_capital, equipment_financing, commercial_real_estate, residential_purchase, residential_refinance, debt_consolidation, bridge_loan, construction, invoice_financing, sba_review, personal_loan, other]
+        requested_amount:
+          type: number
+          minimum: 1
+        state:
+          type: string
+          minLength: 2
+          maxLength: 40
+        credit_score_range:
+          type: string
+          enum: [unknown, below_580, "580_619", "620_659", "660_699", "700_739", 740_plus]
+          default: unknown
+        monthly_revenue:
+          type: number
+          minimum: 0
+        annual_revenue:
+          type: number
+          minimum: 0
+        time_in_business_months:
+          type: integer
+          minimum: 0
+        employment_type:
+          type: string
+          enum: [employed, self_employed, business_owner, investor, retired, unemployed, unknown, other]
+        property_type:
+          type: string
+          enum: [single_family, multifamily, condo, townhouse, mixed_use, commercial, land, construction, not_applicable, unknown, other]
+        occupancy_type:
+          type: string
+          enum: [primary_residence, second_home, investment_property, owner_occupied_business, tenant_occupied, vacant, not_applicable, unknown]
+        collateral_available:
+          type: boolean
+        urgency:
+          type: string
+          enum: [low, normal, high, same_day]
+          default: normal
+        recommended_review_path:
+          type: string
+          enum: [business_funding_review, commercial_real_estate_review, residential_mortgage_review, equipment_financing_review, sba_or_bank_review, manual_exception_review, insufficient_information]
+        consent_to_contact:
+          type: boolean
+        notes:
+          type: string
+          maxLength: 4000
+        human_review_required:
+          type: boolean
+          const: true
+        shared_secret:
+          type: string
+          description: Optional lightweight shared secret if enabled in Vercel.
+    LenderMatchReviewSuccessResponse:
+      type: object
+      required: [success, review_request_id, status, message, next_step]
+      properties:
+        success:
+          type: boolean
+          const: true
+        review_request_id:
+          type: string
+        status:
+          type: string
+          enum: [queued_for_human_review]
+        message:
+          type: string
+        next_step:
+          type: string
+          enum: [manual_review]
+    ErrorResponse:
+      type: object
+      required: [success, error, message]
+      properties:
+        success:
+          type: boolean
+          const: false
+        error:
+          type: string
+        message:
+          type: string

@@ -7,6 +7,16 @@
   },
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/api/no-auth/rank-lender-options", "destination": "/api/no-auth/lender-routing-actions" },
+    { "source": "/api/no-auth/generate-lender-shortlist", "destination": "/api/no-auth/lender-routing-actions" },
+    { "source": "/api/no-auth/flag-manual-review-required", "destination": "/api/no-auth/lender-routing-actions" },
+    { "source": "/api/no-auth/generate-document-checklist", "destination": "/api/no-auth/document-checklist-actions" },
+    { "source": "/api/no-auth/audit-submitted-documents", "destination": "/api/no-auth/document-checklist-actions" },
+    { "source": "/api/no-auth/detect-missing-documents", "destination": "/api/no-auth/document-checklist-actions" },
+    { "source": "/api/no-auth/create-borrower-submission-packet", "destination": "/api/no-auth/document-checklist-actions" },
+    { "source": "/api/no-auth/summarize-funding-file", "destination": "/api/no-auth/document-checklist-actions" }
+  ],
   "redirects": [
     {
       "source": "/home",

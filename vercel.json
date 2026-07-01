@@ -18,7 +18,12 @@
     { "source": "/api/no-auth/audit-submitted-documents", "destination": "/api/no-auth/document-checklist-actions" },
     { "source": "/api/no-auth/detect-missing-documents", "destination": "/api/no-auth/document-checklist-actions" },
     { "source": "/api/no-auth/create-borrower-submission-packet", "destination": "/api/no-auth/document-checklist-actions" },
-    { "source": "/api/no-auth/summarize-funding-file", "destination": "/api/no-auth/document-checklist-actions" }
+    { "source": "/api/no-auth/summarize-funding-file", "destination": "/api/no-auth/document-checklist-actions" },
+    { "source": "/api/no-auth/create-broker-follow-up-plan", "destination": "/api/no-auth/followup-workflow-actions" },
+    { "source": "/api/no-auth/generate-borrower-follow-up-message", "destination": "/api/no-auth/followup-workflow-actions" },
+    { "source": "/api/no-auth/create-stalled-deal-recovery-plan", "destination": "/api/no-auth/followup-workflow-actions" },
+    { "source": "/api/no-auth/create-declined-lead-reactivation-plan", "destination": "/api/no-auth/followup-workflow-actions" },
+    { "source": "/api/no-auth/generate-referral-partner-follow-up", "destination": "/api/no-auth/followup-workflow-actions" }
   ],
   "redirects": [
     { "source": "/home", "destination": "/", "permanent": true },

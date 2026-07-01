@@ -1,0 +1,508 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow AI Lead Intake + Qualification Actions
+  version: 1.0.0
+  description: No-auth BrokerFlow GPT Actions for lead intake, borrower readiness, missing-information detection, funding scenario classification, and broker lead normalization.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+    description: Production Vercel deployment
+paths:
+  /api/no-auth/qualify-funding-lead:
+    post:
+      operationId: qualifyFundingLead
+      summary: Qualify a funding lead
+      description: Scores and qualifies a broker funding lead for follow-up routing. This does not approve, deny, underwrite, price, fund, or submit a borrower.
+      tags: [Lead Intake, Qualification]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QualifyFundingLeadRequest"
+      responses:
+        "200":
+          description: Lead qualified.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualifyFundingLeadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/no-auth/score-borrower-readiness:
+    post:
+      operationId: scoreBorrowerReadiness
+      summary: Score borrower readiness
+      description: Scores borrower readiness across identity, funding request, revenue capacity, credit/risk context, and routing completeness. This does not approve, deny, underwrite, price, fund, or submit a borrower.
+      tags: [Lead Intake, Qualification]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScoreBorrowerReadinessRequest"
+      responses:
+        "200":
+          description: Readiness scored.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScoreBorrowerReadinessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/no-auth/detect-missing-funding-info:
+    post:
+      operationId: detectMissingFundingInfo
+      summary: Detect missing funding information
+      description: Reviews a partial or complete lead and returns missing fields, critical missing fields, recommended follow-up questions, and a completeness score.
+      tags: [Lead Intake, Qualification]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DetectMissingFundingInfoRequest"
+      responses:
+        "200":
+          description: Missing information detected.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DetectMissingFundingInfoResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/no-auth/classify-funding-scenario:
+    post:
+      operationId: classifyFundingScenario
+      summary: Classify a funding scenario
+      description: Classifies a funding scenario into a route family with secondary routes, risk flags, and routing notes. This does not approve, deny, underwrite, price, fund, or submit a borrower.
+      tags: [Lead Intake, Qualification]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassifyFundingScenarioRequest"
+      responses:
+        "200":
+          description: Scenario classified.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassifyFundingScenarioResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/no-auth/normalize-broker-lead:
+    post:
+      operationId: normalizeBrokerLead
+      summary: Normalize a broker lead
+      description: Converts messy or partial broker intake data into BrokerFlow canonical lead format with field warnings and mapping notes.
+      tags: [Lead Intake, Qualification]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NormalizeBrokerLeadRequest"
+      responses:
+        "200":
+          description: Lead normalized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NormalizeBrokerLeadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/ServerError"
+components:
+  responses:
+    BadRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    MethodNotAllowed:
+      description: Method not allowed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServerError:
+      description: Server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    LeadIntakeBase:
+      type: object
+      additionalProperties: false
+      properties:
+        source:
+          type: string
+          enum: [custom_gpt, website, internal_tool, webhook_test]
+        action_type:
+          type: string
+        lead_id:
+          type: string
+        requester_name:
+          type: string
+        broker_name:
+          type: string
+        contact_name:
+          type: string
+        borrower_name:
+          type: string
+        business_name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        state:
+          type: string
+        borrower_type:
+          type: string
+          enum: [individual, business, real_estate_investor, commercial_borrower, referral_partner_lead, unknown]
+        loan_purpose:
+          type: string
+          enum: [business_working_capital, equipment_financing, commercial_real_estate, residential_purchase, residential_refinance, debt_consolidation, bridge_loan, construction, invoice_financing, sba_review, personal_loan, other]
+        requested_amount:
+          type: number
+          minimum: 1
+        monthly_revenue:
+          type: number
+          minimum: 0
+        annual_revenue:
+          type: number
+          minimum: 0
+        time_in_business_months:
+          type: integer
+          minimum: 0
+        credit_score_range:
+          type: string
+          enum: [unknown, below_580, "580_619", "620_659", "660_699", "700_739", 740_plus]
+        urgency:
+          type: string
+          enum: [low, normal, high, same_day]
+        collateral_available:
+          type: boolean
+        property_type:
+          type: string
+          enum: [single_family, multifamily, condo, townhouse, mixed_use, commercial, land, construction, not_applicable, unknown, other]
+        occupancy_type:
+          type: string
+          enum: [primary_residence, second_home, investment_property, owner_occupied_business, tenant_occupied, vacant, not_applicable, unknown]
+        existing_debt_amount:
+          type: number
+          minimum: 0
+        consent_to_contact:
+          type: boolean
+        notes:
+          type: string
+        shared_secret:
+          type: string
+    QualifyFundingLeadRequest:
+      allOf:
+        - $ref: "#/components/schemas/LeadIntakeBase"
+        - type: object
+          required: [source, action_type, borrower_type, loan_purpose, requested_amount, state]
+          properties:
+            action_type:
+              type: string
+              enum: [qualify_funding_lead]
+    ScoreBorrowerReadinessRequest:
+      allOf:
+        - $ref: "#/components/schemas/LeadIntakeBase"
+        - type: object
+          required: [source, action_type, borrower_type, loan_purpose, requested_amount, state]
+          properties:
+            action_type:
+              type: string
+              enum: [score_borrower_readiness]
+    DetectMissingFundingInfoRequest:
+      allOf:
+        - $ref: "#/components/schemas/LeadIntakeBase"
+        - type: object
+          required: [source, action_type]
+          properties:
+            action_type:
+              type: string
+              enum: [detect_missing_funding_info]
+    ClassifyFundingScenarioRequest:
+      allOf:
+        - $ref: "#/components/schemas/LeadIntakeBase"
+        - type: object
+          required: [source, action_type, borrower_type, loan_purpose, requested_amount, state]
+          properties:
+            action_type:
+              type: string
+              enum: [classify_funding_scenario]
+    NormalizeBrokerLeadRequest:
+      allOf:
+        - $ref: "#/components/schemas/LeadIntakeBase"
+        - type: object
+          required: [source, action_type]
+          properties:
+            action_type:
+              type: string
+              enum: [normalize_broker_lead]
+    NormalizedLead:
+      type: object
+      properties:
+        source:
+          type: string
+        action_type:
+          type: string
+        lead_id:
+          type: string
+          nullable: true
+        requester_name:
+          type: string
+          nullable: true
+        contact_name:
+          type: string
+          nullable: true
+        business_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        borrower_type:
+          type: string
+        loan_purpose:
+          type: string
+        requested_amount:
+          type: number
+          nullable: true
+        monthly_revenue:
+          type: number
+          nullable: true
+        annual_revenue:
+          type: number
+          nullable: true
+        time_in_business_months:
+          type: integer
+          nullable: true
+        credit_score_range:
+          type: string
+        urgency:
+          type: string
+        collateral_available:
+          type: boolean
+          nullable: true
+        property_type:
+          type: string
+          nullable: true
+        occupancy_type:
+          type: string
+          nullable: true
+        existing_debt_amount:
+          type: number
+          nullable: true
+        consent_to_contact:
+          type: boolean
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+    QualifyFundingLeadResponse:
+      type: object
+      required: [success, qualification_id, qualified, qualification_tier, qualification_score, primary_route, secondary_routes, reasons, disqualifiers, missing_information, critical_missing_information, next_step]
+      properties:
+        success:
+          type: boolean
+          const: true
+        qualification_id:
+          type: string
+        qualified:
+          type: boolean
+        qualification_tier:
+          type: string
+        qualification_score:
+          type: integer
+        primary_route:
+          type: string
+        secondary_routes:
+          type: array
+          items:
+            type: string
+        reasons:
+          type: array
+          items:
+            type: string
+        disqualifiers:
+          type: array
+          items:
+            type: string
+        missing_information:
+          type: array
+          items:
+            type: string
+        critical_missing_information:
+          type: array
+          items:
+            type: string
+        next_step:
+          type: string
+    ScoreBorrowerReadinessResponse:
+      type: object
+      required: [success, readiness_id, readiness_score, readiness_tier, category_scores, strengths, risks, missing_information, critical_missing_information, next_step]
+      properties:
+        success:
+          type: boolean
+          const: true
+        readiness_id:
+          type: string
+        readiness_score:
+          type: integer
+        readiness_tier:
+          type: string
+        category_scores:
+          type: object
+          additionalProperties:
+            type: integer
+        strengths:
+          type: array
+          items:
+            type: string
+        risks:
+          type: array
+          items:
+            type: string
+        missing_information:
+          type: array
+          items:
+            type: string
+        critical_missing_information:
+          type: array
+          items:
+            type: string
+        next_step:
+          type: string
+    DetectMissingFundingInfoResponse:
+      type: object
+      required: [success, missing_info_id, missing_information, critical_missing_information, recommended_questions, completeness_score, next_step]
+      properties:
+        success:
+          type: boolean
+          const: true
+        missing_info_id:
+          type: string
+        missing_information:
+          type: array
+          items:
+            type: string
+        critical_missing_information:
+          type: array
+          items:
+            type: string
+        recommended_questions:
+          type: array
+          items:
+            type: string
+        completeness_score:
+          type: integer
+        next_step:
+          type: string
+    ClassifyFundingScenarioResponse:
+      type: object
+      required: [success, classification_id, scenario_type, primary_route, secondary_routes, risk_flags, routing_notes, missing_information, critical_missing_information, next_step]
+      properties:
+        success:
+          type: boolean
+          const: true
+        classification_id:
+          type: string
+        scenario_type:
+          type: string
+        primary_route:
+          type: string
+        secondary_routes:
+          type: array
+          items:
+            type: string
+        risk_flags:
+          type: array
+          items:
+            type: string
+        routing_notes:
+          type: array
+          items:
+            type: string
+        missing_information:
+          type: array
+          items:
+            type: string
+        critical_missing_information:
+          type: array
+          items:
+            type: string
+        next_step:
+          type: string
+    NormalizeBrokerLeadResponse:
+      type: object
+      required: [success, normalized_lead_id, normalized_lead, field_warnings, mapping_notes, missing_information, critical_missing_information, next_step]
+      properties:
+        success:
+          type: boolean
+          const: true
+        normalized_lead_id:
+          type: string
+        normalized_lead:
+          $ref: "#/components/schemas/NormalizedLead"
+        field_warnings:
+          type: array
+          items:
+            type: string
+        mapping_notes:
+          type: array
+          items:
+            type: string
+        missing_information:
+          type: array
+          items:
+            type: string
+        critical_missing_information:
+          type: array
+          items:
+            type: string
+        next_step:
+          type: string
+    ErrorResponse:
+      type: object
+      required: [success, error, message]
+      properties:
+        success:
+          type: boolean
+          const: false
+        error:
+          type: string
+        message:
+          type: string

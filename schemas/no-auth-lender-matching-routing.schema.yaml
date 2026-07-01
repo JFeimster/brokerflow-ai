@@ -1,0 +1,365 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow AI Lender Matching + Routing Actions
+  version: 1.0.0
+  description: No-auth BrokerFlow GPT Actions for lender fit routing, lender match review, lender option ranking, lender shortlist generation, and manual-review flagging.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+    description: Production Vercel deployment
+paths:
+  /api/no-auth/lender-fit-routing:
+    post:
+      operationId: routeLenderFitScenario
+      summary: Route a funding scenario to a lender-fit path
+      description: Scores and routes a funding scenario. Routing only; no approval, denial, underwriting, pricing, funding, or lender submission.
+      tags: [Lender Matching, Routing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LenderScenarioRequest"
+      responses:
+        "200":
+          description: Scenario routed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LenderFitRoutingResponse"
+  /api/no-auth/lender-match-review:
+    post:
+      operationId: requestLenderMatchReview
+      summary: Request lender match review
+      description: Queues a funding scenario for human lender-match review. Review only; no approval, denial, underwriting, pricing, funding, or lender submission.
+      tags: [Lender Matching, Routing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LenderScenarioRequest"
+      responses:
+        "200":
+          description: Review queued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LenderMatchReviewResponse"
+  /api/no-auth/rank-lender-options:
+    post:
+      operationId: rankLenderOptions
+      summary: Rank lender options
+      description: Ranks available lender options against a borrower or business funding scenario.
+      tags: [Lender Matching, Routing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/LenderScenarioRequest"
+                - type: object
+                  required: [source, action_type]
+                  properties:
+                    action_type:
+                      type: string
+                      enum: [rank_lender_options]
+                    lender_options:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/LenderOption"
+      responses:
+        "200":
+          description: Lenders ranked.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RankLenderOptionsResponse"
+  /api/no-auth/generate-lender-shortlist:
+    post:
+      operationId: generateLenderShortlist
+      summary: Generate lender shortlist
+      description: Generates a ranked shortlist of lender-review paths for a funding scenario.
+      tags: [Lender Matching, Routing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/LenderScenarioRequest"
+                - type: object
+                  required: [source, action_type]
+                  properties:
+                    action_type:
+                      type: string
+                      enum: [generate_lender_shortlist]
+                    max_results:
+                      type: integer
+                      minimum: 1
+                      maximum: 10
+                    lender_options:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/LenderOption"
+      responses:
+        "200":
+          description: Shortlist generated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerateLenderShortlistResponse"
+  /api/no-auth/flag-manual-review-required:
+    post:
+      operationId: flagManualReviewRequired
+      summary: Flag manual review requirement
+      description: Determines whether a funding scenario should be moved to human review.
+      tags: [Lender Matching, Routing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/LenderScenarioRequest"
+                - type: object
+                  required: [source, action_type]
+                  properties:
+                    action_type:
+                      type: string
+                      enum: [flag_manual_review_required]
+      responses:
+        "200":
+          description: Manual-review requirement flagged.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlagManualReviewRequiredResponse"
+components:
+  schemas:
+    LenderScenarioRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        source:
+          type: string
+          enum: [custom_gpt, website, internal_tool, webhook_test]
+        action_type:
+          type: string
+        scenario_id:
+          type: string
+        requester_name:
+          type: string
+        borrower_type:
+          type: string
+          enum: [individual, business, real_estate_investor, commercial_borrower, referral_partner_lead, unknown]
+        loan_purpose:
+          type: string
+          enum: [business_working_capital, equipment_financing, commercial_real_estate, residential_purchase, residential_refinance, debt_consolidation, bridge_loan, construction, invoice_financing, sba_review, personal_loan, other]
+        requested_amount:
+          type: number
+          minimum: 1
+        state:
+          type: string
+        monthly_revenue:
+          type: number
+          minimum: 0
+        annual_revenue:
+          type: number
+          minimum: 0
+        time_in_business_months:
+          type: integer
+          minimum: 0
+        credit_score_range:
+          type: string
+          enum: [unknown, below_580, "580_619", "620_659", "660_699", "700_739", 740_plus]
+        primary_route:
+          type: string
+        secondary_routes:
+          type: array
+          items:
+            type: string
+        fit_tier:
+          type: string
+        fit_score:
+          type: number
+        missing_information:
+          type: array
+          items:
+            type: string
+        risk_flags:
+          type: array
+          items:
+            type: string
+        urgency:
+          type: string
+          enum: [low, normal, high, same_day]
+        collateral_available:
+          type: boolean
+        property_type:
+          type: string
+        occupancy_type:
+          type: string
+        notes:
+          type: string
+        shared_secret:
+          type: string
+    LenderOption:
+      type: object
+      additionalProperties: false
+      required: [lender_id, lender_name, route_family]
+      properties:
+        lender_id:
+          type: string
+        lender_name:
+          type: string
+        route_family:
+          type: string
+        min_amount:
+          type: number
+        max_amount:
+          type: number
+        min_monthly_revenue:
+          type: number
+        min_time_in_business_months:
+          type: integer
+        accepted_borrower_types:
+          type: array
+          items:
+            type: string
+        accepted_states:
+          type: array
+          items:
+            type: string
+        speed:
+          type: string
+        documentation_level:
+          type: string
+    RankedLender:
+      type: object
+      properties:
+        lender_id:
+          type: string
+        lender_name:
+          type: string
+        route_family:
+          type: string
+        match_score:
+          type: integer
+        match_tier:
+          type: string
+        speed:
+          type: string
+        documentation_level:
+          type: string
+        score_parts:
+          type: object
+          additionalProperties:
+            type: integer
+        match_notes:
+          type: array
+          items:
+            type: string
+    LenderFitRoutingResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        routing_id:
+          type: string
+        primary_route:
+          type: string
+        secondary_routes:
+          type: array
+          items:
+            type: string
+        fit_score:
+          type: integer
+        fit_tier:
+          type: string
+        automation_actions:
+          type: array
+          items:
+            type: string
+        missing_information:
+          type: array
+          items:
+            type: string
+        next_step:
+          type: string
+    LenderMatchReviewResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        review_request_id:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+        next_step:
+          type: string
+    RankLenderOptionsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        ranking_id:
+          type: string
+        ranked_lenders:
+          type: array
+          items:
+            $ref: "#/components/schemas/RankedLender"
+        top_lender:
+          $ref: "#/components/schemas/RankedLender"
+        next_step:
+          type: string
+    GenerateLenderShortlistResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        shortlist_id:
+          type: string
+        shortlist:
+          type: array
+          items:
+            $ref: "#/components/schemas/RankedLender"
+        shortlist_count:
+          type: integer
+        fallback_used:
+          type: boolean
+        shortlist_strategy:
+          type: string
+        next_step:
+          type: string
+    FlagManualReviewRequiredResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        review_flag_id:
+          type: string
+        manual_review_required:
+          type: boolean
+        review_priority:
+          type: string
+        manual_review_flags:
+          type: array
+          items:
+            type: string
+        review_queue:
+          type: string
+          nullable: true
+        next_step:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+        message:
+          type: string

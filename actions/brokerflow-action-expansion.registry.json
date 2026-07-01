@@ -1,11 +1,9 @@
 {
   "id": "brokerflow-action-expansion-registry",
-  "version": "1.0.0",
-  "updated_for_batch": "lead-intake-qualification",
+  "version": "1.1.0",
+  "updated_for_batch": "lender-matching-routing",
   "base_url": "https://brokerflow-ai.vercel.app",
   "auth_type": "none",
-  "optional_shared_secret_env": "LEAD_INTAKE_SHARED_SECRET",
-  "optional_webhook_env": "LEAD_INTAKE_QUALIFICATION_WEBHOOK_URL",
   "batches": [
     {
       "batch_id": "lead-intake-qualification",
@@ -14,66 +12,27 @@
       "docs_file": "actions/no-auth/lead-intake-qualification-actions.md",
       "testing_checklist": "docs/lead-intake-qualification-testing-checklist.md",
       "actions": [
-        {
-          "action_id": "lead_001",
-          "operationId": "qualifyFundingLead",
-          "category": "lead_intake_qualification",
-          "endpoint_path": "/api/no-auth/qualify-funding-lead",
-          "method": "POST",
-          "action_type": "qualify_funding_lead",
-          "input_fields": ["source", "action_type", "borrower_type", "loan_purpose", "requested_amount", "state", "monthly_revenue", "annual_revenue", "time_in_business_months", "credit_score_range", "urgency", "collateral_available", "consent_to_contact", "notes"],
-          "output_fields": ["qualification_id", "qualified", "qualification_tier", "qualification_score", "primary_route", "secondary_routes", "reasons", "disqualifiers", "missing_information", "critical_missing_information", "next_step"],
-          "revenue_use_case": "Fast triage for broker intake and paid lead review workflows.",
-          "launch_priority": "P1"
-        },
-        {
-          "action_id": "lead_002",
-          "operationId": "scoreBorrowerReadiness",
-          "category": "lead_intake_qualification",
-          "endpoint_path": "/api/no-auth/score-borrower-readiness",
-          "method": "POST",
-          "action_type": "score_borrower_readiness",
-          "input_fields": ["source", "action_type", "borrower_type", "loan_purpose", "requested_amount", "state", "monthly_revenue", "annual_revenue", "time_in_business_months", "credit_score_range", "urgency", "collateral_available", "consent_to_contact", "notes"],
-          "output_fields": ["readiness_id", "readiness_score", "readiness_tier", "category_scores", "strengths", "risks", "missing_information", "critical_missing_information", "next_step"],
-          "revenue_use_case": "Readiness scorecard for funding consultations, audits, and broker workflow products.",
-          "launch_priority": "P1"
-        },
-        {
-          "action_id": "lead_003",
-          "operationId": "detectMissingFundingInfo",
-          "category": "lead_intake_qualification",
-          "endpoint_path": "/api/no-auth/detect-missing-funding-info",
-          "method": "POST",
-          "action_type": "detect_missing_funding_info",
-          "input_fields": ["source", "action_type", "borrower_type", "loan_purpose", "requested_amount", "state", "monthly_revenue", "annual_revenue", "time_in_business_months", "credit_score_range", "property_type", "occupancy_type", "email", "phone", "consent_to_contact", "notes"],
-          "output_fields": ["missing_info_id", "missing_information", "critical_missing_information", "recommended_questions", "completeness_score", "next_step"],
-          "revenue_use_case": "Automated intake gap detection for broker follow-up and document collection workflows.",
-          "launch_priority": "P1"
-        },
-        {
-          "action_id": "lead_004",
-          "operationId": "classifyFundingScenario",
-          "category": "lead_intake_qualification",
-          "endpoint_path": "/api/no-auth/classify-funding-scenario",
-          "method": "POST",
-          "action_type": "classify_funding_scenario",
-          "input_fields": ["source", "action_type", "borrower_type", "loan_purpose", "requested_amount", "state", "property_type", "occupancy_type", "credit_score_range", "monthly_revenue", "time_in_business_months", "consent_to_contact", "notes"],
-          "output_fields": ["classification_id", "scenario_type", "primary_route", "secondary_routes", "risk_flags", "routing_notes", "missing_information", "critical_missing_information", "next_step"],
-          "revenue_use_case": "Scenario sorting for lender desk workflows, intake operators, and routing automations.",
-          "launch_priority": "P1"
-        },
-        {
-          "action_id": "lead_005",
-          "operationId": "normalizeBrokerLead",
-          "category": "lead_intake_qualification",
-          "endpoint_path": "/api/no-auth/normalize-broker-lead",
-          "method": "POST",
-          "action_type": "normalize_broker_lead",
-          "input_fields": ["source", "action_type", "lead_id", "requester_name", "broker_name", "contact_name", "borrower_name", "business_name", "email", "phone", "state", "borrower_type", "loan_purpose", "requested_amount", "monthly_revenue", "annual_revenue", "time_in_business_months", "credit_score_range", "urgency", "collateral_available", "property_type", "occupancy_type", "existing_debt_amount", "consent_to_contact", "notes"],
-          "output_fields": ["normalized_lead_id", "normalized_lead", "field_warnings", "mapping_notes", "missing_information", "critical_missing_information", "next_step"],
-          "revenue_use_case": "Data cleanup layer for GPT, forms, CRM imports, and broker intake notes.",
-          "launch_priority": "P1"
-        }
+        { "action_id": "lead_001", "operationId": "qualifyFundingLead", "endpoint_path": "/api/no-auth/qualify-funding-lead", "method": "POST", "action_type": "qualify_funding_lead", "launch_priority": "P1" },
+        { "action_id": "lead_002", "operationId": "scoreBorrowerReadiness", "endpoint_path": "/api/no-auth/score-borrower-readiness", "method": "POST", "action_type": "score_borrower_readiness", "launch_priority": "P1" },
+        { "action_id": "lead_003", "operationId": "detectMissingFundingInfo", "endpoint_path": "/api/no-auth/detect-missing-funding-info", "method": "POST", "action_type": "detect_missing_funding_info", "launch_priority": "P1" },
+        { "action_id": "lead_004", "operationId": "classifyFundingScenario", "endpoint_path": "/api/no-auth/classify-funding-scenario", "method": "POST", "action_type": "classify_funding_scenario", "launch_priority": "P1" },
+        { "action_id": "lead_005", "operationId": "normalizeBrokerLead", "endpoint_path": "/api/no-auth/normalize-broker-lead", "method": "POST", "action_type": "normalize_broker_lead", "launch_priority": "P1" }
+      ]
+    },
+    {
+      "batch_id": "lender-matching-routing",
+      "status": "generated",
+      "schema_file": "schemas/no-auth-lender-matching-routing.schema.yaml",
+      "docs_file": "actions/no-auth/lender-matching-routing-actions.md",
+      "testing_checklist": "docs/lender-matching-routing-testing-checklist.md",
+      "optional_shared_secret_env": "LENDER_MATCHING_ROUTING_SHARED_SECRET",
+      "optional_webhook_env": "LENDER_MATCHING_ROUTING_WEBHOOK_URL",
+      "actions": [
+        { "action_id": "lender_006", "operationId": "routeLenderFitScenario", "endpoint_path": "/api/no-auth/lender-fit-routing", "method": "POST", "action_type": "lender_fit_routing", "status": "existing", "launch_priority": "P1" },
+        { "action_id": "lender_007", "operationId": "requestLenderMatchReview", "endpoint_path": "/api/no-auth/lender-match-review", "method": "POST", "action_type": "lender_match_review", "status": "existing", "launch_priority": "P1" },
+        { "action_id": "lender_008", "operationId": "rankLenderOptions", "endpoint_path": "/api/no-auth/rank-lender-options", "method": "POST", "action_type": "rank_lender_options", "status": "added", "launch_priority": "P1" },
+        { "action_id": "lender_009", "operationId": "generateLenderShortlist", "endpoint_path": "/api/no-auth/generate-lender-shortlist", "method": "POST", "action_type": "generate_lender_shortlist", "status": "added", "launch_priority": "P1" },
+        { "action_id": "lender_010", "operationId": "flagManualReviewRequired", "endpoint_path": "/api/no-auth/flag-manual-review-required", "method": "POST", "action_type": "flag_manual_review_required", "status": "added", "launch_priority": "P1" }
       ]
     }
   ]

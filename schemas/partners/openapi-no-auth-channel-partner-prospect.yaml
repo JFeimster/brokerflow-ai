@@ -1,0 +1,105 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Channel Partner Prospect Webhook
+  version: 1.0.0
+  description: Capture targeted centers of influence such as accountants, attorneys, business brokers, consultants, and other referral prospects.
+servers:
+  - url: https://YOUR-AUTOMATION-DOMAIN.com
+security: []
+paths:
+  /webhook/channel-partner-prospect:
+    post:
+      operationId: submitChannelPartnerProspect
+      summary: Log a targeted channel partner prospect for outreach
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                source:
+                  type: string
+                  enum: [custom_gpt, research, manual, website]
+                event_type:
+                  type: string
+                  enum: [channel_partner_prospect]
+                event_id:
+                  type: string
+                submitted_at:
+                  type: string
+                  format: date-time
+                shared_secret:
+                  type: string
+                human_review_required:
+                  type: boolean
+                  default: true
+                payload:
+                  type: object
+                  properties:
+                    prospect:
+                      type: object
+                      properties:
+                        partner_type:
+                          type: string
+                          enum: [boutique_accountant, small_business_attorney, business_broker, tax_advisor, insurance_agent, payroll_consultant, franchise_consultant, real_estate_broker, consultant, other]
+                        company_name: { type: string }
+                        contact_name: { type: string }
+                        email: { type: string, format: email }
+                        phone: { type: string }
+                        website: { type: string }
+                        linkedin_url: { type: string }
+                        city: { type: string }
+                        state: { type: string }
+                      required: [partner_type, company_name]
+                    fit_signals:
+                      type: object
+                      additionalProperties: true
+                      properties:
+                        serves_small_businesses: { type: boolean }
+                        likely_referral_volume:
+                          type: string
+                          enum: [low, medium, high, unknown]
+                        client_cashflow_pain:
+                          type: string
+                          enum: [low, medium, high, unknown]
+                        notes: { type: string }
+                    recommended_outreach:
+                      type: object
+                      additionalProperties: true
+                      properties:
+                        outreach_angle: { type: string }
+                        priority:
+                          type: string
+                          enum: [low, medium, high, urgent]
+                        owner: { type: string, format: email }
+                  required: [prospect]
+              required: [source, event_type, event_id, shared_secret, human_review_required, payload]
+      responses:
+        '200':
+          description: Prospect logged.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProspectResponse'
+components:
+  schemas:
+    ProspectResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum: [accepted, queued]
+        message: { type: string }
+        external_record_id: { type: string }
+        recommended_next_step: { type: string }
+      required: [status, message]
+x-brokerflow:
+  auth_type: none
+  rate_limit: 60 requests/minute
+  special_headers:
+    - Content-Type: application/json
+    - X-BrokerFlow-Source: custom_gpt

@@ -1,0 +1,104 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Segment Playbooks API
+  version: 1.0.0
+  description: API-key protected endpoints for retrieving and assigning partner segment playbooks.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    PlaybookResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, processed] }
+        message: { type: string }
+        partner_id: { type: string }
+        playbook_id: { type: string }
+        segment: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partner-playbooks:
+    get:
+      operationId: listPartnerSegmentPlaybooks
+      summary: List available partner segment playbooks
+      parameters:
+        - name: segment
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [affiliate_partner, high_value_referral_partner, niche_coi_partner, inactive_partner, new_partner, all]
+      responses:
+        "200":
+          description: Playbook list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [processed] }
+                  playbooks:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                required: [status, playbooks]
+  /partners/{partner_id}/playbook:
+    post:
+      operationId: assignPartnerSegmentPlaybook
+      summary: Assign a playbook to a partner
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                playbook_id: { type: string }
+                segment:
+                  type: string
+                  enum: [affiliate_partner, high_value_referral_partner, niche_coi_partner, inactive_partner, new_partner]
+                reason: { type: string }
+                owner: { type: string, format: email }
+                human_review_required: { type: boolean, default: true }
+              required: [playbook_id, segment]
+      responses:
+        "200":
+          description: Playbook assigned
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlaybookResponse" }
+  /partners/{partner_id}/playbook-status:
+    get:
+      operationId: getPartnerPlaybookStatus
+      summary: Get partner playbook status
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Playbook status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlaybookResponse" }
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per API key
+x-brokerflow-guardrails:
+  - Playbook assignment is an internal routing aid.
+  - Human review required before partner-facing campaigns launch.
+  - Playbooks must use approved partner messaging and safe funding language.

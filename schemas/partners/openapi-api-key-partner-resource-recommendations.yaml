@@ -1,0 +1,124 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Resource Recommendations API
+  version: 1.0.0
+  description: API-key protected endpoints for recommending approved partner resources, assets, training modules, and next-best enablement materials.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ResourceRecommendationResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, processed, queued] }
+        message: { type: string }
+        partner_id: { type: string }
+        recommendation_id: { type: string }
+        recommended_resources:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/resource-recommendations:
+    post:
+      operationId: recommendPartnerResources
+      summary: Recommend partner resources based on segment, lifecycle stage, and current blockers
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                partner_segment:
+                  type: string
+                  enum: [affiliate_partner, high_value_referral_partner, niche_coi_partner, inactive_partner, new_partner, needs_review]
+                lifecycle_stage:
+                  type: string
+                  enum: [prospect, onboarding, active, inactive, reactivation, training, asset_review]
+                goal:
+                  type: string
+                  enum: [get_first_referral, improve_referral_quality, complete_onboarding, launch_campaign, reactivate_partner, educate_partner]
+                blockers:
+                  type: array
+                  items:
+                    type: string
+                    enum: [no_tracking_link, training_incomplete, no_assets, low_referral_quality, inactive, needs_program_review, unknown]
+                human_review_required: { type: boolean, default: true }
+              required: [partner_segment, lifecycle_stage, goal]
+      responses:
+        "200":
+          description: Recommendations generated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResourceRecommendationResponse" }
+  /partners/{partner_id}/resource-assignment:
+    post:
+      operationId: assignPartnerResource
+      summary: Assign an approved resource to a partner
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resource_id: { type: string }
+                resource_type:
+                  type: string
+                  enum: [training_module, email_template, referral_guide, scorecard_link, partner_playbook, approved_asset, faq]
+                reason: { type: string }
+                owner: { type: string, format: email }
+                due_at: { type: string, format: date-time }
+                human_review_required: { type: boolean, default: true }
+              required: [resource_id, resource_type]
+      responses:
+        "200":
+          description: Resource assigned
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResourceRecommendationResponse" }
+  /partners/{partner_id}/resource-recommendations:
+    get:
+      operationId: getPartnerResourceRecommendations
+      summary: Get latest partner resource recommendations
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Resource recommendations
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResourceRecommendationResponse" }
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per API key
+x-brokerflow-guardrails:
+  - Recommend and assign only approved partner resources.
+  - Do not generate new partner-facing claims through this endpoint.
+  - Human review required before campaign launch or public asset publishing.
+  - Do not expose borrower records in resource recommendations.

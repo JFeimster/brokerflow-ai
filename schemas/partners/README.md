@@ -6,10 +6,10 @@ These schemas are designed for Custom GPT Actions and automation backends such a
 
 ## Core Rules
 
-- No Action may approve, decline, qualify, guarantee, underwrite, or fund.
+- No Action may approve, decline, qualify, guarantee, underwrite, fund, or pay automatically.
 - Funding-adjacent partner work must route to human review.
 - No-auth schemas are for low-risk intake, triggers, logging, and workflow starts.
-- API-key schemas are for controlled backend operations such as CRM sync, attribution, onboarding, performance, and payout review.
+- API-key schemas are for controlled backend operations such as CRM sync, attribution, onboarding, activity summaries, payout review, assets, and portal provisioning.
 - OAuth schemas are for per-user integrations such as Calendar and Drive.
 - Every write Action uses `x-openai-isConsequential: true`.
 - No raw borrower documents, bank statements, tax returns, or private lender credentials belong in Action payloads.
@@ -27,8 +27,12 @@ These schemas are designed for Custom GPT Actions and automation backends such a
 | `openapi-api-key-partner-crm-sync.yaml` | API Key Bearer | Create/update partner CRM records, stages, and notes through a backend. |
 | `openapi-api-key-partner-attribution.yaml` | API Key Bearer | Log and retrieve partner attribution events. |
 | `openapi-api-key-partner-onboarding.yaml` | API Key Bearer | Create and update partner onboarding checklists. |
-| `openapi-api-key-partner-performance.yaml` | API Key Bearer | Read internal partner performance summaries and leaderboards. |
-| `openapi-api-key-partner-payout-readiness.yaml` | API Key Bearer | Queue payout-readiness reviews for human approval. |
+| `openapi-api-key-partner-activity-summary.yaml` | API Key Bearer | Read and generate internal partner activity summaries. |
+| `openapi-api-key-partner-payout-readiness.yaml` | API Key Bearer | Queue payout-readiness reviews for human approval; no money movement. |
+| `openapi-api-key-co-marketing-assets.yaml` | API Key Bearer | Request, list, and review partner co-marketing assets. |
+| `openapi-api-key-partner-portal-provisioning.yaml` | API Key Bearer | Provision partner portals, tracking links, and portal status. |
+| `openapi-oauth-partner-calendar-scheduling.yaml` | OAuth | Schedule partner discovery and onboarding calls. |
+| `openapi-oauth-partner-drive-folder.yaml` | OAuth | Create partner resource folders and add approved asset references. |
 | `partner-openapi-registry.json` | n/a | Machine-readable index of the partner schema set. |
 
 ## Base URL Placeholders
@@ -38,7 +42,11 @@ Replace these before using in GPT Builder:
 ```txt
 https://YOUR-AUTOMATION-DOMAIN.com
 https://brokerflow-ai.vercel.app/api
+https://brokerflow-ai.vercel.app/api/calendar
+https://brokerflow-ai.vercel.app/api/drive
 ```
+
+OAuth files use placeholder provider URLs. Replace those with the real Google, Microsoft, HubSpot, or wrapper OAuth authorization/token URLs before production use.
 
 ## Recommended Build Order
 
@@ -50,8 +58,12 @@ https://brokerflow-ai.vercel.app/api
 6. Partner attribution
 7. Partner follow-up trigger
 8. Partner onboarding
-9. Partner performance
-10. Partner payout readiness
+9. Partner portal provisioning
+10. Co-marketing asset requests
+11. Partner activity summaries
+12. Partner payout readiness review
+13. Partner calendar scheduling
+14. Partner resource folder setup
 
 ## Workflow Map
 
@@ -65,6 +77,6 @@ Partner signup
   -> attribution event
   -> broker review task
   -> partner update/follow-up
-  -> performance summary
+  -> activity summary
   -> payout readiness review
 ```

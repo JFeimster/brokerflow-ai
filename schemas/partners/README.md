@@ -1,6 +1,6 @@
 # Partner Action OpenAPI Schemas
 
-This folder contains Action-ready OpenAPI 3.1.0 schemas for internal partner, affiliate, channel partner, referral-partner, and partner-ops-intelligence workflows in BrokerFlow AI.
+This folder contains Action-ready OpenAPI 3.1.0 schemas and implementation docs for internal partner, affiliate, channel partner, referral-partner, and partner-ops-intelligence workflows in BrokerFlow AI.
 
 These schemas are designed for Custom GPT Actions and automation backends such as n8n, Zapier, Make, Airtable, HubSpot, GoHighLevel, or a controlled BrokerFlow API wrapper.
 
@@ -15,7 +15,7 @@ These schemas are designed for Custom GPT Actions and automation backends such a
 - No raw borrower documents, bank statements, tax returns, or private lender credentials belong in Action payloads.
 - Use `event_id` for dedupe and `shared_secret` for no-auth webhook hardening.
 
-## Files
+## Schema Files
 
 | File | Auth | Purpose |
 | --- | --- | --- |
@@ -42,7 +42,16 @@ These schemas are designed for Custom GPT Actions and automation backends such a
 | `openapi-api-key-partner-health-monitor.yaml` | API Key Bearer | Run internal partner health checks and route health flags. |
 | `openapi-api-key-partner-resource-recommendations.yaml` | API Key Bearer | Recommend approved resources, assets, and training modules by partner stage. |
 | `openapi-api-key-partner-quarterly-review.yaml` | API Key Bearer | Prepare internal partner quarterly reviews and follow-up tasks. |
-| `partner-openapi-registry.json` | n/a | Machine-readable index of the partner schema set. |
+
+## Implementation Docs
+
+| File | Purpose |
+| --- | --- |
+| `gpt-builder-import-guide.md` | Step-by-step GPT Builder import, auth, and test guidance. |
+| `action-testing-checklist.md` | Pre-production validation checklist for no-auth, API-key, and OAuth Actions. |
+| `backend-implementation-notes.md` | Backend validation, idempotency, rate-limit, logging, and review-queue notes. |
+| `action-rollout-plan.md` | Phased rollout plan from no-auth intake to OAuth integrations. |
+| `partner-openapi-registry.json` | Machine-readable index of schemas and docs. |
 
 ## Base URL Placeholders
 
@@ -82,6 +91,10 @@ OAuth files use placeholder provider URLs. Replace those with the real Google, M
 21. Partner health monitor
 22. Partner resource recommendations
 23. Partner quarterly review
+24. GPT Builder import guide
+25. Action testing checklist
+26. Backend implementation notes
+27. Action rollout plan
 
 ## Workflow Map
 
@@ -103,4 +116,7 @@ Partner signup
   -> activity summary
   -> quarterly review
   -> payout readiness review
+  -> GPT Builder testing
+  -> backend implementation
+  -> phased rollout
 ```

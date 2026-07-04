@@ -1,8 +1,8 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "project": "brokerflow-ai",
   "folder": "schemas/partners",
-  "description": "Action-ready OpenAPI schemas for partner, affiliate, channel partner, referral partner, and partner ops intelligence workflows.",
+  "description": "Action-ready OpenAPI schemas and implementation docs for partner, affiliate, channel partner, referral partner, and partner ops intelligence workflows.",
   "base_urls": {
     "no_auth_webhooks": "https://YOUR-AUTOMATION-DOMAIN.com",
     "api_key_backend": "https://brokerflow-ai.vercel.app/api",
@@ -34,10 +34,16 @@
     { "id": "partner-resource-recommendations", "file": "openapi-api-key-partner-resource-recommendations.yaml", "auth": "api_key_bearer", "status": "built" },
     { "id": "partner-quarterly-review", "file": "openapi-api-key-partner-quarterly-review.yaml", "auth": "api_key_bearer", "status": "built" }
   ],
+  "docs": [
+    { "id": "gpt-builder-import-guide", "file": "gpt-builder-import-guide.md", "status": "built" },
+    { "id": "action-testing-checklist", "file": "action-testing-checklist.md", "status": "built" },
+    { "id": "backend-implementation-notes", "file": "backend-implementation-notes.md", "status": "built" },
+    { "id": "action-rollout-plan", "file": "action-rollout-plan.md", "status": "built" }
+  ],
   "planned_next": [
-    "schemas/partners/gpt-builder-import-guide.md",
-    "schemas/partners/action-testing-checklist.md",
-    "schemas/partners/backend-implementation-notes.md"
+    "schemas/partners/examples/",
+    "schemas/partners/payloads/",
+    "schemas/partners/postman-or-http-tests/"
   ],
   "guardrails": [
     "No automatic partner activation.",

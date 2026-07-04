@@ -1,8 +1,8 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "project": "brokerflow-ai",
   "folder": "schemas/partners",
-  "description": "Action-ready OpenAPI schemas for partner, affiliate, channel partner, and referral partner workflows.",
+  "description": "Action-ready OpenAPI schemas for partner, affiliate, channel partner, referral partner, and partner ops intelligence workflows.",
   "base_urls": {
     "no_auth_webhooks": "https://YOUR-AUTOMATION-DOMAIN.com",
     "api_key_backend": "https://brokerflow-ai.vercel.app/api",
@@ -29,12 +29,15 @@
     { "id": "partner-training-progress", "file": "openapi-api-key-partner-training-progress.yaml", "auth": "api_key_bearer", "status": "built" },
     { "id": "partner-outreach-campaigns", "file": "openapi-api-key-partner-outreach-campaigns.yaml", "auth": "api_key_bearer", "status": "built" },
     { "id": "partner-lifecycle-automation", "file": "openapi-api-key-partner-lifecycle-automation.yaml", "auth": "api_key_bearer", "status": "built" },
-    { "id": "partner-segment-playbooks", "file": "openapi-api-key-partner-segment-playbooks.yaml", "auth": "api_key_bearer", "status": "built" }
+    { "id": "partner-segment-playbooks", "file": "openapi-api-key-partner-segment-playbooks.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-health-monitor", "file": "openapi-api-key-partner-health-monitor.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-resource-recommendations", "file": "openapi-api-key-partner-resource-recommendations.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-quarterly-review", "file": "openapi-api-key-partner-quarterly-review.yaml", "auth": "api_key_bearer", "status": "built" }
   ],
   "planned_next": [
-    "openapi-api-key-partner-health-monitor.yaml",
-    "openapi-api-key-partner-resource-recommendations.yaml",
-    "openapi-api-key-partner-quarterly-review.yaml"
+    "schemas/partners/gpt-builder-import-guide.md",
+    "schemas/partners/action-testing-checklist.md",
+    "schemas/partners/backend-implementation-notes.md"
   ],
   "guardrails": [
     "No automatic partner activation.",

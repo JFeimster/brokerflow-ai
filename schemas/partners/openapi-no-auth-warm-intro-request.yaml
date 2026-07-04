@@ -1,0 +1,97 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Warm Intro Request Webhook
+  version: 1.0.0
+  description: Queue a warm-intro request for a referral partner or center of influence to review before sending.
+servers:
+  - url: https://YOUR-AUTOMATION-DOMAIN.com
+security: []
+paths:
+  /webhook/warm-intro-request:
+    post:
+      operationId: submitWarmIntroRequest
+      summary: Queue a partner warm-intro request for human review
+      x-openai-isConsequential: true
+      parameters:
+        - name: X-BrokerFlow-Source
+          in: header
+          required: false
+          schema: { type: string, example: custom_gpt }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                source: { type: string, example: custom_gpt }
+                event_type: { type: string, enum: [warm_intro_request] }
+                event_id: { type: string }
+                submitted_at: { type: string, format: date-time }
+                shared_secret: { type: string }
+                human_review_required: { type: boolean, default: true }
+                payload:
+                  type: object
+                  additionalProperties: true
+                  properties:
+                    partner:
+                      type: object
+                      properties:
+                        partner_id: { type: string }
+                        contact_name: { type: string }
+                        email: { type: string, format: email }
+                      required: [contact_name, email]
+                    borrower:
+                      type: object
+                      properties:
+                        first_name: { type: string }
+                        business_name: { type: string }
+                    intro_context:
+                      type: object
+                      properties:
+                        reason: { type: string }
+                        recommended_channel:
+                          type: string
+                          enum: [email, sms, phone, linkedin, other]
+                        draft_message: { type: string }
+                    owner:
+                      type: string
+                      format: email
+                  required: [partner, intro_context]
+              required: [source, event_type, event_id, shared_secret, human_review_required, payload]
+      responses:
+        "200":
+          description: Warm intro request queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [accepted, queued] }
+                  message: { type: string }
+                  external_record_id: { type: string }
+                required: [status, message]
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [error, invalid_request] }
+        message: { type: string }
+        errors:
+          type: array
+          items: { type: string }
+      required: [status, message]
+x-brokerflow-rate-limit:
+  suggested: 20 requests/minute per source
+x-brokerflow-guardrails:
+  - Human review required before sending.
+  - Use possible-fit language only.
+  - Never imply approval, qualification, eligibility, or guaranteed funding.

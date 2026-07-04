@@ -1,0 +1,125 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Onboarding API
+  version: 1.0.0
+  description: API-key protected endpoints for partner onboarding checklists and status updates.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    OnboardingStep:
+      type: string
+      enum: [complete_profile, review_referral_rules, confirm_program_terms, receive_tracking_link, receive_partner_assets, schedule_launch_call]
+    StandardResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, processed, queued] }
+        message: { type: string }
+        partner_id: { type: string }
+        checklist_id: { type: string }
+        completion_percent: { type: number }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/onboarding-checklist:
+    post:
+      operationId: createPartnerOnboardingChecklist
+      summary: Create a partner onboarding checklist
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                partner_type: { type: string }
+                checklist_type:
+                  type: string
+                  enum: [affiliate_partner, referral_partner, channel_partner, coi_partner]
+                required_steps:
+                  type: array
+                  items: { $ref: "#/components/schemas/OnboardingStep" }
+                owner: { type: string, format: email }
+                human_review_required: { type: boolean, default: true }
+              required: [checklist_type, required_steps]
+      responses:
+        "200":
+          description: Checklist created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StandardResponse" }
+  /partners/{partner_id}/onboarding-step:
+    patch:
+      operationId: updatePartnerOnboardingStep
+      summary: Update one onboarding step for a partner
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                step: { $ref: "#/components/schemas/OnboardingStep" }
+                status:
+                  type: string
+                  enum: [not_started, in_progress, completed, blocked]
+                notes: { type: string }
+              required: [step, status]
+      responses:
+        "200":
+          description: Step updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StandardResponse" }
+  /partners/{partner_id}/onboarding-status:
+    get:
+      operationId: getPartnerOnboardingStatus
+      summary: Get partner onboarding status
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Onboarding status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [processed] }
+                  partner_id: { type: string }
+                  checklist_id: { type: string }
+                  completion_percent: { type: number }
+                  steps:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        step: { $ref: "#/components/schemas/OnboardingStep" }
+                        status: { type: string }
+                required: [status, partner_id]
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per API key
+x-brokerflow-guardrails:
+  - Do not activate a partner automatically when steps are incomplete.
+  - Program terms and asset review steps require human confirmation.

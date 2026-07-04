@@ -1,0 +1,127 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Health Monitor API
+  version: 1.0.0
+  description: API-key protected endpoints for internal partner health checks, risk flags, and follow-up recommendations. This schema does not deactivate partners automatically.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    PartnerHealthStatus:
+      type: string
+      enum: [healthy, watch, at_risk, inactive, needs_review]
+    HealthMonitorResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, processed, queued] }
+        message: { type: string }
+        partner_id: { type: string }
+        health_status:
+          $ref: "#/components/schemas/PartnerHealthStatus"
+        health_score: { type: integer, minimum: 0, maximum: 100 }
+        recommended_next_action: { type: string }
+        human_review_required: { type: boolean }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/health:
+    get:
+      operationId: getPartnerHealth
+      summary: Get internal partner health status
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: lookback_days
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 365, default: 90 }
+      responses:
+        "200":
+          description: Partner health status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthMonitorResponse" }
+  /partners/{partner_id}/health-check:
+    post:
+      operationId: runPartnerHealthCheck
+      summary: Run a partner health check and queue recommended internal action
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                lookback_days: { type: integer, minimum: 1, maximum: 365, default: 90 }
+                signals:
+                  type: object
+                  properties:
+                    referrals_submitted: { type: integer, minimum: 0 }
+                    last_referral_at: { type: string, format: date-time }
+                    onboarding_complete: { type: boolean }
+                    training_complete: { type: boolean }
+                    open_followups: { type: integer, minimum: 0 }
+                    asset_review_needed: { type: boolean }
+                human_review_required: { type: boolean, default: true }
+              required: [signals]
+      responses:
+        "200":
+          description: Health check processed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthMonitorResponse" }
+  /partners/{partner_id}/health-flag:
+    post:
+      operationId: addPartnerHealthFlag
+      summary: Add an internal health flag to a partner record
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                flag_type:
+                  type: string
+                  enum: [inactive, low_quality_referrals, onboarding_blocked, training_incomplete, asset_review_needed, needs_owner_followup]
+                severity:
+                  type: string
+                  enum: [low, medium, high]
+                note: { type: string }
+                owner: { type: string, format: email }
+                human_review_required: { type: boolean, default: true }
+              required: [flag_type, severity]
+      responses:
+        "200":
+          description: Health flag added
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthMonitorResponse" }
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per API key
+x-brokerflow-guardrails:
+  - Partner health is an internal routing signal only.
+  - This schema does not deactivate, suspend, approve, or activate partners automatically.
+  - Human review required before status changes that affect partner access or payouts.
+  - Do not include borrower-level sensitive details in health checks.

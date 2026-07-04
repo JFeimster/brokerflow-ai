@@ -1,0 +1,134 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Quarterly Review API
+  version: 1.0.0
+  description: API-key protected endpoints for preparing internal partner quarterly business reviews, summaries, agenda items, and follow-up tasks.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    QuarterlyReviewResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, queued, processed] }
+        message: { type: string }
+        partner_id: { type: string }
+        review_id: { type: string }
+        review_period: { type: string }
+        human_review_required: { type: boolean }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/quarterly-review:
+    post:
+      operationId: createPartnerQuarterlyReview
+      summary: Prepare an internal partner quarterly review
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                period_start: { type: string, format: date }
+                period_end: { type: string, format: date }
+                review_type:
+                  type: string
+                  enum: [quarterly_business_review, monthly_partner_review, reactivation_review, annual_partner_review]
+                include_sections:
+                  type: array
+                  items:
+                    type: string
+                    enum: [activity_summary, attribution_summary, training_status, resource_usage, open_followups, opportunities, risks, next_steps]
+                human_review_required: { type: boolean, default: true }
+              required: [period_start, period_end, review_type]
+      responses:
+        "200":
+          description: Partner review prepared
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QuarterlyReviewResponse" }
+  /partners/{partner_id}/quarterly-review/{review_id}:
+    get:
+      operationId: getPartnerQuarterlyReview
+      summary: Get a prepared partner quarterly review
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: review_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Partner review
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                properties:
+                  status: { type: string, enum: [processed] }
+                  partner_id: { type: string }
+                  review_id: { type: string }
+                  sections:
+                    type: object
+                    additionalProperties: true
+                required: [status, partner_id, review_id]
+  /partners/{partner_id}/quarterly-review/{review_id}/followup-task:
+    post:
+      operationId: createPartnerQuarterlyReviewFollowupTask
+      summary: Create an internal follow-up task from a partner review
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: review_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_type:
+                  type: string
+                  enum: [schedule_review_call, send_resources, update_playbook, review_health_flags, discuss_referral_quality, assign_training]
+                owner: { type: string, format: email }
+                due_at: { type: string, format: date-time }
+                notes: { type: string }
+                human_review_required: { type: boolean, default: true }
+              required: [task_type]
+      responses:
+        "200":
+          description: Follow-up task created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QuarterlyReviewResponse" }
+x-brokerflow-rate-limit:
+  suggested: 20 requests/minute per API key
+x-brokerflow-guardrails:
+  - Quarterly reviews are internal operating summaries.
+  - Do not include borrower-level sensitive data in review outputs.
+  - Human review required before sharing summaries externally.
+  - Follow-up tasks do not trigger partner-facing messages automatically.

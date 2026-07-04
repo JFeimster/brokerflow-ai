@@ -1,6 +1,6 @@
 # Partner Action OpenAPI Schemas
 
-This folder contains Action-ready OpenAPI 3.1.0 schemas for internal partner, affiliate, channel partner, and referral-partner workflows in BrokerFlow AI.
+This folder contains Action-ready OpenAPI 3.1.0 schemas for internal partner, affiliate, channel partner, referral-partner, and partner-ops-intelligence workflows in BrokerFlow AI.
 
 These schemas are designed for Custom GPT Actions and automation backends such as n8n, Zapier, Make, Airtable, HubSpot, GoHighLevel, or a controlled BrokerFlow API wrapper.
 
@@ -9,7 +9,7 @@ These schemas are designed for Custom GPT Actions and automation backends such a
 - No Action may approve, decline, qualify, guarantee, underwrite, fund, pay, or activate automatically.
 - Funding-adjacent partner work must route to human review.
 - No-auth schemas are for low-risk intake, triggers, logging, and workflow starts.
-- API-key schemas are for controlled backend operations such as CRM sync, attribution, onboarding, activity summaries, payout review, assets, portal provisioning, program review, fit scoring, training progress, outreach, lifecycle routing, and playbooks.
+- API-key schemas are for controlled backend operations such as CRM sync, attribution, onboarding, activity summaries, payout review, assets, portal provisioning, program review, fit scoring, training progress, outreach, lifecycle routing, playbooks, health monitoring, resource recommendations, and quarterly reviews.
 - OAuth schemas are for per-user integrations such as Calendar and Drive.
 - Every write Action uses `x-openai-isConsequential: true`.
 - No raw borrower documents, bank statements, tax returns, or private lender credentials belong in Action payloads.
@@ -39,6 +39,9 @@ These schemas are designed for Custom GPT Actions and automation backends such a
 | `openapi-api-key-partner-outreach-campaigns.yaml` | API Key Bearer | Create partner outreach campaign plans and queue internal outreach tasks. |
 | `openapi-api-key-partner-lifecycle-automation.yaml` | API Key Bearer | Track partner lifecycle events and recommend internal next actions. |
 | `openapi-api-key-partner-segment-playbooks.yaml` | API Key Bearer | List and assign partner segment playbooks. |
+| `openapi-api-key-partner-health-monitor.yaml` | API Key Bearer | Run internal partner health checks and route health flags. |
+| `openapi-api-key-partner-resource-recommendations.yaml` | API Key Bearer | Recommend approved resources, assets, and training modules by partner stage. |
+| `openapi-api-key-partner-quarterly-review.yaml` | API Key Bearer | Prepare internal partner quarterly reviews and follow-up tasks. |
 | `partner-openapi-registry.json` | n/a | Machine-readable index of the partner schema set. |
 
 ## Base URL Placeholders
@@ -76,6 +79,9 @@ OAuth files use placeholder provider URLs. Replace those with the real Google, M
 18. Partner outreach campaigns
 19. Partner lifecycle automation
 20. Partner segment playbooks
+21. Partner health monitor
+22. Partner resource recommendations
+23. Partner quarterly review
 
 ## Workflow Map
 
@@ -92,6 +98,9 @@ Partner signup
   -> broker review task
   -> partner update/follow-up
   -> lifecycle next action
+  -> health monitor
+  -> resource recommendations
   -> activity summary
+  -> quarterly review
   -> payout readiness review
 ```

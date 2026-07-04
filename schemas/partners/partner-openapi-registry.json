@@ -1,0 +1,46 @@
+{
+  "version": "1.3.0",
+  "project": "brokerflow-ai",
+  "folder": "schemas/partners",
+  "description": "Action-ready OpenAPI schemas for partner, affiliate, channel partner, and referral partner workflows.",
+  "base_urls": {
+    "no_auth_webhooks": "https://YOUR-AUTOMATION-DOMAIN.com",
+    "api_key_backend": "https://brokerflow-ai.vercel.app/api",
+    "oauth_calendar_wrapper": "https://brokerflow-ai.vercel.app/api/calendar",
+    "oauth_drive_wrapper": "https://brokerflow-ai.vercel.app/api/drive"
+  },
+  "schemas": [
+    { "id": "partner-signup", "file": "openapi-no-auth-partner-signup.yaml", "auth": "none", "status": "built" },
+    { "id": "partner-referral-lead-intake", "file": "openapi-no-auth-referral-lead-intake.yaml", "auth": "none", "status": "built" },
+    { "id": "channel-partner-prospect", "file": "openapi-no-auth-channel-partner-prospect.yaml", "auth": "none", "status": "built" },
+    { "id": "warm-intro-request", "file": "openapi-no-auth-warm-intro-request.yaml", "auth": "none", "status": "built" },
+    { "id": "partner-followup-trigger", "file": "openapi-no-auth-partner-followup-trigger.yaml", "auth": "none", "status": "built" },
+    { "id": "partner-crm-sync", "file": "openapi-api-key-partner-crm-sync.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-attribution", "file": "openapi-api-key-partner-attribution.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-onboarding", "file": "openapi-api-key-partner-onboarding.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-activity-summary", "file": "openapi-api-key-partner-activity-summary.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-payout-readiness", "file": "openapi-api-key-partner-payout-readiness.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "co-marketing-assets", "file": "openapi-api-key-co-marketing-assets.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-portal-provisioning", "file": "openapi-api-key-partner-portal-provisioning.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-calendar-scheduling", "file": "openapi-oauth-partner-calendar-scheduling.yaml", "auth": "oauth_authorization_code", "status": "built" },
+    { "id": "partner-drive-folder", "file": "openapi-oauth-partner-drive-folder.yaml", "auth": "oauth_authorization_code", "status": "built" },
+    { "id": "partner-program-review", "file": "openapi-api-key-partner-program-review.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-fit-scoring", "file": "openapi-api-key-partner-fit-scoring.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-training-progress", "file": "openapi-api-key-partner-training-progress.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-outreach-campaigns", "file": "openapi-api-key-partner-outreach-campaigns.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-lifecycle-automation", "file": "openapi-api-key-partner-lifecycle-automation.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-segment-playbooks", "file": "openapi-api-key-partner-segment-playbooks.yaml", "auth": "api_key_bearer", "status": "built" }
+  ],
+  "planned_next": [
+    "openapi-api-key-partner-health-monitor.yaml",
+    "openapi-api-key-partner-resource-recommendations.yaml",
+    "openapi-api-key-partner-quarterly-review.yaml"
+  ],
+  "guardrails": [
+    "No automatic partner activation.",
+    "No-auth endpoints must include shared_secret and event_id.",
+    "Funding-adjacent and partner-activation work requires human review.",
+    "Do not transmit raw documents or sensitive borrower data through partner-facing schemas.",
+    "OAuth schemas use wrapper endpoints and placeholder provider URLs that must be replaced before production."
+  ]
+}

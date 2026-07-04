@@ -1,0 +1,112 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Resource Folder API
+  version: 1.0.0
+  description: OAuth-protected endpoints for creating partner resource folders and placing approved partner assets in a user's Drive or document workspace.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api/drive
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://provider.example.com/oauth/authorize
+          tokenUrl: https://provider.example.com/oauth/token
+          scopes:
+            drive.file: Create and manage files/folders created by this app.
+  schemas:
+    FolderResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, processed] }
+        message: { type: string }
+        folder_id: { type: string }
+        folder_url: { type: string }
+      required: [status, message]
+security:
+  - oauth2: [drive.file]
+paths:
+  /partner-resource-folder:
+    post:
+      operationId: createPartnerResourceFolder
+      summary: Create a partner resource folder
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                partner_id: { type: string }
+                folder_name: { type: string }
+                assets:
+                  type: array
+                  items:
+                    type: string
+                    enum: [referral_rules, approved_email_templates, funding_readiness_scorecard_link, tracking_link, faq, training_doc]
+                access:
+                  type: object
+                  properties:
+                    partner_email: { type: string, format: email }
+                    permission:
+                      type: string
+                      enum: [viewer, commenter]
+              required: [partner_id, folder_name]
+      responses:
+        "200":
+          description: Partner folder created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FolderResponse" }
+  /partner-resource-folder/{folder_id}/asset:
+    post:
+      operationId: addPartnerResourceAsset
+      summary: Add an approved asset reference to a partner resource folder
+      x-openai-isConsequential: true
+      parameters:
+        - name: folder_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                asset_name: { type: string }
+                asset_type: { type: string }
+                asset_url: { type: string }
+                notes: { type: string }
+              required: [asset_name, asset_type]
+      responses:
+        "200":
+          description: Asset added
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FolderResponse" }
+  /partner-resource-folder/{folder_id}:
+    get:
+      operationId: getPartnerResourceFolder
+      summary: Get partner resource folder metadata
+      parameters:
+        - name: folder_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Folder metadata
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FolderResponse" }
+x-brokerflow-rate-limit:
+  suggested: provider limits apply
+x-brokerflow-guardrails:
+  - Use file-scoped access rather than full-drive access.
+  - Do not place borrower documents in partner resource folders.
+  - Viewer or commenter access by default.

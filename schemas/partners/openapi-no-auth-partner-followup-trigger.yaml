@@ -1,0 +1,87 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Follow Up Trigger
+  version: 1.0.0
+  description: Trigger approved partner onboarding, update, recap, and reactivation workflows.
+servers:
+  - url: https://YOUR-AUTOMATION-DOMAIN.com
+security: []
+paths:
+  /webhook/partner-followup:
+    post:
+      operationId: triggerPartnerFollowup
+      summary: Trigger a partner follow up workflow
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                source: { type: string, example: custom_gpt }
+                event_type: { type: string, enum: [partner_followup] }
+                event_id: { type: string }
+                submitted_at: { type: string, format: date-time }
+                shared_secret: { type: string }
+                human_review_required: { type: boolean, default: false }
+                payload:
+                  type: object
+                  additionalProperties: true
+                  properties:
+                    partner_id: { type: string }
+                    partner:
+                      type: object
+                      properties:
+                        contact_name: { type: string }
+                        email: { type: string, format: email }
+                    sequence_type:
+                      type: string
+                      enum: [new_signup, onboarding_incomplete, referral_received, referral_status_update, monthly_recap, partner_reactivation, co_marketing_asset_ready]
+                    channel:
+                      type: string
+                      enum: [email, phone, both, internal_only]
+                    first_message_delay_hours:
+                      type: integer
+                      minimum: 0
+                    context:
+                      type: object
+                      additionalProperties: true
+                  required: [sequence_type]
+              required: [source, event_type, event_id, shared_secret, payload]
+      responses:
+        "200":
+          description: Partner follow up queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [accepted, queued] }
+                  message: { type: string }
+                  external_record_id: { type: string }
+                required: [status, message]
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [error, invalid_request] }
+        message: { type: string }
+        errors:
+          type: array
+          items: { type: string }
+      required: [status, message]
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per source
+x-brokerflow-guardrails:
+  - Honor partner contact preferences.
+  - Use approved partner-facing templates.
+  - Human review required if the message references borrower-specific or deal-specific information.

@@ -1,0 +1,97 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Calendar Scheduling API
+  version: 1.0.0
+  description: OAuth-protected endpoints for scheduling partner discovery and onboarding meetings through a user's calendar account.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api/calendar
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://provider.example.com/oauth/authorize
+          tokenUrl: https://provider.example.com/oauth/token
+          scopes:
+            calendar.events: Create and read calendar events needed for partner meetings.
+  schemas:
+    CalendarResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, processed] }
+        message: { type: string }
+        event_id: { type: string }
+        calendar_url: { type: string }
+      required: [status, message]
+security:
+  - oauth2: [calendar.events]
+paths:
+  /availability:
+    get:
+      operationId: getPartnerMeetingAvailability
+      summary: Get available time windows for partner meetings
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema: { type: string, format: date }
+        - name: meeting_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [partner_discovery_call, partner_onboarding_call, referral_review_call]
+      responses:
+        "200":
+          description: Availability windows
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [processed] }
+                  available_windows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        start_time: { type: string, format: date-time }
+                        end_time: { type: string, format: date-time }
+                required: [status, available_windows]
+  /partner-discovery-call:
+    post:
+      operationId: schedulePartnerDiscoveryCall
+      summary: Schedule a partner discovery call
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                partner_id: { type: string }
+                partner_name: { type: string }
+                contact_name: { type: string }
+                contact_email: { type: string, format: email }
+                meeting_type:
+                  type: string
+                  enum: [partner_discovery_call, partner_onboarding_call, referral_review_call]
+                start_time: { type: string, format: date-time }
+                end_time: { type: string, format: date-time }
+                description: { type: string }
+              required: [contact_email, meeting_type, start_time, end_time]
+      responses:
+        "200":
+          description: Meeting scheduled
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CalendarResponse" }
+x-brokerflow-rate-limit:
+  suggested: provider limits apply
+x-brokerflow-guardrails:
+  - Use least-privilege calendar scopes.
+  - Do not include sensitive borrower details in calendar descriptions.
+  - Scheduling does not imply partner activation.

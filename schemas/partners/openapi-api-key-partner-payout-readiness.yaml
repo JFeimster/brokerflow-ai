@@ -1,0 +1,86 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Payout Readiness API
+  version: 1.0.0
+  description: API-key protected endpoints for queuing partner payout readiness review. This schema does not move money or approve payment.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ReviewResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, queued, processed] }
+        message: { type: string }
+        partner_id: { type: string }
+        review_id: { type: string }
+        ready_for_human_review: { type: boolean }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/payout-review:
+    post:
+      operationId: queuePartnerPayoutReview
+      summary: Queue partner payout readiness for human review
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deal_id: { type: string }
+                referral_event_id: { type: string }
+                readiness:
+                  type: object
+                  properties:
+                    referral_agreement_on_file: { type: boolean }
+                    tax_form_on_file: { type: boolean }
+                    attribution_verified: { type: boolean }
+                    funding_confirmed_by_human: { type: boolean }
+                estimated_amount: { type: number, minimum: 0 }
+                human_review_required: { type: boolean, default: true }
+              required: [readiness, human_review_required]
+      responses:
+        "200":
+          description: Review queued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewResponse" }
+  /partners/{partner_id}/payout-readiness:
+    get:
+      operationId: getPartnerPayoutReadiness
+      summary: Get partner payout readiness review status
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: deal_id
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Readiness status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewResponse" }
+x-brokerflow-rate-limit:
+  suggested: 10 requests/minute per API key
+x-brokerflow-guardrails:
+  - No money movement endpoint is included.
+  - Never mark payout approved automatically.
+  - Require human review before payment approval or release.

@@ -1,0 +1,177 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner CRM Sync API
+  version: 1.0.0
+  description: API-key protected endpoints for creating, updating, reading, and staging partner CRM records.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: GPT Builder API Key auth using Bearer format.
+  schemas:
+    Partner:
+      type: object
+      additionalProperties: true
+      properties:
+        partner_id: { type: string }
+        partner_type:
+          type: string
+          enum: [affiliate, referral_partner, channel_partner, boutique_accountant, small_business_attorney, business_broker, consultant, other]
+        company_name: { type: string }
+        contact_name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        website: { type: string }
+        stage:
+          type: string
+          enum: [new_signup, prospect_identified, outreach_needed, contacted, discovery_scheduled, under_review, approved_for_onboarding, onboarding_started, active_partner, inactive_partner, do_not_contact]
+        owner: { type: string, format: email }
+        tags:
+          type: array
+          items: { type: string }
+      required: [partner_type, contact_name, email]
+    StandardResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, processed, queued] }
+        message: { type: string }
+        partner_id: { type: string }
+        stage: { type: string }
+      required: [status, message]
+    ErrorResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [error, invalid_request, unauthorized] }
+        message: { type: string }
+        errors:
+          type: array
+          items: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/upsert:
+    post:
+      operationId: upsertPartnerRecord
+      summary: Create or update a partner CRM record
+      x-openai-isConsequential: true
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                match_on:
+                  type: string
+                  enum: [email, partner_id, phone]
+                  default: email
+                partner:
+                  $ref: "#/components/schemas/Partner"
+              required: [partner]
+      responses:
+        "200":
+          description: Partner upserted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StandardResponse" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /partners/{partner_id}:
+    get:
+      operationId: getPartnerRecord
+      summary: Read a partner CRM record
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Partner record
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [processed] }
+                  partner:
+                    $ref: "#/components/schemas/Partner"
+                required: [status, partner]
+  /partners/{partner_id}/stage:
+    patch:
+      operationId: updatePartnerStage
+      summary: Update a partner stage using review-safe partner stages
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stage:
+                  type: string
+                  enum: [new_signup, prospect_identified, outreach_needed, contacted, discovery_scheduled, under_review, approved_for_onboarding, onboarding_started, inactive_partner, do_not_contact]
+                reason: { type: string }
+                human_review_required: { type: boolean, default: true }
+              required: [stage, reason]
+      responses:
+        "200":
+          description: Stage updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StandardResponse" }
+  /partners/{partner_id}/notes:
+    post:
+      operationId: addPartnerNote
+      summary: Add an internal note to a partner record
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note_type:
+                  type: string
+                  enum: [outreach_note, discovery_note, referral_note, compliance_note, system_note]
+                body: { type: string }
+                author: { type: string, default: brokerflow-ai }
+              required: [body]
+      responses:
+        "200":
+          description: Note added
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StandardResponse" }
+x-brokerflow-rate-limit:
+  suggested: 60 requests/minute per API key
+x-brokerflow-guardrails:
+  - No delete endpoint.
+  - Do not auto-activate partners without human review.
+  - Use separate staging and production API keys.

@@ -1,0 +1,113 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Outreach Campaigns API
+  version: 1.0.0
+  description: API-key protected endpoints for planning partner outreach campaigns, queueing outreach tasks, and tracking outreach status. This schema does not send partner-facing messages automatically.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    OutreachResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, queued, processed] }
+        message: { type: string }
+        campaign_id: { type: string }
+        task_id: { type: string }
+        partner_id: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partner-outreach/campaigns:
+    post:
+      operationId: createPartnerOutreachCampaign
+      summary: Create an internal partner outreach campaign plan
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                campaign_name: { type: string }
+                target_segment:
+                  type: string
+                  enum: [boutique_accountants, small_business_attorneys, business_brokers, consultants, affiliates, inactive_partners, all_partners]
+                outreach_goal:
+                  type: string
+                  enum: [discovery_call, partner_signup, referral_activation, training_completion, asset_review, reactivation]
+                owner: { type: string, format: email }
+                notes: { type: string }
+                human_review_required: { type: boolean, default: true }
+              required: [campaign_name, target_segment, outreach_goal]
+      responses:
+        "200":
+          description: Campaign created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OutreachResponse" }
+  /partner-outreach/tasks:
+    post:
+      operationId: createPartnerOutreachTask
+      summary: Queue an internal outreach task for a partner or prospect
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                campaign_id: { type: string }
+                partner_id: { type: string }
+                prospect_id: { type: string }
+                task_type:
+                  type: string
+                  enum: [send_intro_email, make_call, connect_on_linkedin, schedule_discovery, follow_up, review_assets]
+                due_at: { type: string, format: date-time }
+                owner: { type: string, format: email }
+                draft_note: { type: string }
+                human_review_required: { type: boolean, default: true }
+              required: [task_type]
+      responses:
+        "200":
+          description: Outreach task queued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OutreachResponse" }
+  /partner-outreach/campaigns/{campaign_id}/status:
+    get:
+      operationId: getPartnerOutreachCampaignStatus
+      summary: Get partner outreach campaign status
+      parameters:
+        - name: campaign_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Campaign status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [processed] }
+                  campaign_id: { type: string }
+                  summary:
+                    type: object
+                    additionalProperties: true
+                required: [status, campaign_id]
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per API key
+x-brokerflow-guardrails:
+  - This schema queues outreach work; it does not send messages automatically.
+  - Human review required before external partner-facing outreach.
+  - Use approved templates for partner-facing content.

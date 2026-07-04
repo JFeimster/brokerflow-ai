@@ -1,0 +1,116 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Referral Lead Intake
+  version: 1.0.0
+  description: Capture referred borrower leads from partners while preserving attribution and routing to broker review.
+servers:
+  - url: https://YOUR-AUTOMATION-DOMAIN.com
+security: []
+paths:
+  /webhook/partner-referral-lead:
+    post:
+      operationId: submitPartnerReferralLead
+      summary: Submit a referred borrower lead from a partner
+      x-openai-isConsequential: true
+      parameters:
+        - name: X-BrokerFlow-Source
+          in: header
+          required: false
+          schema: { type: string, example: custom_gpt }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                source: { type: string, example: custom_gpt }
+                event_type: { type: string, enum: [partner_referral_lead] }
+                event_id: { type: string }
+                submitted_at: { type: string, format: date-time }
+                shared_secret: { type: string }
+                human_review_required: { type: boolean, default: true }
+                payload:
+                  type: object
+                  additionalProperties: true
+                  properties:
+                    partner:
+                      type: object
+                      properties:
+                        partner_id: { type: string }
+                        company_name: { type: string }
+                        contact_name: { type: string }
+                        email: { type: string, format: email }
+                      required: [contact_name, email]
+                    borrower:
+                      type: object
+                      properties:
+                        first_name: { type: string }
+                        last_name: { type: string }
+                        email: { type: string, format: email }
+                        phone: { type: string }
+                        consent_to_contact: { type: boolean }
+                      required: [first_name, email, consent_to_contact]
+                    business:
+                      type: object
+                      properties:
+                        legal_business_name: { type: string }
+                        industry: { type: string }
+                        state: { type: string }
+                        monthly_revenue_range:
+                          type: string
+                          enum: [under_10000, 10000_25000, 25000_50000, 50000_75000, 75000_100000, 100000_plus, unknown]
+                    funding_request:
+                      type: object
+                      properties:
+                        amount_requested: { type: number, minimum: 0 }
+                        use_of_funds: { type: string }
+                        urgency:
+                          type: string
+                          enum: [immediate, within_7_days, within_30_days, exploring]
+                    referral_context:
+                      type: object
+                      properties:
+                        relationship_to_borrower: { type: string }
+                        warm_intro_available: { type: boolean }
+                        notes: { type: string }
+                  required: [partner, borrower]
+              required: [source, event_type, event_id, shared_secret, human_review_required, payload]
+      responses:
+        "200":
+          description: Referral lead received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [accepted, queued] }
+                  message: { type: string }
+                  external_record_id: { type: string }
+                  partner_attribution_id: { type: string }
+                required: [status, message]
+        "400":
+          description: Invalid referral lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [error, invalid_request] }
+        message: { type: string }
+        errors:
+          type: array
+          items: { type: string }
+      required: [status, message]
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per source
+x-brokerflow-guardrails:
+  - Require borrower consent_to_contact before outreach.
+  - Preserve partner attribution.
+  - Create broker review task automatically.
+  - Never approve, decline, qualify, or submit to lenders from this action.

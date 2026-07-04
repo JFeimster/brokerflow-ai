@@ -1,0 +1,129 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Co-Marketing Asset API
+  version: 1.0.0
+  description: API-key protected endpoints for partner-specific asset requests, approved copy, and campaign materials.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    AssetRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        asset_type:
+          type: string
+          enum: [partner_landing_page, email_template, social_post, referral_card, lead_magnet, training_doc]
+        campaign: { type: string }
+        audience: { type: string }
+        cta_url: { type: string }
+        tone: { type: string }
+        required_disclosures:
+          type: array
+          items: { type: string }
+      required: [asset_type, campaign, audience]
+    AssetResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, queued, processed] }
+        message: { type: string }
+        asset_request_id: { type: string }
+        asset_id: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/asset-request:
+    post:
+      operationId: createPartnerAssetRequest
+      summary: Request a partner-specific co-marketing asset
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                asset_request:
+                  $ref: "#/components/schemas/AssetRequest"
+                human_review_required: { type: boolean, default: true }
+              required: [asset_request]
+      responses:
+        "200":
+          description: Asset request queued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssetResponse" }
+  /partners/{partner_id}/assets:
+    get:
+      operationId: getPartnerAssets
+      summary: List available partner assets
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Partner assets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [processed] }
+                  assets:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                required: [status, assets]
+  /partners/{partner_id}/assets/{asset_id}/status:
+    patch:
+      operationId: updatePartnerAssetStatus
+      summary: Update partner asset review status
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: asset_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [draft, needs_review, approved, archived]
+                notes: { type: string }
+              required: [status]
+      responses:
+        "200":
+          description: Asset status updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssetResponse" }
+x-brokerflow-rate-limit:
+  suggested: 20 requests/minute per API key
+x-brokerflow-guardrails:
+  - Human review before publishing partner-facing assets.
+  - Do not invent testimonials, logos, metrics, or outcome claims.
+  - Use approved disclosure language for funding-related campaigns.

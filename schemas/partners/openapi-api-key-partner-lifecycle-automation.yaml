@@ -1,0 +1,119 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Lifecycle Automation API
+  version: 1.0.0
+  description: API-key protected endpoints for managing partner lifecycle events, recommended next actions, and internal automation triggers.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    LifecycleResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, queued, processed] }
+        message: { type: string }
+        partner_id: { type: string }
+        lifecycle_event_id: { type: string }
+        recommended_next_action: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/lifecycle-event:
+    post:
+      operationId: createPartnerLifecycleEvent
+      summary: Create a partner lifecycle event
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event_type:
+                  type: string
+                  enum: [new_signup, prospect_created, discovery_scheduled, onboarding_started, training_assigned, portal_ready, first_referral_received, inactive_30_days, review_needed, reactivation_needed]
+                occurred_at: { type: string, format: date-time }
+                source: { type: string, default: brokerflow-ai }
+                notes: { type: string }
+                human_review_required: { type: boolean, default: true }
+              required: [event_type]
+      responses:
+        "200":
+          description: Lifecycle event created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LifecycleResponse" }
+  /partners/{partner_id}/next-action:
+    post:
+      operationId: recommendPartnerNextAction
+      summary: Recommend the next internal partner action
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_stage: { type: string }
+                latest_event_type: { type: string }
+                context:
+                  type: object
+                  additionalProperties: true
+                human_review_required: { type: boolean, default: true }
+              required: [current_stage]
+      responses:
+        "200":
+          description: Next action recommended
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LifecycleResponse" }
+  /partners/{partner_id}/lifecycle-status:
+    get:
+      operationId: getPartnerLifecycleStatus
+      summary: Get partner lifecycle status
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lifecycle status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [processed] }
+                  partner_id: { type: string }
+                  current_stage: { type: string }
+                  latest_events:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                required: [status, partner_id]
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per API key
+x-brokerflow-guardrails:
+  - Lifecycle automation recommends internal actions only.
+  - Human review required before activation, public profile publishing, or partner-facing claims.
+  - Do not include private borrower records in lifecycle events.

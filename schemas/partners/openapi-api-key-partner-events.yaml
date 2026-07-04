@@ -1,0 +1,78 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Events API
+  version: 1.0.0
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    PartnerEvent:
+      type: object
+      properties:
+        partner_id: { type: string }
+        event_type: { type: string }
+        event_id: { type: string }
+        occurred_at: { type: string, format: date-time }
+        lead_id: { type: string }
+        deal_id: { type: string }
+        metadata:
+          type: object
+          additionalProperties: true
+      required: [partner_id, event_type, event_id]
+    EventResponse:
+      type: object
+      properties:
+        status: { type: string }
+        message: { type: string }
+        event_record_id: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partner-events:
+    post:
+      operationId: createPartnerEvent
+      summary: Create a partner event record
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerEvent'
+      responses:
+        '200':
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+  /partners/{partner_id}/events:
+    get:
+      operationId: listPartnerEvents
+      summary: List partner events
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Events returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PartnerEvent'
+x-brokerflow:
+  auth_type: api_key_bearer
+  rate_limit: 120 requests/minute per API key

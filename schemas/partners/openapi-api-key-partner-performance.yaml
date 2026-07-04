@@ -1,0 +1,88 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Performance API
+  version: 1.0.0
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    PerformanceSummary:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string }
+        partner_id: { type: string }
+        period:
+          type: object
+          properties:
+            start: { type: string, format: date }
+            end: { type: string, format: date }
+        metrics:
+          type: object
+          additionalProperties: true
+          properties:
+            referrals_submitted: { type: integer }
+            valid_leads: { type: integer }
+            broker_review_ready: { type: integer }
+            funded_deals: { type: integer }
+            estimated_commission_pending: { type: number }
+        insights:
+          type: array
+          items: { type: string }
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/performance:
+    get:
+      operationId: getPartnerPerformance
+      summary: Get partner performance summary
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: period_start
+          in: query
+          required: false
+          schema: { type: string, format: date }
+        - name: period_end
+          in: query
+          required: false
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Performance summary returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceSummary'
+  /partners/performance-summary:
+    post:
+      operationId: createPartnerPerformanceSummary
+      summary: Create a partner performance summary for internal review
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                partner_id: { type: string }
+                period_start: { type: string, format: date }
+                period_end: { type: string, format: date }
+              required: [partner_id]
+      responses:
+        '200':
+          description: Summary created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceSummary'
+x-brokerflow:
+  auth_type: api_key_bearer
+  rate_limit: 30 requests/minute per API key

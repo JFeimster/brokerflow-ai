@@ -1,0 +1,75 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Finance Review API
+  version: 1.0.0
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    PartnerFinanceReview:
+      type: object
+      properties:
+        partner_id: { type: string }
+        deal_id: { type: string }
+        review:
+          type: object
+          additionalProperties: true
+        human_review_required: { type: boolean, default: true }
+      required: [partner_id, deal_id, review]
+    ReviewResponse:
+      type: object
+      properties:
+        status: { type: string }
+        message: { type: string }
+        review_id: { type: string }
+        ready_for_review: { type: boolean }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/finance-review:
+    post:
+      operationId: createPartnerFinanceReview
+      summary: Queue a partner finance review record
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerFinanceReview'
+      responses:
+        '200':
+          description: Review queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+  /partners/{partner_id}/finance-review:
+    get:
+      operationId: getPartnerFinanceReview
+      summary: Get partner finance review record
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Review returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+x-brokerflow:
+  auth_type: api_key_bearer
+  rate_limit: 10 requests/minute per API key

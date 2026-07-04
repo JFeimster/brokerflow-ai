@@ -9,7 +9,7 @@ These schemas are designed for Custom GPT Actions and automation backends such a
 - No Action may approve, decline, qualify, guarantee, underwrite, fund, pay, or activate automatically.
 - Funding-adjacent partner work must route to human review.
 - No-auth schemas are for low-risk intake, triggers, logging, and workflow starts.
-- API-key schemas are for controlled backend operations such as CRM sync, attribution, onboarding, activity summaries, payout review, assets, portal provisioning, program review, fit scoring, and training progress.
+- API-key schemas are for controlled backend operations such as CRM sync, attribution, onboarding, activity summaries, payout review, assets, portal provisioning, program review, fit scoring, training progress, outreach, lifecycle routing, and playbooks.
 - OAuth schemas are for per-user integrations such as Calendar and Drive.
 - Every write Action uses `x-openai-isConsequential: true`.
 - No raw borrower documents, bank statements, tax returns, or private lender credentials belong in Action payloads.
@@ -36,6 +36,9 @@ These schemas are designed for Custom GPT Actions and automation backends such a
 | `openapi-api-key-partner-program-review.yaml` | API Key Bearer | Queue partner program readiness reviews and internal notes. |
 | `openapi-api-key-partner-fit-scoring.yaml` | API Key Bearer | Score partner fit for internal routing and segment assignment. |
 | `openapi-api-key-partner-training-progress.yaml` | API Key Bearer | Track partner training progress and assigned modules. |
+| `openapi-api-key-partner-outreach-campaigns.yaml` | API Key Bearer | Create partner outreach campaign plans and queue internal outreach tasks. |
+| `openapi-api-key-partner-lifecycle-automation.yaml` | API Key Bearer | Track partner lifecycle events and recommend internal next actions. |
+| `openapi-api-key-partner-segment-playbooks.yaml` | API Key Bearer | List and assign partner segment playbooks. |
 | `partner-openapi-registry.json` | n/a | Machine-readable index of the partner schema set. |
 
 ## Base URL Placeholders
@@ -70,6 +73,9 @@ OAuth files use placeholder provider URLs. Replace those with the real Google, M
 15. Partner program review
 16. Partner fit scoring
 17. Partner training progress
+18. Partner outreach campaigns
+19. Partner lifecycle automation
+20. Partner segment playbooks
 
 ## Workflow Map
 
@@ -80,10 +86,12 @@ Partner signup
   -> onboarding checklist
   -> training assignment
   -> portal/tracking setup
+  -> outreach campaign/playbook
   -> referral lead intake
   -> attribution event
   -> broker review task
   -> partner update/follow-up
+  -> lifecycle next action
   -> activity summary
   -> payout readiness review
 ```

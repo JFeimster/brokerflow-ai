@@ -1,0 +1,150 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Signup Webhook
+  version: 1.0.0
+  description: Capture affiliate, channel partner, and referral partner signups for human review and onboarding.
+servers:
+  - url: https://YOUR-AUTOMATION-DOMAIN.com
+security: []
+paths:
+  /webhook/partner-signup:
+    post:
+      operationId: submitPartnerSignup
+      summary: Submit a partner or affiliate signup for review
+      description: Receives partner signup data and queues a human review task. Does not approve or activate partners automatically.
+      x-openai-isConsequential: true
+      parameters:
+        - name: X-BrokerFlow-Source
+          in: header
+          required: false
+          schema:
+            type: string
+            example: custom_gpt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                source:
+                  type: string
+                  example: custom_gpt
+                event_type:
+                  type: string
+                  enum: [partner_signup]
+                event_id:
+                  type: string
+                  description: Unique id for dedupe.
+                submitted_at:
+                  type: string
+                  format: date-time
+                shared_secret:
+                  type: string
+                  description: Lightweight webhook hardening token checked by the workflow.
+                human_review_required:
+                  type: boolean
+                  default: true
+                payload:
+                  type: object
+                  additionalProperties: true
+                  properties:
+                    partner:
+                      type: object
+                      additionalProperties: true
+                      properties:
+                        partner_type:
+                          type: string
+                          enum: [affiliate, referral_partner, channel_partner, boutique_accountant, small_business_attorney, business_broker, consultant, other]
+                        company_name:
+                          type: string
+                        contact_name:
+                          type: string
+                        email:
+                          type: string
+                          format: email
+                        phone:
+                          type: string
+                        website:
+                          type: string
+                        city:
+                          type: string
+                        state:
+                          type: string
+                      required: [partner_type, contact_name, email]
+                    audience:
+                      type: object
+                      additionalProperties: true
+                      properties:
+                        primary_audience:
+                          type: string
+                        estimated_monthly_referrals:
+                          type: integer
+                          minimum: 0
+                        industries_served:
+                          type: array
+                          items:
+                            type: string
+                    source_context:
+                      type: object
+                      additionalProperties: true
+                      properties:
+                        signup_source:
+                          type: string
+                          enum: [custom_gpt, tally, partner_page, manual, event, other]
+                        campaign:
+                          type: string
+                        notes:
+                          type: string
+                  required: [partner]
+              required: [source, event_type, event_id, shared_secret, human_review_required, payload]
+      responses:
+        "200":
+          description: Partner signup received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartnerAcceptedResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    PartnerAcceptedResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum: [accepted, queued, received]
+        message:
+          type: string
+        external_record_id:
+          type: string
+        next_step:
+          type: string
+          enum: [review_partner_fit, create_onboarding_task, request_more_info]
+      required: [status, message]
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error, invalid_request]
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required: [status, message]
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per source
+x-brokerflow-guardrails:
+  - Do not auto-approve affiliate or partner status.
+  - Require human review before onboarding or activation.
+  - Do not collect sensitive borrower documents in this endpoint.

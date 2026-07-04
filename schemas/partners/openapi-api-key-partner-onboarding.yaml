@@ -1,0 +1,108 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Onboarding API
+  version: 1.0.0
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    OnboardingChecklistRequest:
+      type: object
+      properties:
+        partner_id: { type: string }
+        partner_type: { type: string }
+        checklist_type: { type: string, enum: [funding_referral_partner, affiliate_partner, channel_partner, coi_partner] }
+        required_steps:
+          type: array
+          items:
+            type: string
+            enum: [complete_profile, review_referral_rules, confirm_disclosures, receive_tracking_link, receive_partner_assets, schedule_launch_call, first_referral_walkthrough]
+        owner: { type: string, format: email }
+      required: [partner_id, checklist_type]
+    OnboardingResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, processed, queued] }
+        message: { type: string }
+        partner_id: { type: string }
+        checklist_id: { type: string }
+        completion_percent: { type: integer }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/onboarding-checklist:
+    post:
+      operationId: createPartnerOnboardingChecklist
+      summary: Create a partner onboarding checklist
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingChecklistRequest'
+      responses:
+        '200':
+          description: Checklist created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingResponse'
+  /partners/{partner_id}/onboarding-step:
+    patch:
+      operationId: updatePartnerOnboardingStep
+      summary: Update a partner onboarding step
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                step: { type: string }
+                status: { type: string, enum: [not_started, in_progress, completed, blocked] }
+                notes: { type: string }
+              required: [step, status]
+      responses:
+        '200':
+          description: Step updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingResponse'
+  /partners/{partner_id}/onboarding-status:
+    get:
+      operationId: getPartnerOnboardingStatus
+      summary: Get partner onboarding status
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Onboarding status returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingResponse'
+x-brokerflow:
+  auth_type: api_key_bearer
+  rate_limit: 30 requests/minute per API key

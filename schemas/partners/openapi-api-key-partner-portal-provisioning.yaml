@@ -1,0 +1,115 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Portal Provisioning API
+  version: 1.0.0
+  description: API-key protected endpoints for preparing partner portal access, profile pages, tracking links, and allowed partner tools.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    PortalConfig:
+      type: object
+      additionalProperties: true
+      properties:
+        slug: { type: string }
+        display_name: { type: string }
+        partner_type: { type: string }
+        tracking_code: { type: string }
+        allowed_tools:
+          type: array
+          items:
+            type: string
+            enum: [funding_readiness_scorecard, document_checklist, referral_lead_form, partner_resource_hub, training_library]
+      required: [slug, display_name, tracking_code]
+    PortalResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, queued, processed] }
+        message: { type: string }
+        partner_id: { type: string }
+        portal_url: { type: string }
+        tracking_link: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/portal:
+    post:
+      operationId: provisionPartnerPortal
+      summary: Prepare partner portal access and configuration
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                portal:
+                  $ref: "#/components/schemas/PortalConfig"
+                human_review_required: { type: boolean, default: true }
+              required: [portal]
+      responses:
+        "200":
+          description: Partner portal provisioning started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PortalResponse" }
+  /partners/{partner_id}/tracking-link:
+    post:
+      operationId: createPartnerTrackingLink
+      summary: Create or refresh a partner tracking link
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tracking_code: { type: string }
+                destination_url: { type: string }
+                campaign: { type: string }
+              required: [tracking_code, destination_url]
+      responses:
+        "200":
+          description: Tracking link created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PortalResponse" }
+  /partners/{partner_id}/portal-status:
+    get:
+      operationId: getPartnerPortalStatus
+      summary: Get partner portal status
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Partner portal status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PortalResponse" }
+x-brokerflow-rate-limit:
+  suggested: 10 requests/minute per API key
+x-brokerflow-guardrails:
+  - Require human review before publishing public partner profile pages.
+  - Prevent duplicate partner slugs and tracking codes.
+  - Do not expose private borrower or deal data in partner portals.

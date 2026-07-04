@@ -1,0 +1,86 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Profile API
+  version: 1.0.0
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    PartnerProfile:
+      type: object
+      additionalProperties: true
+      properties:
+        partner_id: { type: string }
+        partner_type: { type: string }
+        company_name: { type: string }
+        contact_name: { type: string }
+        email: { type: string, format: email }
+        audience_size: { type: string }
+        estimated_monthly_referrals: { type: integer }
+        relationship_strength: { type: string }
+      required: [partner_type, contact_name, email]
+    StandardResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string }
+        message: { type: string }
+        partner_id: { type: string }
+        segment: { type: string }
+        recommended_next_step: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/profile:
+    post:
+      operationId: savePartnerProfile
+      summary: Save a partner profile
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerProfile'
+      responses:
+        '200':
+          description: Profile saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+  /partners/{partner_id}/segment:
+    patch:
+      operationId: updatePartnerSegment
+      summary: Update partner segment
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                segment: { type: string }
+                reason: { type: string }
+              required: [segment]
+      responses:
+        '200':
+          description: Segment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+x-brokerflow:
+  auth_type: api_key_bearer
+  rate_limit: 60 requests/minute per API key

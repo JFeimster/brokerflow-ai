@@ -6,10 +6,10 @@ These schemas are designed for Custom GPT Actions and automation backends such a
 
 ## Core Rules
 
-- No Action may approve, decline, qualify, guarantee, underwrite, fund, or pay automatically.
+- No Action may approve, decline, qualify, guarantee, underwrite, fund, pay, or activate automatically.
 - Funding-adjacent partner work must route to human review.
 - No-auth schemas are for low-risk intake, triggers, logging, and workflow starts.
-- API-key schemas are for controlled backend operations such as CRM sync, attribution, onboarding, activity summaries, payout review, assets, and portal provisioning.
+- API-key schemas are for controlled backend operations such as CRM sync, attribution, onboarding, activity summaries, payout review, assets, portal provisioning, program review, fit scoring, and training progress.
 - OAuth schemas are for per-user integrations such as Calendar and Drive.
 - Every write Action uses `x-openai-isConsequential: true`.
 - No raw borrower documents, bank statements, tax returns, or private lender credentials belong in Action payloads.
@@ -33,6 +33,9 @@ These schemas are designed for Custom GPT Actions and automation backends such a
 | `openapi-api-key-partner-portal-provisioning.yaml` | API Key Bearer | Provision partner portals, tracking links, and portal status. |
 | `openapi-oauth-partner-calendar-scheduling.yaml` | OAuth | Schedule partner discovery and onboarding calls. |
 | `openapi-oauth-partner-drive-folder.yaml` | OAuth | Create partner resource folders and add approved asset references. |
+| `openapi-api-key-partner-program-review.yaml` | API Key Bearer | Queue partner program readiness reviews and internal notes. |
+| `openapi-api-key-partner-fit-scoring.yaml` | API Key Bearer | Score partner fit for internal routing and segment assignment. |
+| `openapi-api-key-partner-training-progress.yaml` | API Key Bearer | Track partner training progress and assigned modules. |
 | `partner-openapi-registry.json` | n/a | Machine-readable index of the partner schema set. |
 
 ## Base URL Placeholders
@@ -64,14 +67,18 @@ OAuth files use placeholder provider URLs. Replace those with the real Google, M
 12. Partner payout readiness review
 13. Partner calendar scheduling
 14. Partner resource folder setup
+15. Partner program review
+16. Partner fit scoring
+17. Partner training progress
 
 ## Workflow Map
 
 ```txt
 Partner signup
   -> partner CRM record
-  -> fit/compliance review task
+  -> fit/program review task
   -> onboarding checklist
+  -> training assignment
   -> portal/tracking setup
   -> referral lead intake
   -> attribution event

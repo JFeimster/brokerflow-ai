@@ -1,0 +1,109 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Training Progress API
+  version: 1.0.0
+  description: API-key protected endpoints for tracking partner training progress, resource completion, and onboarding readiness.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    TrainingResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, processed] }
+        message: { type: string }
+        partner_id: { type: string }
+        completion_percent: { type: number, minimum: 0, maximum: 100 }
+        training_status:
+          type: string
+          enum: [not_started, in_progress, completed, blocked]
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/training-progress:
+    get:
+      operationId: getPartnerTrainingProgress
+      summary: Get partner training progress
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Training progress
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrainingResponse" }
+  /partners/{partner_id}/training-progress:
+    patch:
+      operationId: updatePartnerTrainingProgress
+      summary: Update partner training progress
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                module_id: { type: string }
+                module_name: { type: string }
+                module_status:
+                  type: string
+                  enum: [not_started, in_progress, completed, blocked]
+                completion_percent: { type: number, minimum: 0, maximum: 100 }
+                notes: { type: string }
+              required: [module_id, module_status]
+      responses:
+        "200":
+          description: Training progress updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrainingResponse" }
+  /partners/{partner_id}/training-assignment:
+    post:
+      operationId: assignPartnerTrainingModule
+      summary: Assign a training module to a partner
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                module_id: { type: string }
+                module_name: { type: string }
+                due_at: { type: string, format: date-time }
+                owner: { type: string, format: email }
+                notes: { type: string }
+              required: [module_id, module_name]
+      responses:
+        "200":
+          description: Training module assigned
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrainingResponse" }
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per API key
+x-brokerflow-guardrails:
+  - Training completion does not automatically activate a partner.
+  - Human review still required for partner activation and public-facing assets.
+  - Do not include borrower details in partner training records.

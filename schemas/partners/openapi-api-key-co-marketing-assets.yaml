@@ -1,0 +1,124 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Co-Marketing Assets API
+  version: 1.0.0
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    AssetRequest:
+      type: object
+      properties:
+        partner_id: { type: string }
+        asset_request:
+          type: object
+          additionalProperties: true
+          properties:
+            asset_type:
+              type: string
+              enum: [partner_landing_page, social_post, email_sequence, qr_card, lead_magnet, referral_kit, faq]
+            campaign: { type: string }
+            audience: { type: string }
+            cta_url: { type: string }
+            tone: { type: string }
+            required_disclosures:
+              type: array
+              items: { type: string }
+        human_review_required: { type: boolean, default: true }
+      required: [partner_id, asset_request]
+    AssetResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [queued, accepted, processed] }
+        message: { type: string }
+        asset_request_id: { type: string }
+        asset_id: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/asset-request:
+    post:
+      operationId: createPartnerAssetRequest
+      summary: Create a co-marketing asset request
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetRequest'
+      responses:
+        '200':
+          description: Asset request queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetResponse'
+  /partners/{partner_id}/assets:
+    get:
+      operationId: getPartnerAssets
+      summary: Get partner assets
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Partner assets returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  assets:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+  /partners/{partner_id}/assets/{asset_id}/status:
+    patch:
+      operationId: updatePartnerAssetStatus
+      summary: Update partner asset status
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: asset_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [draft, needs_review, approved, published, archived] }
+                notes: { type: string }
+              required: [status]
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetResponse'
+x-brokerflow:
+  auth_type: api_key_bearer
+  rate_limit: 20 requests/minute per API key

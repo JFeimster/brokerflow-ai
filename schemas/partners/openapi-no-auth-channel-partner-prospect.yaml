@@ -1,0 +1,108 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Channel Partner Prospect Webhook
+  version: 1.0.0
+  description: Log targeted center-of-influence prospects such as accountants, attorneys, business brokers, consultants, and other niche referral sources.
+servers:
+  - url: https://YOUR-AUTOMATION-DOMAIN.com
+security: []
+paths:
+  /webhook/channel-partner-prospect:
+    post:
+      operationId: submitChannelPartnerProspect
+      summary: Submit a channel partner or COI prospect for outreach review
+      x-openai-isConsequential: true
+      parameters:
+        - name: X-BrokerFlow-Source
+          in: header
+          required: false
+          schema: { type: string, example: custom_gpt }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                source: { type: string, example: custom_gpt }
+                event_type: { type: string, enum: [channel_partner_prospect] }
+                event_id: { type: string }
+                submitted_at: { type: string, format: date-time }
+                shared_secret: { type: string }
+                human_review_required: { type: boolean, default: true }
+                payload:
+                  type: object
+                  additionalProperties: true
+                  properties:
+                    prospect:
+                      type: object
+                      properties:
+                        partner_type:
+                          type: string
+                          enum: [boutique_accountant, small_business_attorney, business_broker, commercial_insurance_agent, payroll_consultant, franchise_consultant, real_estate_investor_connector, consultant, other]
+                        company_name: { type: string }
+                        contact_name: { type: string }
+                        email: { type: string, format: email }
+                        phone: { type: string }
+                        website: { type: string }
+                        linkedin_url: { type: string }
+                        city: { type: string }
+                        state: { type: string }
+                      required: [partner_type, company_name]
+                    fit_signals:
+                      type: object
+                      properties:
+                        serves_small_businesses: { type: boolean }
+                        likely_referral_volume:
+                          type: string
+                          enum: [low, medium, high, unknown]
+                        client_cashflow_pain:
+                          type: string
+                          enum: [low, medium, high, unknown]
+                        notes: { type: string }
+                    recommended_outreach:
+                      type: object
+                      properties:
+                        outreach_angle: { type: string }
+                        priority:
+                          type: string
+                          enum: [low, medium, high, urgent]
+                        owner: { type: string, format: email }
+                  required: [prospect]
+              required: [source, event_type, event_id, shared_secret, human_review_required, payload]
+      responses:
+        "200":
+          description: Prospect logged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [accepted, queued] }
+                  message: { type: string }
+                  external_record_id: { type: string }
+                required: [status, message]
+        "400":
+          description: Invalid prospect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [error, invalid_request] }
+        message: { type: string }
+        errors:
+          type: array
+          items: { type: string }
+      required: [status, message]
+x-brokerflow-rate-limit:
+  suggested: 60 requests/minute per source
+x-brokerflow-guardrails:
+  - Use public or user-provided business information only.
+  - Human review before outreach.
+  - Do not enrich with sensitive or private data.

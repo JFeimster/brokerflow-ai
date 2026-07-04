@@ -1,0 +1,110 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Portal Provisioning API
+  version: 1.0.0
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    PortalRequest:
+      type: object
+      properties:
+        partner_id: { type: string }
+        portal:
+          type: object
+          properties:
+            slug: { type: string }
+            display_name: { type: string }
+            partner_type: { type: string }
+            tracking_code: { type: string }
+            allowed_tools:
+              type: array
+              items: { type: string }
+          required: [slug, display_name]
+      required: [partner_id, portal]
+    PortalResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [queued, accepted, processed] }
+        message: { type: string }
+        partner_id: { type: string }
+        portal_url: { type: string }
+        tracking_link: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/portal:
+    post:
+      operationId: provisionPartnerPortal
+      summary: Provision a partner portal
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortalRequest'
+      responses:
+        '200':
+          description: Portal provisioning queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortalResponse'
+  /partners/{partner_id}/tracking-link:
+    post:
+      operationId: createPartnerTrackingLink
+      summary: Create a partner tracking link
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tracking_code: { type: string }
+                destination_url: { type: string }
+              required: [tracking_code, destination_url]
+      responses:
+        '200':
+          description: Tracking link created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortalResponse'
+  /partners/{partner_id}/portal-status:
+    get:
+      operationId: getPartnerPortalStatus
+      summary: Get partner portal status
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Portal status returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortalResponse'
+x-brokerflow:
+  auth_type: api_key_bearer
+  rate_limit: 10 requests/minute per API key

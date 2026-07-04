@@ -1,0 +1,75 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Warm Intro Request Webhook
+  version: 1.0.0
+  description: Queue a warm-intro request for human review before partner or borrower-facing outreach.
+servers:
+  - url: https://YOUR-AUTOMATION-DOMAIN.com
+security: []
+paths:
+  /webhook/warm-intro-request:
+    post:
+      operationId: submitWarmIntroRequest
+      summary: Queue a warm intro request
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                source: { type: string, enum: [custom_gpt, manual, partner_portal] }
+                event_type: { type: string, enum: [warm_intro_request] }
+                event_id: { type: string }
+                submitted_at: { type: string, format: date-time }
+                shared_secret: { type: string }
+                human_review_required: { type: boolean, default: true }
+                payload:
+                  type: object
+                  properties:
+                    partner:
+                      type: object
+                      properties:
+                        partner_id: { type: string }
+                        contact_name: { type: string }
+                        email: { type: string, format: email }
+                      required: [contact_name, email]
+                    borrower:
+                      type: object
+                      properties:
+                        first_name: { type: string }
+                        business_name: { type: string }
+                    intro_context:
+                      type: object
+                      properties:
+                        reason: { type: string }
+                        recommended_channel: { type: string, enum: [email, sms, phone, linkedin, other] }
+                        draft_message: { type: string }
+                    owner: { type: string, format: email }
+                  required: [partner, intro_context]
+              required: [source, event_type, event_id, shared_secret, human_review_required, payload]
+      responses:
+        '200':
+          description: Warm intro request queued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarmIntroResponse'
+components:
+  schemas:
+    WarmIntroResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, queued] }
+        message: { type: string }
+        external_record_id: { type: string }
+      required: [status, message]
+x-brokerflow:
+  auth_type: none
+  rate_limit: 20 requests/minute
+  special_headers:
+    - Content-Type: application/json
+    - X-BrokerFlow-Source: custom_gpt

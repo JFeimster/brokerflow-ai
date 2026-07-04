@@ -1,0 +1,130 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Referral Lead Webhook
+  version: 1.0.0
+  description: Capture a funding referral from a partner and route it to broker review.
+servers:
+  - url: https://YOUR-AUTOMATION-DOMAIN.com
+security: []
+paths:
+  /webhook/partner-referral-lead:
+    post:
+      operationId: submitPartnerReferralLead
+      summary: Submit a funding referral from a partner
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                source:
+                  type: string
+                  enum: [custom_gpt, partner_portal, website, manual]
+                event_type:
+                  type: string
+                  enum: [partner_referral_lead]
+                event_id:
+                  type: string
+                submitted_at:
+                  type: string
+                  format: date-time
+                shared_secret:
+                  type: string
+                human_review_required:
+                  type: boolean
+                  default: true
+                payload:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    partner:
+                      type: object
+                      properties:
+                        partner_id: { type: string }
+                        company_name: { type: string }
+                        contact_name: { type: string }
+                        email: { type: string, format: email }
+                      required: [contact_name, email]
+                    borrower:
+                      type: object
+                      properties:
+                        first_name: { type: string }
+                        last_name: { type: string }
+                        email: { type: string, format: email }
+                        phone: { type: string }
+                        consent_to_contact: { type: boolean }
+                      required: [first_name, last_name, email, consent_to_contact]
+                    business:
+                      type: object
+                      additionalProperties: true
+                      properties:
+                        legal_business_name: { type: string }
+                        industry: { type: string }
+                        state: { type: string }
+                        monthly_revenue_range: { type: string }
+                    funding_request:
+                      type: object
+                      additionalProperties: true
+                      properties:
+                        amount_requested: { type: number, minimum: 0 }
+                        use_of_funds: { type: string }
+                        urgency:
+                          type: string
+                          enum: [immediate, within_7_days, within_30_days, flexible, unknown]
+                    referral_context:
+                      type: object
+                      additionalProperties: true
+                      properties:
+                        relationship_to_borrower: { type: string }
+                        warm_intro_available: { type: boolean }
+                        notes: { type: string }
+                  required: [partner, borrower]
+              required: [source, event_type, event_id, shared_secret, human_review_required, payload]
+      responses:
+        '200':
+          description: Referral lead received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralLeadResponse'
+        '400':
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ReferralLeadResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum: [accepted, queued]
+        message: { type: string }
+        external_record_id: { type: string }
+        partner_attribution_id: { type: string }
+        human_review_required: { type: boolean }
+      required: [status, message]
+    ErrorResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum: [error, invalid_request]
+        message: { type: string }
+        errors:
+          type: array
+          items: { type: string }
+      required: [status, message]
+x-brokerflow:
+  auth_type: none
+  rate_limit: 30 requests/minute
+  special_headers:
+    - Content-Type: application/json
+    - X-BrokerFlow-Source: custom_gpt

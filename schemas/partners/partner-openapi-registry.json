@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "project": "brokerflow-ai",
   "folder": "schemas/partners",
   "description": "Action-ready OpenAPI schemas for partner, affiliate, channel partner, and referral partner workflows.",
@@ -26,12 +26,15 @@
     { "id": "partner-drive-folder", "file": "openapi-oauth-partner-drive-folder.yaml", "auth": "oauth_authorization_code", "status": "built" },
     { "id": "partner-program-review", "file": "openapi-api-key-partner-program-review.yaml", "auth": "api_key_bearer", "status": "built" },
     { "id": "partner-fit-scoring", "file": "openapi-api-key-partner-fit-scoring.yaml", "auth": "api_key_bearer", "status": "built" },
-    { "id": "partner-training-progress", "file": "openapi-api-key-partner-training-progress.yaml", "auth": "api_key_bearer", "status": "built" }
+    { "id": "partner-training-progress", "file": "openapi-api-key-partner-training-progress.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-outreach-campaigns", "file": "openapi-api-key-partner-outreach-campaigns.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-lifecycle-automation", "file": "openapi-api-key-partner-lifecycle-automation.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-segment-playbooks", "file": "openapi-api-key-partner-segment-playbooks.yaml", "auth": "api_key_bearer", "status": "built" }
   ],
   "planned_next": [
-    "openapi-api-key-partner-outreach-campaigns.yaml",
-    "openapi-api-key-partner-lifecycle-automation.yaml",
-    "openapi-api-key-partner-segment-playbooks.yaml"
+    "openapi-api-key-partner-health-monitor.yaml",
+    "openapi-api-key-partner-resource-recommendations.yaml",
+    "openapi-api-key-partner-quarterly-review.yaml"
   ],
   "guardrails": [
     "No automatic partner activation.",

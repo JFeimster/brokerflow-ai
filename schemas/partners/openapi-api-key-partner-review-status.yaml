@@ -1,0 +1,76 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Review Status API
+  version: 1.0.0
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    PartnerReviewRequest:
+      type: object
+      properties:
+        partner_id: { type: string }
+        review_type: { type: string }
+        checklist:
+          type: object
+          additionalProperties: true
+        notes: { type: string }
+        human_review_required: { type: boolean, default: true }
+      required: [partner_id, review_type]
+    PartnerReviewResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string }
+        message: { type: string }
+        partner_id: { type: string }
+        review_status: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/review-status:
+    post:
+      operationId: createPartnerReviewStatus
+      summary: Create or update partner review status
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerReviewRequest'
+      responses:
+        '200':
+          description: Review status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerReviewResponse'
+    get:
+      operationId: getPartnerReviewStatus
+      summary: Get partner review status
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Review status returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerReviewResponse'
+x-brokerflow:
+  auth_type: api_key_bearer
+  rate_limit: 20 requests/minute per API key

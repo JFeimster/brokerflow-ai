@@ -1,0 +1,112 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Fit Scoring API
+  version: 1.0.0
+  description: API-key protected endpoints for internal partner fit scoring and segment routing. Scores are internal triage signals only and do not approve partners automatically.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    FitScoreResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [processed, accepted] }
+        partner_id: { type: string }
+        fit_score: { type: integer, minimum: 0, maximum: 100 }
+        segment:
+          type: string
+          enum: [high_value_referral_partner, affiliate_partner, niche_coi_partner, nurture_prospect, low_fit, needs_review]
+        recommended_next_step:
+          type: string
+          enum: [schedule_discovery_call, send_partner_info, create_outreach_task, request_more_info, no_action]
+        human_review_required: { type: boolean }
+        notes: { type: string }
+      required: [status, fit_score, segment]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/fit-score:
+    post:
+      operationId: scorePartnerFit
+      summary: Score partner fit for internal routing
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profile:
+                  type: object
+                  additionalProperties: true
+                  properties:
+                    partner_type: { type: string }
+                    audience_size: { type: string, enum: [small, medium, large, unknown] }
+                    estimated_monthly_referrals: { type: integer, minimum: 0 }
+                    industries_served:
+                      type: array
+                      items: { type: string }
+                    relationship_strength:
+                      type: string
+                      enum: [cold, warm, active, unknown]
+                fit_inputs:
+                  type: object
+                  properties:
+                    has_business_owner_audience: { type: boolean }
+                    has_funding_need_visibility: { type: boolean }
+                    can_make_warm_intros: { type: boolean }
+                    needs_program_review: { type: boolean }
+                human_review_required: { type: boolean, default: true }
+              required: [profile, fit_inputs]
+      responses:
+        "200":
+          description: Partner fit score calculated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FitScoreResponse" }
+  /partners/{partner_id}/segment:
+    patch:
+      operationId: updatePartnerSegment
+      summary: Update partner segment after review
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                segment:
+                  type: string
+                  enum: [high_value_referral_partner, affiliate_partner, niche_coi_partner, nurture_prospect, low_fit, needs_review]
+                reason: { type: string }
+                human_review_required: { type: boolean, default: true }
+              required: [segment, reason]
+      responses:
+        "200":
+          description: Partner segment updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FitScoreResponse" }
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per API key
+x-brokerflow-guardrails:
+  - Internal triage only; does not approve or activate partners.
+  - Human review required before onboarding or activation.
+  - Do not use private data to score prospects.

@@ -1,0 +1,85 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Activity Summary API
+  version: 1.0.0
+  description: API-key protected endpoints for internal partner activity summaries.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/activity-summary:
+    get:
+      operationId: getPartnerActivitySummary
+      summary: Get an internal activity summary for one partner
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: period_start
+          in: query
+          required: false
+          schema: { type: string, format: date }
+        - name: period_end
+          in: query
+          required: false
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Partner activity summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [processed] }
+                  partner_id: { type: string }
+                  summary:
+                    type: object
+                    properties:
+                      referral_events: { type: integer }
+                      valid_lead_events: { type: integer }
+                      review_ready_events: { type: integer }
+                      partner_update_events: { type: integer }
+                  insights:
+                    type: array
+                    items: { type: string }
+                required: [status, summary]
+  /partners/activity-summary:
+    post:
+      operationId: createPartnerActivitySummary
+      summary: Create an internal activity summary for a date range
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                period_start: { type: string, format: date }
+                period_end: { type: string, format: date }
+                partner_type: { type: string }
+              required: [period_start, period_end]
+      responses:
+        "200":
+          description: Summary created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [processed] }
+                  message: { type: string }
+                required: [status, message]
+x-brokerflow-rate-limit:
+  suggested: 30 requests/minute per API key
+x-brokerflow-guardrails:
+  - Internal use only.
+  - Do not expose borrower-level sensitive details in summaries.

@@ -1,0 +1,74 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Follow-Up Trigger Webhook
+  version: 1.0.0
+  description: Trigger approved partner follow-up workflows for onboarding, inactivity, referral updates, and reactivation.
+servers:
+  - url: https://YOUR-AUTOMATION-DOMAIN.com
+security: []
+paths:
+  /webhook/partner-followup:
+    post:
+      operationId: triggerPartnerFollowup
+      summary: Trigger a partner follow-up workflow
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                source: { type: string, enum: [custom_gpt, crm, manual, partner_portal] }
+                event_type: { type: string, enum: [partner_followup] }
+                event_id: { type: string }
+                submitted_at: { type: string, format: date-time }
+                shared_secret: { type: string }
+                human_review_required: { type: boolean, default: false }
+                payload:
+                  type: object
+                  properties:
+                    partner_id: { type: string }
+                    partner:
+                      type: object
+                      properties:
+                        contact_name: { type: string }
+                        email: { type: string, format: email }
+                    sequence_type:
+                      type: string
+                      enum: [new_signup, onboarding_incomplete, first_referral_request, referral_status_update, inactive_partner_reactivation, monthly_partner_recap, funded_deal_update]
+                    channel:
+                      type: string
+                      enum: [email, sms, phone_task, internal_only]
+                    first_message_delay_hours:
+                      type: integer
+                      minimum: 0
+                    context:
+                      type: object
+                      additionalProperties: true
+                  required: [partner_id, sequence_type]
+              required: [source, event_type, event_id, shared_secret, payload]
+      responses:
+        '200':
+          description: Partner follow-up queued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowupResponse'
+components:
+  schemas:
+    FollowupResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, queued] }
+        message: { type: string }
+        external_record_id: { type: string }
+      required: [status, message]
+x-brokerflow:
+  auth_type: none
+  rate_limit: 30 requests/minute
+  special_headers:
+    - Content-Type: application/json
+    - X-BrokerFlow-Source: custom_gpt

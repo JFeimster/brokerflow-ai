@@ -1,0 +1,129 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Attribution API
+  version: 1.0.0
+  description: API-key protected endpoints for logging and reading partner attribution events.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    AttributionEvent:
+      type: object
+      additionalProperties: true
+      properties:
+        partner_id: { type: string }
+        event_type:
+          type: string
+          enum: [tracking_click, partner_signup, referral_lead_submitted, warm_intro_requested, call_scheduled, docs_requested, broker_review_ready, partner_update]
+        event_id: { type: string }
+        occurred_at: { type: string, format: date-time }
+        lead_id: { type: string }
+        deal_id: { type: string }
+        tracking_code: { type: string }
+        source_url: { type: string }
+        metadata:
+          type: object
+          additionalProperties: true
+      required: [partner_id, event_type, event_id]
+    StandardResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [accepted, processed] }
+        message: { type: string }
+        attribution_id: { type: string }
+      required: [status, message]
+    ErrorResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [error, invalid_request, unauthorized] }
+        message: { type: string }
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partner-attribution/events:
+    post:
+      operationId: logPartnerAttributionEvent
+      summary: Log a partner attribution event
+      x-openai-isConsequential: true
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttributionEvent"
+      responses:
+        "200":
+          description: Attribution event logged
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StandardResponse" }
+  /partners/{partner_id}/attribution:
+    get:
+      operationId: getPartnerAttribution
+      summary: Get attribution events for a partner
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: period_start
+          in: query
+          required: false
+          schema: { type: string, format: date }
+        - name: period_end
+          in: query
+          required: false
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Attribution events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [processed] }
+                  partner_id: { type: string }
+                  events:
+                    type: array
+                    items: { $ref: "#/components/schemas/AttributionEvent" }
+                required: [status, events]
+  /leads/{lead_id}/attribution:
+    get:
+      operationId: getLeadAttribution
+      summary: Get attribution for a lead
+      parameters:
+        - name: lead_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lead attribution
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [processed] }
+                  lead_id: { type: string }
+                  attribution:
+                    type: array
+                    items: { $ref: "#/components/schemas/AttributionEvent" }
+                required: [status, attribution]
+x-brokerflow-rate-limit:
+  suggested: 120 requests/minute per API key
+x-brokerflow-guardrails:
+  - Require event_id for dedupe.
+  - Never overwrite original attribution without admin review.
+  - Support first-touch and last-touch reporting.

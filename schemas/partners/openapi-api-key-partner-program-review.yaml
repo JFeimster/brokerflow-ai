@@ -1,0 +1,115 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Program Review API
+  version: 1.0.0
+  description: API-key protected endpoints for reviewing partner program readiness, terms acknowledgement, allowed claims, and activation prerequisites. This does not activate a partner automatically.
+servers:
+  - url: https://brokerflow-ai.vercel.app/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ProgramReviewResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status: { type: string, enum: [accepted, queued, processed] }
+        message: { type: string }
+        partner_id: { type: string }
+        review_id: { type: string }
+        review_status:
+          type: string
+          enum: [needs_review, ready_for_human_review, approved_by_human, changes_needed]
+      required: [status, message]
+security:
+  - bearerAuth: []
+paths:
+  /partners/{partner_id}/program-review:
+    post:
+      operationId: queuePartnerProgramReview
+      summary: Queue a partner program readiness review
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                review_type:
+                  type: string
+                  enum: [affiliate_activation, referral_partner_activation, channel_partner_activation, asset_review, terms_review]
+                items:
+                  type: object
+                  properties:
+                    program_terms_acknowledged: { type: boolean }
+                    referral_rules_reviewed: { type: boolean }
+                    allowed_claims_reviewed: { type: boolean }
+                    approved_assets_ready: { type: boolean }
+                    tracking_link_ready: { type: boolean }
+                notes: { type: string }
+                human_review_required: { type: boolean, default: true }
+              required: [review_type, human_review_required]
+      responses:
+        "200":
+          description: Program review queued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProgramReviewResponse" }
+  /partners/{partner_id}/program-review-status:
+    get:
+      operationId: getPartnerProgramReviewStatus
+      summary: Get partner program review status
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Program review status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProgramReviewResponse" }
+  /partners/{partner_id}/program-review-note:
+    post:
+      operationId: addPartnerProgramReviewNote
+      summary: Add an internal note to a partner program review
+      x-openai-isConsequential: true
+      parameters:
+        - name: partner_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note_type:
+                  type: string
+                  enum: [terms_note, asset_note, activation_note, follow_up_note]
+                body: { type: string }
+                author: { type: string, default: brokerflow-ai }
+              required: [body]
+      responses:
+        "200":
+          description: Note added
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProgramReviewResponse" }
+x-brokerflow-rate-limit:
+  suggested: 20 requests/minute per API key
+x-brokerflow-guardrails:
+  - Human review required before active partner status.
+  - GPT may queue review and summarize gaps, but may not approve activation.
+  - Partner-facing assets must avoid outcome guarantees and unsupported claims.

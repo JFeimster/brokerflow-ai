@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: BrokerFlow Partner Onboarding API
   version: 1.0.0
-  description: API-key protected endpoints for partner onboarding checklists and status updates.
+  description: Legacy API-key onboarding and status endpoints. The canonical production GPT Action for checklist generation is ../no-auth-partner-onboarding-checklist.schema.yaml.
 servers:
   - url: https://brokerflow-ai.vercel.app/api
 components:
@@ -120,6 +120,8 @@ paths:
                 required: [status, partner_id]
 x-brokerflow-rate-limit:
   suggested: 30 requests/minute per API key
+x-brokerflow-status: reference-only
+x-brokerflow-canonical-schema: ../no-auth-partner-onboarding-checklist.schema.yaml
 x-brokerflow-guardrails:
   - Do not activate a partner automatically when steps are incomplete.
   - Program terms and asset review steps require human confirmation.

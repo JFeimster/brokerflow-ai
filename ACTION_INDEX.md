@@ -12,6 +12,9 @@
 | Partner Outreach Campaign Builder | `createPartnerOutreachCampaign` | `POST /api/no-auth/partner-outreach-campaign` | `schemas/no-auth-partner-outreach-campaign.schema.yaml` | Draft targeted messaging and classify the campaign for optional workflow routing. |
 | Partner Objection Handler / Response Draft | `draftPartnerObjectionResponse` | `POST /api/no-auth/partner-objection-response` | `schemas/no-auth-partner-objection-response.schema.yaml` | Draft trust-preserving responses and next steps without compensation or lending commitments. |
 | Partner Meeting / Call Prep Brief | `createPartnerCallPrepBrief` | `POST /api/no-auth/partner-call-prep-brief` | `schemas/no-auth-partner-call-prep-brief.schema.yaml` | Separate supplied partner context from category-specific meeting recommendations. |
+| Partner Onboarding Checklist Generator | `generatePartnerOnboardingChecklist` | `POST /api/no-auth/partner-onboarding-checklist` | `schemas/no-auth-partner-onboarding-checklist.schema.yaml` | Generate partner-specific onboarding items and an internal next step; compensation remains descriptive only. |
+| Partner Training / Enablement Content Request | `requestPartnerEnablementContent` | `POST /api/no-auth/partner-enablement-content` | `schemas/no-auth-partner-enablement-content.schema.yaml` | Prepare tailored educational partner content without lending or funding promises. |
+| Partner Reactivation / Nurture Trigger | `triggerPartnerReactivation` | `POST /api/no-auth/partner-reactivation` | `schemas/no-auth-partner-reactivation.schema.yaml` | Select a deterministic reactivation route, message, channel, and bounded cadence. |
 
 ## Automation Boundary
 
@@ -110,9 +113,42 @@ Human review should block only final regulated steps:
 - `templates/partner-call-prep-brief-template.md`
 - `docs/partner-call-prep-brief-testing-checklist.md`
 
+### Partner Onboarding Checklist Generator
+
+- `actions/no-auth/partner-onboarding-checklist-actions.md`
+- `schemas/no-auth-partner-onboarding-checklist.schema.yaml`
+- `api/no-auth/partner-onboarding-checklist.js`
+- `knowledge/partner-onboarding-checklist-guardrails.md`
+- `workflows/no-auth-partner-onboarding-checklist-workflow.md`
+- `docs/partner-onboarding-checklist-testing-checklist.md`
+
+### Partner Training / Enablement Content Request
+
+- `actions/no-auth/partner-enablement-content-actions.md`
+- `schemas/no-auth-partner-enablement-content.schema.yaml`
+- `api/no-auth/partner-enablement-content.js`
+- `knowledge/partner-enablement-content-guardrails.md`
+- `workflows/no-auth-partner-enablement-content-workflow.md`
+- `templates/partner-enablement-content-templates.md`
+- `docs/partner-enablement-content-testing-checklist.md`
+
+### Partner Reactivation / Nurture Trigger
+
+- `actions/no-auth/partner-reactivation-trigger-actions.md`
+- `schemas/no-auth-partner-reactivation.schema.yaml`
+- `api/no-auth/partner-reactivation.js`
+- `knowledge/partner-reactivation-guardrails.md`
+- `workflows/no-auth-partner-reactivation-trigger-workflow.md`
+- `templates/partner-reactivation-templates.md`
+- `docs/partner-reactivation-trigger-testing-checklist.md`
+
 Batch 2 runtime validation/forwarding is shared in `lib/partner-action-utils.js`.
 Run `node --test tests/partner-outreach-conversion.test.js` and
 `python scripts/validate-partner-outreach-conversion.py` (PyYAML + jsonschema).
 The older API-key outreach schema is reference-only; its campaign operation is
 `createLegacyPartnerOutreachCampaignPlan`. Import the production schema above
 for `createPartnerOutreachCampaign`.
+
+The older API-key onboarding schema and generic partner-followup webhook
+envelope are reference-only for checklist generation and segment-specific
+reactivation, respectively. Use the canonical Batch 3 schemas listed above.

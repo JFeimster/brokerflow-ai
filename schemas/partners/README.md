@@ -33,13 +33,24 @@ canonical production contracts and Vercel handlers are:
 | `createPartnerOutreachCampaign` | `../no-auth-partner-outreach-campaign.schema.yaml` |
 | `draftPartnerObjectionResponse` | `../no-auth-partner-objection-response.schema.yaml` |
 | `createPartnerCallPrepBrief` | `../no-auth-partner-call-prep-brief.schema.yaml` |
+| `generatePartnerOnboardingChecklist` | `../no-auth-partner-onboarding-checklist.schema.yaml` |
+| `requestPartnerEnablementContent` | `../no-auth-partner-enablement-content.schema.yaml` |
+| `triggerPartnerReactivation` | `../no-auth-partner-reactivation.schema.yaml` |
 
 The production schemas flatten useful partner, audience, contact, and fit
-signals from the legacy nested payloads and point directly at the Vercel API.
-Use those files when importing these six Actions. The API-key
+signals from legacy payloads and point directly at the Vercel API. Use those
+files when importing these Actions. The API-key
 `openapi-api-key-partner-fit-scoring.yaml` remains a distinct CRM fit-scoring
 and segment-update contract; it is not a duplicate of the no-auth COI
 prioritization endpoint.
+
+The API-key partner onboarding checklist schema is reference-only for the
+production checklist generator. The older partner-followup webhook envelope
+also remains reference-only for segment-specific reactivation; use the
+canonical Vercel action schema above. Routine enablement, onboarding, and
+bounded reactivation work may run automatically. Human review remains for
+legal/compliance uncertainty, compensation disputes or payout authorization,
+private-record retrieval, and final regulated borrower decisions.
 
 `openapi-api-key-partner-outreach-campaigns.yaml` is a **reference-only API-key
 design**, not an implemented production route. Its legacy creation operation

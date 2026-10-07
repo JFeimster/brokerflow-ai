@@ -1,0 +1,124 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Enablement Content Action
+  version: 1.0.0
+  description: Prepares deterministic partner-specific educational content without lending or funding promises.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+paths:
+  /api/no-auth/partner-enablement-content:
+    post:
+      operationId: requestPartnerEnablementContent
+      summary: Prepare partner training or enablement content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartnerRequest' }
+            example:
+              source: custom_gpt
+              action_type: partner_enablement_content
+              partner_id: partner_123
+              partner_category: accountant_cpa
+              business_type: accounting practice
+              content_type: funding_trigger_guide
+              target_audience: small business clients
+              funding_product_focus: working capital
+              tone: consultative
+              format: bullet_guide
+              use_case: quarterly partner training
+              distribution_channel: email
+              notes: Focus on seasonal business needs.
+      responses:
+        '200':
+          description: Enablement draft prepared
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PartnerResponse' }
+              example:
+                success: true
+                content_request_id: pec_20261007_123e4567-e89b-12d3-a456-426614174000
+                content_title: Business funding trigger guide
+                content_type: funding_trigger_guide
+                target_partner_segment: professional_services_coi
+                draft_content: 'Business funding trigger guide for small business clients: listen for tax-payment timing, seasonal liquidity needs, and growth plans. Exploring options does not guarantee approval, rates, terms, lender acceptance, or funding.'
+                usage_notes: [Adapt examples to the partner's approved scope and audience., Use only the approved referral and consent workflow., Keep private borrower or business records out of no-auth requests and shared content.]
+                compliance_safe_notes: [Do not promise approval, rates, terms, lender acceptance, or funding certainty., This material is educational and does not make borrower eligibility or underwriting decisions.]
+                recommended_next_step: review_against_current_approved_messaging_then_share_with_the_partner
+                message: Partner-specific educational content prepared for review and distribution.
+                webhook_status: not_configured
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, error: validation_error, message: content_type must be one of the supported values. }
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, error: invalid_method, message: Only POST requests are allowed. }
+        '500':
+          description: Content generation failed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, content_request_id: pec_20261007_123e4567-e89b-12d3-a456-426614174000, error: generation_failed, message: The partner-development draft could not be prepared. }
+        '502':
+          description: Downstream webhook delivery was not confirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, content_request_id: pec_20261007_123e4567-e89b-12d3-a456-426614174000, error: forwarding_failed, message: 'Draft prepared, but webhook delivery could not be confirmed. Check downstream state before retrying.' }
+components:
+  schemas:
+    PartnerRequest:
+      type: object
+      additionalProperties: false
+      required: [source, action_type, partner_category, business_type, content_type, target_audience]
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type: { const: partner_enablement_content }
+        partner_id: { type: string, maxLength: 200 }
+        partner_category:
+          type: string
+          enum: [accountant_cpa, bookkeeper, tax_advisor, attorney, small_business_attorney, business_broker, commercial_real_estate, merchant_services, payroll_provider, fractional_cfo, equipment_vendor, insurance_agent, franchise_consultant, local_business_association, industry_consultant, ecommerce_consultant, restaurant_consultant, construction_consultant, trucking_logistics_consultant, healthcare_practice_consultant, other]
+        business_type: { type: string, maxLength: 160 }
+        content_type: { type: string, enum: [referral_cheat_sheet, funding_trigger_guide, conversation_script, email_template, linkedin_template, faq, one_pager, training_outline, call_script, partner_playbook, objection_guide, educational_article] }
+        target_audience: { type: string, maxLength: 240 }
+        funding_product_focus: { type: string, maxLength: 300 }
+        tone: { type: string, enum: [professional, friendly, consultative, concise] }
+        format: { type: string, enum: [short_form, long_form, bullet_guide, email, script, one_page, faq, training_module, presentation_outline] }
+        use_case: { type: string, maxLength: 1000 }
+        distribution_channel: { type: string, enum: [email, linkedin, phone, sms, multi_channel] }
+        notes: { type: string, maxLength: 4000 }
+        shared_secret: { type: string, maxLength: 500, writeOnly: true }
+    PartnerResponse:
+      type: object
+      additionalProperties: false
+      required: [success, content_request_id, content_title, content_type, target_partner_segment, draft_content, usage_notes, compliance_safe_notes, recommended_next_step, message, webhook_status]
+      properties:
+        success: { const: true }
+        content_request_id: { type: string }
+        content_title: { type: string }
+        content_type: { type: string, enum: [referral_cheat_sheet, funding_trigger_guide, conversation_script, email_template, linkedin_template, faq, one_pager, training_outline, call_script, partner_playbook, objection_guide, educational_article] }
+        target_partner_segment: { type: string }
+        draft_content: { type: string }
+        usage_notes: { type: array, items: { type: string } }
+        compliance_safe_notes: { type: array, items: { type: string } }
+        recommended_next_step: { type: string }
+        message: { type: string }
+        webhook_status: { type: string, enum: [forwarded, not_configured] }
+    ErrorResponse:
+      type: object
+      required: [success, error, message]
+      properties:
+        success: { const: false }
+        content_request_id: { type: string }
+        error: { type: string, enum: [validation_error, invalid_method, generation_failed, forwarding_failed] }
+        message: { type: string }
+x-brokerflow-env:
+  PARTNER_ENABLEMENT_CONTENT_WEBHOOK_URL: Optional downstream workflow URL.
+  PARTNER_ENABLEMENT_CONTENT_SHARED_SECRET: Optional request-body secret.
+  WEBHOOK_SHARED_SECRET: Optional shared outbound x-brokerflow-secret header.

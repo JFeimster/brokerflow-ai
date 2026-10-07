@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: BrokerFlow Partner Follow Up Trigger
   version: 1.0.0
-  description: Trigger approved partner onboarding, update, recap, and reactivation workflows.
+  description: Legacy generic webhook envelope for partner onboarding, update, recap, and reactivation workflows. Use ../no-auth-partner-reactivation.schema.yaml for the canonical production segment-specific reactivation Action.
 servers:
   - url: https://YOUR-AUTOMATION-DOMAIN.com
 security: []
@@ -81,6 +81,8 @@ components:
       required: [status, message]
 x-brokerflow-rate-limit:
   suggested: 30 requests/minute per source
+x-brokerflow-status: reference-only
+x-brokerflow-canonical-reactivation-schema: ../no-auth-partner-reactivation.schema.yaml
 x-brokerflow-guardrails:
   - Honor partner contact preferences.
   - Use approved partner-facing templates.

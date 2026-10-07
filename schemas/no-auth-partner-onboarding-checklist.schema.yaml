@@ -1,0 +1,151 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Onboarding Checklist Action
+  version: 1.0.0
+  description: Creates a partner-specific onboarding checklist and internal next step. Compensation fields are descriptive only.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+paths:
+  /api/no-auth/partner-onboarding-checklist:
+    post:
+      operationId: generatePartnerOnboardingChecklist
+      summary: Generate a partner onboarding checklist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerRequest'
+            example:
+              source: custom_gpt
+              action_type: partner_onboarding_checklist
+              partner_id: partner_123
+              partner_name: Alex Rivera
+              company_name: Rivera Advisory
+              partner_type: professional_services_coi
+              business_type: accounting practice
+              state: NY
+              referral_model: warm_introduction
+              compensation_model: non_compensated_coi
+              training_required: true
+              approved_messaging_required: true
+              crm_setup_required: true
+              current_onboarding_status: in_progress
+              completed_items: [profile_setup]
+              notes: Prefers email updates.
+      responses:
+        '200':
+          description: Checklist prepared
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PartnerResponse' }
+              example:
+                success: true
+                onboarding_checklist_id: pon_20261007_123e4567-e89b-12d3-a456-426614174000
+                onboarding_priority: normal
+                partner_segment: professional_services_coi
+                checklist_sections:
+                  - section: profile_setup
+                    items:
+                      - { item: profile_setup, label: Confirm partner profile and preferred contact details., status: completed }
+                missing_items: [first_referral_steps, partner_contact_preferences]
+                completed_items: [profile_setup]
+                recommended_next_step: complete_first_referral_steps
+                message: Onboarding checklist prepared with outstanding items. Compensation details are descriptive only.
+                webhook_status: not_configured
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, error: validation_error, message: partner_type must be one of the supported values. }
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, error: invalid_method, message: Only POST requests are allowed. }
+        '500':
+          description: Checklist generation failed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, onboarding_checklist_id: pon_20261007_123e4567-e89b-12d3-a456-426614174000, error: generation_failed, message: The partner-development draft could not be prepared. }
+        '502':
+          description: Downstream webhook delivery was not confirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, onboarding_checklist_id: pon_20261007_123e4567-e89b-12d3-a456-426614174000, error: forwarding_failed, message: 'Draft prepared, but webhook delivery could not be confirmed. Check downstream state before retrying.' }
+components:
+  schemas:
+    PartnerRequest:
+      type: object
+      additionalProperties: false
+      required: [source, action_type, partner_type]
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type: { const: partner_onboarding_checklist }
+        partner_id: { type: string, maxLength: 200 }
+        partner_name: { type: string, maxLength: 160 }
+        company_name: { type: string, maxLength: 200 }
+        partner_type: { type: string, enum: [professional_services_coi, affiliate, channel_partner, embedded_partner, referral_partner, other] }
+        business_type: { type: string, maxLength: 160 }
+        state: { type: string, maxLength: 80 }
+        referral_model: { type: string, enum: [direct_referral, affiliate_link, warm_introduction, channel_referral, co_marketing, embedded_partner, unknown] }
+        compensation_model: { type: string, enum: [none, flat_referral_fee, percentage_based, case_by_case, non_compensated_coi, unknown] }
+        training_required: { type: boolean }
+        approved_messaging_required: { type: boolean }
+        crm_setup_required: { type: boolean }
+        current_onboarding_status: { type: string, enum: [not_started, in_progress, blocked, completed] }
+        completed_items:
+          type: array
+          uniqueItems: true
+          maxItems: 19
+          items:
+            type: string
+            enum: [profile_setup, referral_link_setup, commission_terms, training_materials, approved_messaging, compliance_disclosures, crm_tags, first_referral_steps, co_marketing_assets, client_introduction_process, funding_trigger_guide, confidentiality_expectations, partner_contact_preferences, attribution_process, intake_workflow, lead_routing_rules, partner_status_expectations, technical_handoff_details, escalation_path]
+        notes: { type: string, maxLength: 4000 }
+        shared_secret: { type: string, maxLength: 500, writeOnly: true }
+    ChecklistItem:
+      type: object
+      additionalProperties: false
+      required: [item, label, status]
+      properties:
+        item: { type: string, enum: [profile_setup, referral_link_setup, commission_terms, training_materials, approved_messaging, compliance_disclosures, crm_tags, first_referral_steps, co_marketing_assets, client_introduction_process, funding_trigger_guide, confidentiality_expectations, partner_contact_preferences, attribution_process, intake_workflow, lead_routing_rules, partner_status_expectations, technical_handoff_details, escalation_path] }
+        label: { type: string }
+        status: { type: string, enum: [completed, missing] }
+    ChecklistSection:
+      type: object
+      additionalProperties: false
+      required: [section, items]
+      properties:
+        section: { type: string, enum: [profile_setup, referral_link_setup, commission_terms, training_materials, approved_messaging, crm_tags, first_referral_steps] }
+        items: { type: array, items: { $ref: '#/components/schemas/ChecklistItem' } }
+    PartnerResponse:
+      type: object
+      additionalProperties: false
+      required: [success, onboarding_checklist_id, onboarding_priority, partner_segment, checklist_sections, missing_items, completed_items, recommended_next_step, message, webhook_status]
+      properties:
+        success: { const: true }
+        onboarding_checklist_id: { type: string }
+        onboarding_priority: { type: string, enum: [low, normal, high] }
+        partner_segment: { type: string }
+        checklist_sections: { type: array, items: { $ref: '#/components/schemas/ChecklistSection' } }
+        missing_items: { type: array, items: { type: string } }
+        completed_items: { type: array, items: { type: string } }
+        recommended_next_step: { type: string }
+        message: { type: string }
+        webhook_status: { type: string, enum: [forwarded, not_configured] }
+    ErrorResponse:
+      type: object
+      required: [success, error, message]
+      properties:
+        success: { const: false }
+        onboarding_checklist_id: { type: string }
+        error: { type: string, enum: [validation_error, invalid_method, generation_failed, forwarding_failed] }
+        message: { type: string }
+x-brokerflow-env:
+  PARTNER_ONBOARDING_CHECKLIST_WEBHOOK_URL: Optional downstream workflow URL.
+  PARTNER_ONBOARDING_CHECKLIST_SHARED_SECRET: Optional request-body secret.
+  WEBHOOK_SHARED_SECRET: Optional shared outbound x-brokerflow-secret header.

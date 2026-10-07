@@ -25,6 +25,8 @@ BrokerFlow also contains no-auth GPT Action packs for intake, scoring, routing, 
 | Lender Match Review | `requestLenderMatchReview` | `POST /api/no-auth/lender-match-review` | `schemas/no-auth-lender-match-review.schema.yaml` |
 | Automated Lender Fit Routing | `routeLenderFitScenario` | `POST /api/no-auth/lender-fit-routing` | `schemas/no-auth-automated-lender-fit-routing.schema.yaml` |
 
+The 12 partner lifecycle Actions have a consolidated endpoint and operation map in [`docs/internal-partner-action-packs-overview.md`](docs/internal-partner-action-packs-overview.md), plus [GPT Builder setup](docs/internal-partner-action-packs-gpt-builder-setup.md), [Vercel environment configuration](docs/internal-partner-action-packs-vercel-env.md), and [testing guidance](docs/internal-partner-action-packs-test-plan.md).
+
 ### Automation boundary
 
 The lender-fit routing action is automation-first: it can score/rank a scenario, select a route, create queue/workflow payloads, send alerts, and trigger downstream automation.

@@ -1,0 +1,26 @@
+# Internal Partner Action Packs Overview
+
+All 12 canonical partner Actions are Vercel serverless POST handlers. GPT Actions use no configured API authentication; a per-action body `shared_secret` can optionally be enforced. Webhook forwarding is optional, and outbound requests can carry `x-brokerflow-secret` from `WEBHOOK_SHARED_SECRET`. There is no durable persistence in these handlers.
+
+| Lifecycle stage | Action / operationId | Endpoint | Auth | Main inputs | Main outputs | Downstream handoff |
+| --- | --- | --- | --- | --- | --- | --- |
+| Signup | Affiliate Partner Signup / `submitAffiliatePartnerSignup` | `POST /api/no-auth/affiliate-partner-signup` | No-auth; optional body secret | Partner identity/contact, partner type, consent, referral experience | Signup ID, status/segment, onboarding priority, next step | CRM partner record and onboarding queue via webhook |
+| Prospect capture | Channel Partner Prospect Capture / `captureChannelPartnerProspect` | `POST /api/no-auth/channel-partner-prospect` | No-auth; optional body secret | Company/contact, category, niche, client type, potential, relationship | Prospect ID/status, recommended priority and next step | Partner pipeline / COI scoring |
+| COI prioritization | COI Niche Scoring / `scoreCoiPartnerProspect` | `POST /api/no-auth/coi-niche-scoring` | No-auth; optional body secret | Prospect, category/niche, client access, trigger frequency, trust, referral potential | Internal score, breakdown, priority, outreach angle | Outreach planning; never borrower scoring |
+| Outreach | Partner Outreach Campaign Builder / `createPartnerOutreachCampaign` | `POST /api/no-auth/partner-outreach-campaign` | No-auth; optional body secret | Segment, relationship, goal, audience, tone, channel | Subjects, first touch, bounded follow-up, call/LinkedIn notes | Human/operator review or configured messaging workflow |
+| Objection handling | Partner Objection Handler / `draftPartnerObjectionResponse` | `POST /api/no-auth/partner-objection-response` | No-auth; optional body secret | Objection type/text, relationship, tone, channel | Response drafts, trust builder, review flag, next step | Partner communication draft; specialist for legal/compensation ambiguity |
+| Meeting prep | Partner Meeting / Call Prep Brief / `createPartnerCallPrepBrief` | `POST /api/no-auth/partner-call-prep-brief` | No-auth; optional body secret | Partner category, stage, goal, supplied context | Agenda, questions, topics, pitch angle, next step | Meeting/operator workflow |
+| Signup/onboarding | Partner Onboarding Checklist / `generatePartnerOnboardingChecklist` | `POST /api/no-auth/partner-onboarding-checklist` | No-auth; optional body secret | Partner type, referral/compensation model, setup flags/status | Checklist, missing/completed items, priority, next step | CRM tasks and onboarding workflow; no compensation approval |
+| Enablement | Partner Training / Enablement Content / `requestPartnerEnablementContent` | `POST /api/no-auth/partner-enablement-content` | No-auth; optional body secret | Category, business type, content type, audience, format/tone | Draft content, usage/compliance notes, next step | Content review/distribution task |
+| Reactivation | Partner Reactivation / Nurture Trigger / `triggerPartnerReactivation` | `POST /api/no-auth/partner-reactivation` | No-auth; optional body secret | Segment, activity dates, relationship, preferred channel | Message, priority, channel, bounded schedule, next step | CRM follow-up task or configured nurture workflow |
+| Referral | Partner Referral Submission / `submitPartnerReferral` | `POST /api/no-auth/partner-referral` | No-auth; optional body secret | Partner/source, borrower/business/contact, scenario, permission, warm intro | Referral ID, attribution, intake/routing readiness, next step | Configured handoff to borrower intake and lender-fit routing |
+| Deal update | Partner Deal Status Update Draft / `draftPartnerStatusUpdate` | `POST /api/no-auth/partner-status-update-draft` | No-auth; optional body secret | Referral ID, stage/update type, disclosure level, optional details | Safe update draft, disclosure level, do-not-share list, next step | Internal draft/communication task; does not send messages |
+| Attribution log | Partner Commission / Attribution Log / `logPartnerAttribution` | `POST /api/no-auth/partner-attribution-log` | No-auth; optional body secret | Partner/referral IDs, attribution/commission/payout states, dispute flag | Log ID, statuses, review flag, next step | Downstream attribution store/review; no payment authorization |
+
+## Canonical contract sources
+
+Use the 12 production schemas listed in `ACTION_INDEX.md`. Historical nested webhook envelopes under `schemas/partners/` are reference-only where the partner schema registry says so. The API-key attribution event/read schema remains a separate protected integration contract.
+
+## Handoff boundary
+
+Partner referral → Borrower Intake / structured deal payload → Automated Lender Fit Routing → Document / review workflows → Partner Status Update Draft → Attribution Log. These are orchestration handoffs, not direct endpoint calls from one Action to another. The webhook receiver is responsible for durable record creation and deduplication.

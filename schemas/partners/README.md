@@ -79,11 +79,11 @@ action's linked guardrails define that boundary.
 
 | File | Auth | Purpose |
 | --- | --- | --- |
-| `openapi-no-auth-partner-signup.yaml` | None | Capture affiliate/partner signups from GPT, Tally, or public forms. |
-| `openapi-no-auth-referral-lead-intake.yaml` | None | Let partners submit referred borrower leads with attribution. |
-| `openapi-no-auth-channel-partner-prospect.yaml` | None | Log niche COI prospects such as CPAs, attorneys, consultants, and business brokers. |
-| `openapi-no-auth-warm-intro-request.yaml` | None | Queue warm intro requests for human review. |
-| `openapi-no-auth-partner-followup-trigger.yaml` | None | Trigger approved partner nurture/onboarding follow-up sequences. |
+| `openapi-no-auth-partner-signup.yaml` | None | Reference-only legacy signup envelope; use the canonical affiliate signup schema. |
+| `openapi-no-auth-referral-lead-intake.yaml` | None | Reference-only legacy nested webhook envelope; use canonical Partner Referral Submission. |
+| `openapi-no-auth-channel-partner-prospect.yaml` | None | Reference-only legacy prospect envelope; use the canonical channel partner prospect schema. |
+| `openapi-no-auth-warm-intro-request.yaml` | None | Reference-only legacy warm-intro envelope; route warm introductions through the referral workflow. |
+| `openapi-no-auth-partner-followup-trigger.yaml` | None | Reference-only legacy follow-up envelope; use canonical reactivation. |
 | `openapi-api-key-partner-crm-sync.yaml` | API Key Bearer | Create/update partner CRM records, stages, and notes through a backend. |
 | `openapi-api-key-partner-attribution.yaml` | API Key Bearer | Log and retrieve partner attribution events. |
 | `openapi-api-key-partner-onboarding.yaml` | API Key Bearer | Create and update partner onboarding checklists. |

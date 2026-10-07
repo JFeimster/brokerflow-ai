@@ -1,4 +1,8 @@
 openapi: 3.1.0
+# LEGACY REFERENCE ONLY: The production GPT Action is
+# schemas/no-auth-affiliate-partner-signup.schema.yaml at
+# POST /api/no-auth/affiliate-partner-signup. This historical envelope uses a
+# placeholder webhook URL and is not the canonical production contract.
 info:
   title: BrokerFlow Partner Signup Webhook
   version: 1.0.0

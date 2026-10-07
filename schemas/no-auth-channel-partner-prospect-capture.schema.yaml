@@ -1,0 +1,99 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Channel Partner Prospect Capture
+  version: 1.0.0
+  description: Capture and deterministically prioritize centers of influence for internal business development. This is not borrower scoring or lending decisioning.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+security: []
+paths:
+  /api/no-auth/channel-partner-prospect:
+    post:
+      operationId: captureChannelPartnerProspect
+      summary: Capture a channel partner prospect
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChannelPartnerProspectRequest' }
+            example:
+              source: custom_gpt
+              action_type: channel_partner_prospect
+              company_name: Northside Accounting
+              contact_name: Alex Morgan
+              partner_category: accountant_cpa
+              niche: construction
+              target_client_type: small_business_owner
+              estimated_referral_potential: high
+              relationship_strength: aware
+              outreach_priority: normal
+              city: Buffalo
+              state: NY
+              website: https://example.com
+              notes: Serves local contractors
+              next_step: Research public service pages
+      responses:
+        '200':
+          description: Prospect classified and routed for internal follow-up
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChannelPartnerProspectResponse' }
+              example:
+                success: true
+                prospect_id: cpp_20261007_ab12cd34ef56
+                status: prospect_captured
+                partner_category: accountant_cpa
+                recommended_priority: high
+                recommended_next_step: prepare_personalized_partner_outreach
+                message: Prospect captured and prioritized for internal business-development follow-up.
+        '400':
+          description: Missing, invalid, or unauthorized request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '405': { description: Only POST is supported }
+components:
+  schemas:
+    ChannelPartnerProspectRequest:
+      type: object
+      additionalProperties: false
+      required: [source, action_type, company_name, contact_name, partner_category, niche, target_client_type, estimated_referral_potential, relationship_strength]
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type: { type: string, const: channel_partner_prospect }
+        company_name: { type: string, minLength: 1, maxLength: 200 }
+        contact_name: { type: string, minLength: 1, maxLength: 160 }
+        partner_category:
+          type: string
+          enum: [accountant_cpa, bookkeeper, tax_advisor, attorney, business_broker, commercial_real_estate, merchant_services, payroll_provider, fractional_cfo, equipment_vendor, insurance_agent, franchise_consultant, local_business_association, industry_consultant, ecommerce_consultant, restaurant_consultant, construction_consultant, trucking_logistics_consultant, healthcare_practice_consultant, other]
+        niche: { type: string, minLength: 1, maxLength: 160 }
+        target_client_type: { type: string, minLength: 1, maxLength: 160 }
+        estimated_referral_potential: { type: string, enum: [low, medium, high, unknown] }
+        relationship_strength: { type: string, enum: [cold, aware, engaged, strong, unknown] }
+        outreach_priority: { type: string, enum: [low, normal, high, urgent] }
+        city: { type: string, maxLength: 120 }
+        state: { type: string, maxLength: 80 }
+        website: { type: string, format: uri, maxLength: 500 }
+        linkedin_url: { type: string, format: uri, maxLength: 500 }
+        notes: { type: string, maxLength: 4000 }
+        next_step: { type: string, maxLength: 500 }
+        shared_secret: { type: string, maxLength: 500, writeOnly: true }
+    ChannelPartnerProspectResponse:
+      type: object
+      required: [success, prospect_id, status, partner_category, recommended_priority, recommended_next_step, message]
+      properties:
+        success: { type: boolean, const: true }
+        prospect_id: { type: string }
+        status: { type: string, const: prospect_captured }
+        partner_category: { type: string }
+        recommended_priority: { type: string, enum: [low, normal, high, urgent] }
+        recommended_next_step: { type: string, enum: [research_public_business_information, prepare_personalized_partner_outreach, schedule_discovery_conversation, continue_relationship_nurture] }
+        message: { type: string }
+    ErrorResponse:
+      type: object
+      required: [success, error, message]
+      properties:
+        success: { type: boolean, const: false }
+        error: { type: string }
+        message: { type: string }

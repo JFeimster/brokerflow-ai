@@ -1,0 +1,111 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow COI Niche Scoring
+  version: 1.0.0
+  description: Deterministic internal business-development prioritization for centers of influence. Scores do not evaluate borrowers or lending eligibility.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+security: []
+paths:
+  /api/no-auth/coi-niche-scoring:
+    post:
+      operationId: scoreCoiPartnerProspect
+      summary: Score and prioritize a COI partner prospect
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CoiNicheScoringRequest' }
+            example:
+              source: custom_gpt
+              action_type: coi_niche_scoring
+              prospect_id: cpp_20261007_ab12cd34ef56
+              company_name: Northside Accounting
+              partner_category: accountant_cpa
+              niche: construction
+              client_access_level: direct
+              funding_trigger_frequency: frequent
+              trust_authority_level: primary_advisor
+              repeat_referral_potential: recurring
+              relationship_strength: engaged
+              urgency_signals: emerging
+              geographic_focus: Western New York
+      responses:
+        '200':
+          description: Prospect scored and assigned an internal outreach priority
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CoiNicheScoringResponse' }
+              example:
+                success: true
+                scoring_id: coi_20261007_ab12cd34ef56
+                overall_partner_score: 79
+                recommended_priority: high
+                score_breakdown:
+                  client_access_score: 100
+                  funding_trigger_score: 75
+                  trust_authority_score: 93
+                  repeat_referral_score: 79
+                  niche_fit_score: 100
+                  urgency_score: 50
+                recommended_outreach_angle: Offer a brief working-capital education conversation relevant to construction businesses.
+                recommended_next_step: schedule_partner_discovery
+                message: Internal partner-development score; no borrower or lending decision was made.
+        '400':
+          description: Missing, invalid, or unauthorized request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '405': { description: Only POST is supported }
+components:
+  schemas:
+    CoiNicheScoringRequest:
+      type: object
+      additionalProperties: false
+      required: [source, action_type, company_name, partner_category, niche, client_access_level, funding_trigger_frequency, trust_authority_level, repeat_referral_potential, relationship_strength, urgency_signals]
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type: { type: string, const: coi_niche_scoring }
+        prospect_id: { type: string, maxLength: 120 }
+        company_name: { type: string, minLength: 1, maxLength: 200 }
+        partner_category: { type: string, minLength: 1, maxLength: 120 }
+        niche: { type: string, minLength: 1, maxLength: 160 }
+        client_access_level: { type: string, enum: [indirect, direct, broad, unknown] }
+        funding_trigger_frequency: { type: string, enum: [rare, occasional, frequent, very_frequent, unknown] }
+        trust_authority_level: { type: string, enum: [informational, advisory, decision_influencer, primary_advisor, unknown] }
+        repeat_referral_potential: { type: string, enum: [one_time, occasional, recurring, high_volume, unknown] }
+        relationship_strength: { type: string, enum: [cold, aware, engaged, strong, unknown] }
+        niche_fit: { type: string, enum: [limited, moderate, strong, unknown] }
+        urgency_signals: { type: string, enum: [none, emerging, time_sensitive, urgent, unknown] }
+        geographic_focus: { type: string, maxLength: 300 }
+        notes: { type: string, maxLength: 4000 }
+        shared_secret: { type: string, maxLength: 500, writeOnly: true }
+    CoiNicheScoringResponse:
+      type: object
+      required: [success, scoring_id, overall_partner_score, recommended_priority, score_breakdown, recommended_outreach_angle, recommended_next_step, message]
+      properties:
+        success: { type: boolean, const: true }
+        scoring_id: { type: string }
+        overall_partner_score: { type: integer, minimum: 0, maximum: 100 }
+        recommended_priority: { type: string, enum: [low, normal, high, urgent] }
+        score_breakdown:
+          type: object
+          required: [client_access_score, funding_trigger_score, trust_authority_score, repeat_referral_score, niche_fit_score, urgency_score]
+          properties:
+            client_access_score: { type: integer, minimum: 0, maximum: 100 }
+            funding_trigger_score: { type: integer, minimum: 0, maximum: 100 }
+            trust_authority_score: { type: integer, minimum: 0, maximum: 100 }
+            repeat_referral_score: { type: integer, minimum: 0, maximum: 100 }
+            niche_fit_score: { type: integer, minimum: 0, maximum: 100 }
+            urgency_score: { type: integer, minimum: 0, maximum: 100 }
+        recommended_outreach_angle: { type: string }
+        recommended_next_step: { type: string, enum: [schedule_partner_discovery, prepare_personalized_partner_outreach, continue_relationship_nurture, research_public_business_information] }
+        message: { type: string }
+    ErrorResponse:
+      type: object
+      required: [success, error, message]
+      properties:
+        success: { type: boolean, const: false }
+        error: { type: string }
+        message: { type: string }

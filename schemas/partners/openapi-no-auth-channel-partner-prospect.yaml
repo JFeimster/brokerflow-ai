@@ -1,4 +1,8 @@
 openapi: 3.1.0
+# LEGACY REFERENCE ONLY: The production GPT Action is
+# schemas/no-auth-channel-partner-prospect-capture.schema.yaml at
+# POST /api/no-auth/channel-partner-prospect. This historical envelope uses a
+# placeholder webhook URL and is not the canonical production contract.
 info:
   title: BrokerFlow Channel Partner Prospect Webhook
   version: 1.0.0

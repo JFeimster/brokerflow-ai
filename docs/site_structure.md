@@ -1,6 +1,6 @@
 brokerflow-ai/
 ├── `README.md`
-├── agents.md
+├── gpt-instructions.md
 ├── package.json
 ├── index.html
 ├── agents.html

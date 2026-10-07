@@ -188,3 +188,14 @@ Batch 4 partner referrals hand off to borrower intake and lender-fit routing
 through configured workflow orchestration; the referral handler does not call
 other endpoints directly. Status drafts remain partner-safe, and attribution
 logging is descriptive only. Webhook delivery is not durably deduplicated.
+
+## Partner lifecycle and integration references
+
+- `knowledge/internal-partner-action-router.md` — select the canonical Action by intent.
+- `workflows/internal-partner-lifecycle-workflow.md` — prospect through referral and reactivation handoffs.
+- `docs/internal-partner-action-packs-overview.md` — endpoint, operation, auth, field, and handoff map for all 12 partner Actions.
+- `docs/internal-partner-action-packs-gpt-builder-setup.md` — canonical schema imports and GPT Builder guidance.
+- `docs/internal-partner-action-packs-vercel-env.md` — partner webhook and request-secret variables.
+- `docs/internal-partner-action-packs-test-plan.md` — consolidated validation and regression plan.
+- `docs/partner-action-auth-boundary-review.md` — current auth classification and future protections.
+- `docs/partner-action-idempotency-persistence-plan.md` — retry, storage, deduplication, and audit recommendations.

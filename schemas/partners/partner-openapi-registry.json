@@ -1,5 +1,5 @@
 {
-  "version": "1.6.0",
+  "version": "1.7.0",
   "project": "brokerflow-ai",
   "folder": "schemas/partners",
   "description": "Action-ready OpenAPI schemas and implementation docs for partner, affiliate, channel partner, referral partner, and partner ops intelligence workflows.",
@@ -10,10 +10,10 @@
     "oauth_drive_wrapper": "https://brokerflow-ai.vercel.app/api/drive"
   },
   "schemas": [
-    { "id": "partner-signup", "file": "openapi-no-auth-partner-signup.yaml", "auth": "none", "status": "built" },
+    { "id": "partner-signup", "file": "openapi-no-auth-partner-signup.yaml", "auth": "none", "status": "reference_only", "canonical_schema": "../no-auth-affiliate-partner-signup.schema.yaml" },
     { "id": "partner-referral-lead-intake", "file": "openapi-no-auth-referral-lead-intake.yaml", "auth": "none", "status": "reference_only", "canonical_schema": "../no-auth-partner-referral-submission.schema.yaml" },
-    { "id": "channel-partner-prospect", "file": "openapi-no-auth-channel-partner-prospect.yaml", "auth": "none", "status": "built" },
-    { "id": "warm-intro-request", "file": "openapi-no-auth-warm-intro-request.yaml", "auth": "none", "status": "built" },
+    { "id": "channel-partner-prospect", "file": "openapi-no-auth-channel-partner-prospect.yaml", "auth": "none", "status": "reference_only", "canonical_schema": "../no-auth-channel-partner-prospect-capture.schema.yaml" },
+    { "id": "warm-intro-request", "file": "openapi-no-auth-warm-intro-request.yaml", "auth": "none", "status": "reference_only", "workflow_handoff": "../../workflows/no-auth-partner-referral-submission-workflow.md" },
     { "id": "partner-followup-trigger", "file": "openapi-no-auth-partner-followup-trigger.yaml", "auth": "none", "status": "reference_only", "canonical_reactivation_schema": "../no-auth-partner-reactivation.schema.yaml" },
     { "id": "partner-crm-sync", "file": "openapi-api-key-partner-crm-sync.yaml", "auth": "api_key_bearer", "status": "built" },
     { "id": "partner-attribution", "file": "openapi-api-key-partner-attribution.yaml", "auth": "api_key_bearer", "status": "built" },

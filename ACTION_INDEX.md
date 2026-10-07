@@ -9,6 +9,9 @@
 | Affiliate Partner Signup | `submitAffiliatePartnerSignup` | `POST /api/no-auth/affiliate-partner-signup` | `schemas/no-auth-affiliate-partner-signup.schema.yaml` | Capture partner consent and profile details, then assign an internal onboarding segment and next step. |
 | Channel Partner Prospect Capture | `captureChannelPartnerProspect` | `POST /api/no-auth/channel-partner-prospect` | `schemas/no-auth-channel-partner-prospect-capture.schema.yaml` | Capture and prioritize COI prospects for internal business-development follow-up. |
 | COI Niche Scoring | `scoreCoiPartnerProspect` | `POST /api/no-auth/coi-niche-scoring` | `schemas/no-auth-coi-niche-scoring.schema.yaml` | Calculate a documented internal partner-development score and outreach priority. |
+| Partner Outreach Campaign Builder | `createPartnerOutreachCampaign` | `POST /api/no-auth/partner-outreach-campaign` | `schemas/no-auth-partner-outreach-campaign.schema.yaml` | Draft targeted messaging and classify the campaign for optional workflow routing. |
+| Partner Objection Handler / Response Draft | `draftPartnerObjectionResponse` | `POST /api/no-auth/partner-objection-response` | `schemas/no-auth-partner-objection-response.schema.yaml` | Draft trust-preserving responses and next steps without compensation or lending commitments. |
+| Partner Meeting / Call Prep Brief | `createPartnerCallPrepBrief` | `POST /api/no-auth/partner-call-prep-brief` | `schemas/no-auth-partner-call-prep-brief.schema.yaml` | Separate supplied partner context from category-specific meeting recommendations. |
 
 ## Automation Boundary
 
@@ -76,3 +79,40 @@ Human review should block only final regulated steps:
 - `knowledge/coi-niche-scoring-guardrails.md`
 - `workflows/no-auth-coi-niche-scoring-workflow.md`
 - `docs/coi-niche-scoring-testing-checklist.md`
+
+### Partner Outreach Campaign Builder
+
+- `actions/no-auth/partner-outreach-campaign-actions.md`
+- `schemas/no-auth-partner-outreach-campaign.schema.yaml`
+- `api/no-auth/partner-outreach-campaign.js`
+- `knowledge/partner-outreach-campaign-guardrails.md`
+- `workflows/no-auth-partner-outreach-campaign-workflow.md`
+- `templates/partner-outreach-email-templates.md`
+- `docs/partner-outreach-campaign-testing-checklist.md`
+
+### Partner Objection Handler / Response Draft
+
+- `actions/no-auth/partner-objection-response-actions.md`
+- `schemas/no-auth-partner-objection-response.schema.yaml`
+- `api/no-auth/partner-objection-response.js`
+- `knowledge/partner-objection-response-guardrails.md`
+- `workflows/no-auth-partner-objection-response-workflow.md`
+- `templates/partner-objection-response-templates.md`
+- `docs/partner-objection-response-testing-checklist.md`
+
+### Partner Meeting / Call Prep Brief
+
+- `actions/no-auth/partner-call-prep-brief-actions.md`
+- `schemas/no-auth-partner-call-prep-brief.schema.yaml`
+- `api/no-auth/partner-call-prep-brief.js`
+- `knowledge/partner-call-prep-brief-guardrails.md`
+- `workflows/no-auth-partner-call-prep-brief-workflow.md`
+- `templates/partner-call-prep-brief-template.md`
+- `docs/partner-call-prep-brief-testing-checklist.md`
+
+Batch 2 runtime validation/forwarding is shared in `lib/partner-action-utils.js`.
+Run `node --test tests/partner-outreach-conversion.test.js` and
+`python scripts/validate-partner-outreach-conversion.py` (PyYAML + jsonschema).
+The older API-key outreach schema is reference-only; its campaign operation is
+`createLegacyPartnerOutreachCampaignPlan`. Import the production schema above
+for `createPartnerOutreachCampaign`.

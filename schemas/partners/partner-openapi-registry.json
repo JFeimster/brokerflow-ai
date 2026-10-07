@@ -27,7 +27,7 @@
     { "id": "partner-program-review", "file": "openapi-api-key-partner-program-review.yaml", "auth": "api_key_bearer", "status": "built" },
     { "id": "partner-fit-scoring", "file": "openapi-api-key-partner-fit-scoring.yaml", "auth": "api_key_bearer", "status": "built" },
     { "id": "partner-training-progress", "file": "openapi-api-key-partner-training-progress.yaml", "auth": "api_key_bearer", "status": "built" },
-    { "id": "partner-outreach-campaigns", "file": "openapi-api-key-partner-outreach-campaigns.yaml", "auth": "api_key_bearer", "status": "built" },
+    { "id": "partner-outreach-campaigns", "file": "openapi-api-key-partner-outreach-campaigns.yaml", "auth": "api_key_bearer", "status": "reference_only", "canonical_campaign_schema": "../no-auth-partner-outreach-campaign.schema.yaml" },
     { "id": "partner-lifecycle-automation", "file": "openapi-api-key-partner-lifecycle-automation.yaml", "auth": "api_key_bearer", "status": "built" },
     { "id": "partner-segment-playbooks", "file": "openapi-api-key-partner-segment-playbooks.yaml", "auth": "api_key_bearer", "status": "built" },
     { "id": "partner-health-monitor", "file": "openapi-api-key-partner-health-monitor.yaml", "auth": "api_key_bearer", "status": "built" },

@@ -30,13 +30,30 @@ canonical production contracts and Vercel handlers are:
 | `submitAffiliatePartnerSignup` | `../no-auth-affiliate-partner-signup.schema.yaml` |
 | `captureChannelPartnerProspect` | `../no-auth-channel-partner-prospect-capture.schema.yaml` |
 | `scoreCoiPartnerProspect` | `../no-auth-coi-niche-scoring.schema.yaml` |
+| `createPartnerOutreachCampaign` | `../no-auth-partner-outreach-campaign.schema.yaml` |
+| `draftPartnerObjectionResponse` | `../no-auth-partner-objection-response.schema.yaml` |
+| `createPartnerCallPrepBrief` | `../no-auth-partner-call-prep-brief.schema.yaml` |
 
 The production schemas flatten useful partner, audience, contact, and fit
 signals from the legacy nested payloads and point directly at the Vercel API.
-Use those files when importing these three Actions. The API-key
+Use those files when importing these six Actions. The API-key
 `openapi-api-key-partner-fit-scoring.yaml` remains a distinct CRM fit-scoring
 and segment-update contract; it is not a duplicate of the no-auth COI
 prioritization endpoint.
+
+`openapi-api-key-partner-outreach-campaigns.yaml` is a **reference-only API-key
+design**, not an implemented production route. Its legacy creation operation
+is now `createLegacyPartnerOutreachCampaignPlan` to reserve
+`createPartnerOutreachCampaign` for the production no-auth action. Its task
+and status designs are retained without claiming implementation.
+
+For the three production outreach/conversion actions, routine drafting,
+classification, routing, preparation, and internal tasks may be automated.
+The broad review statements in the legacy Core Rules and reference schemas
+do not add a gate to these actions. Review or stronger authorization is
+reserved for legal/compliance ambiguity, actual compensation commitments,
+payouts, private records, and regulated borrower decisions. Each production
+action's linked guardrails define that boundary.
 
 | File | Auth | Purpose |
 | --- | --- | --- |
@@ -57,7 +74,7 @@ prioritization endpoint.
 | `openapi-api-key-partner-program-review.yaml` | API Key Bearer | Queue partner program readiness reviews and internal notes. |
 | `openapi-api-key-partner-fit-scoring.yaml` | API Key Bearer | Score partner fit for internal routing and segment assignment. |
 | `openapi-api-key-partner-training-progress.yaml` | API Key Bearer | Track partner training progress and assigned modules. |
-| `openapi-api-key-partner-outreach-campaigns.yaml` | API Key Bearer | Create partner outreach campaign plans and queue internal outreach tasks. |
+| `openapi-api-key-partner-outreach-campaigns.yaml` | API Key Bearer | Reference-only campaign persistence, task queue, and status design; use the canonical no-auth schema for production drafts. |
 | `openapi-api-key-partner-lifecycle-automation.yaml` | API Key Bearer | Track partner lifecycle events and recommend internal next actions. |
 | `openapi-api-key-partner-segment-playbooks.yaml` | API Key Bearer | List and assign partner segment playbooks. |
 | `openapi-api-key-partner-health-monitor.yaml` | API Key Bearer | Run internal partner health checks and route health flags. |

@@ -1,0 +1,413 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Meeting / Call Prep Brief
+  version: 1.0.0
+  description: Prepare a category-specific, 20-minute internal meeting brief. Caller-provided context is labeled
+    unverified and kept separate from suggested client audiences, triggers, objections, and opportunities. No external
+    records or partner performance figures are inferred.
+servers:
+- url: https://brokerflow-ai.vercel.app
+security: []
+paths:
+  /api/no-auth/partner-call-prep-brief:
+    post:
+      operationId: createPartnerCallPrepBrief
+      summary: Partner Meeting / Call Prep Brief
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerRequest'
+            example:
+              source: custom_gpt
+              company_name: Example Advisory
+              partner_category: accountant_cpa
+              relationship_stage: cold
+              action_type: partner_call_prep_brief
+              partner_name: Alex
+              prospect_id: cpp_example
+              niche: local service businesses
+              meeting_goal: initial_discovery
+              known_context: 'Synthetic example: an introductory conversation is planned.'
+              likely_client_base: Local service business owners
+              geographic_focus: Western New York
+      responses:
+        '200':
+          description: Draft generated and optional webhook delivery confirmed; no direct outreach or record retrieval.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerResponse'
+              example:
+                success: true
+                brief_id: pcb_20261007_11111111-2222-4333-8444-555555555555
+                partner_profile:
+                  partner_id: null
+                  prospect_id: cpp_example
+                  partner_name: Alex
+                  company_name: Example Advisory
+                  partner_category: accountant_cpa
+                  niche: local service businesses
+                  relationship_stage: cold
+                  geographic_focus: Western New York
+                  known_context: 'Synthetic example: an introductory conversation is planned.'
+                  recent_activity: null
+                  notes: null
+                  information_basis: caller_provided_unverified
+                likely_client_base:
+                  provided: Local service business owners
+                  suggested_to_verify: Business owners seeking accounting, tax, bookkeeping, or financial advice
+                funding_triggers_to_discuss:
+                - Cash-flow gaps
+                - Tax obligations
+                - Expansion funding
+                - Seasonal working-capital needs
+                recommended_pitch_angle: Explore funding-readiness education while preserving client trust and the
+                  advisor's role.
+                questions_to_ask:
+                - Which client needs should we understand first?
+                - When do clients raise cash-flow or tax-timing questions?
+                - What would protect client trust during an introduction?
+                - Does the supplied niche (local service businesses) reflect the clients you want to serve?
+                - What local needs or constraints should we verify in Western New York?
+                objections_to_expect:
+                - client_relationship_risk
+                - do_not_want_financing_role
+                cross_referral_opportunities:
+                - Explore permission-based introductions for bookkeeping or planning support.
+                meeting_agenda:
+                - minutes: 3
+                  topic: Introductions and permission to explore a relationship
+                - minutes: 5
+                  topic: Understand the partner's audience and priorities
+                - minutes: 5
+                  topic: Discuss suggested category topics and verify their relevance
+                - minutes: 4
+                  topic: Agree on roles, controlled communications, and confidentiality expectations
+                - minutes: 3
+                  topic: Confirm a next step, owner, and timing
+                recommendation_notice: Talking points, possible objections, and opportunities are category-based
+                  suggestions, not verified facts about this partner or its clients. Supplied context is unverified;
+                  no external records were retrieved.
+                recommended_next_step: document_partner_needs_and_contact_preferences
+                message: Internal partner meeting brief prepared. No meeting was scheduled and no borrower decision
+                  was made.
+                webhook_status: not_configured
+        '400':
+          description: Missing, invalid, unsupported, or unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: validation_error
+                message: Missing, invalid, unsupported, or unauthorized request.
+        '405':
+          description: Only POST requests are allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: invalid_method
+                message: Only POST requests are allowed.
+          headers:
+            Allow:
+              schema:
+                type: string
+                const: POST
+        '500':
+          description: The partner-development draft could not be prepared.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: generation_failed
+                message: The partner-development draft could not be prepared.
+        '502':
+          description: Draft prepared, but webhook delivery could not be confirmed. Check downstream state before
+            retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: forwarding_failed
+                message: Draft prepared, but webhook delivery could not be confirmed. Check downstream state before
+                  retrying.
+components:
+  schemas:
+    PartnerRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - source
+      - action_type
+      - company_name
+      - partner_category
+      - meeting_goal
+      - relationship_stage
+      properties:
+        source:
+          type: string
+          enum:
+          - custom_gpt
+          - website
+          - internal_tool
+          - webhook_test
+        company_name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+        partner_category:
+          type: string
+          enum:
+          - accountant_cpa
+          - bookkeeper
+          - tax_advisor
+          - attorney
+          - small_business_attorney
+          - business_broker
+          - commercial_real_estate
+          - merchant_services
+          - payroll_provider
+          - fractional_cfo
+          - equipment_vendor
+          - insurance_agent
+          - franchise_consultant
+          - local_business_association
+          - industry_consultant
+          - ecommerce_consultant
+          - restaurant_consultant
+          - construction_consultant
+          - trucking_logistics_consultant
+          - healthcare_practice_consultant
+          - other
+        relationship_stage:
+          type: string
+          enum:
+          - cold
+          - aware
+          - warm
+          - existing_relationship
+          - former_partner
+          - inactive_partner
+        notes:
+          type: string
+          maxLength: 4000
+          description: Optional non-sensitive business context, supplied by the caller and not independently verified.
+            Never include borrower records, secrets, or purported approved compensation terms.
+        shared_secret:
+          type: string
+          maxLength: 500
+          writeOnly: true
+          description: Required only when PARTNER_CALL_PREP_SHARED_SECRET is configured. Excluded from responses
+            and forwarded payloads; not a source of business authorization.
+        action_type:
+          type: string
+          const: partner_call_prep_brief
+        partner_id:
+          type: string
+          maxLength: 200
+        prospect_id:
+          type: string
+          maxLength: 200
+        partner_name:
+          type: string
+          maxLength: 160
+        niche:
+          type: string
+          maxLength: 160
+        meeting_goal:
+          type: string
+          enum:
+          - initial_discovery
+          - partner_program_pitch
+          - relationship_development
+          - referral_strategy
+          - reactivation
+          - co_marketing
+          - performance_review
+          - issue_resolution
+        known_context:
+          type: string
+          maxLength: 4000
+        likely_client_base:
+          type: string
+          maxLength: 1000
+        geographic_focus:
+          type: string
+          maxLength: 300
+        recent_activity:
+          type: string
+          maxLength: 4000
+    PartnerResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - success
+      - brief_id
+      - partner_profile
+      - likely_client_base
+      - funding_triggers_to_discuss
+      - recommended_pitch_angle
+      - questions_to_ask
+      - objections_to_expect
+      - cross_referral_opportunities
+      - meeting_agenda
+      - recommendation_notice
+      - recommended_next_step
+      - message
+      - webhook_status
+      properties:
+        success:
+          type: boolean
+          const: true
+        brief_id:
+          type: string
+          pattern: ^pcb_[0-9]{8}_[0-9a-f-]{36}$
+        partner_profile:
+          type: object
+          additionalProperties: false
+          required:
+          - partner_id
+          - prospect_id
+          - partner_name
+          - company_name
+          - partner_category
+          - niche
+          - relationship_stage
+          - geographic_focus
+          - known_context
+          - recent_activity
+          - notes
+          - information_basis
+          properties:
+            partner_id:
+              type:
+              - string
+              - 'null'
+            prospect_id:
+              type:
+              - string
+              - 'null'
+            partner_name:
+              type:
+              - string
+              - 'null'
+            company_name:
+              type: string
+            partner_category:
+              type: string
+            niche:
+              type:
+              - string
+              - 'null'
+            relationship_stage:
+              type: string
+            geographic_focus:
+              type:
+              - string
+              - 'null'
+            known_context:
+              type:
+              - string
+              - 'null'
+            recent_activity:
+              type:
+              - string
+              - 'null'
+            notes:
+              type:
+              - string
+              - 'null'
+            information_basis:
+              type: string
+          description: Supplied context only; not independently verified.
+        likely_client_base:
+          type: object
+          additionalProperties: false
+          required:
+          - provided
+          - suggested_to_verify
+          properties:
+            provided:
+              type:
+              - string
+              - 'null'
+            suggested_to_verify:
+              type: string
+        funding_triggers_to_discuss:
+          type: array
+          items:
+            type: string
+          description: Category-based discussion suggestions, not known partner or borrower facts.
+        recommended_pitch_angle:
+          type: string
+        questions_to_ask:
+          type: array
+          items:
+            type: string
+        objections_to_expect:
+          type: array
+          items:
+            type: string
+        cross_referral_opportunities:
+          type: array
+          items:
+            type: string
+        meeting_agenda:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - minutes
+            - topic
+            properties:
+              minutes:
+                type: integer
+              topic:
+                type: string
+        recommendation_notice:
+          type: string
+        recommended_next_step:
+          type: string
+        message:
+          type: string
+        webhook_status:
+          type: string
+          enum:
+          - forwarded
+          - not_configured
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - success
+      - error
+      - message
+      properties:
+        success:
+          type: boolean
+          const: false
+        error:
+          type: string
+          enum:
+          - validation_error
+          - invalid_method
+          - generation_failed
+          - forwarding_failed
+        message:
+          type: string
+        brief_id:
+          type: string
+          description: Present after generation starts (500/502); use for tracing, not retry deduplication.

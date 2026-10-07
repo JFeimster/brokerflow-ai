@@ -1,0 +1,414 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Outreach Campaign Builder
+  version: 1.0.0
+  description: Generate deterministic outreach copy and a campaign route from partner category, audience, relationship
+    stage, goal, tone, and channel. Notes may select a controlled educational topic (inventory, cash flow, transactions,
+    or growth); their text remains labeled internal context and is never treated as proof or copied verbatim into
+    outreach.
+servers:
+- url: https://brokerflow-ai.vercel.app
+security: []
+paths:
+  /api/no-auth/partner-outreach-campaign:
+    post:
+      operationId: createPartnerOutreachCampaign
+      summary: Partner Outreach Campaign Builder
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerRequest'
+            example:
+              source: custom_gpt
+              company_name: Example Advisory
+              partner_category: accountant_cpa
+              relationship_stage: cold
+              action_type: partner_outreach_campaign
+              prospect_id: cpp_example
+              contact_name: Alex
+              niche: local service businesses
+              target_client_type: business owners
+              outreach_goal: initial_introduction
+              tone: consultative
+              channel: email
+              geographic_focus: Western New York
+              notes: 'Synthetic example: prefers educational materials.'
+      responses:
+        '200':
+          description: Draft generated and optional webhook delivery confirmed; no direct outreach or record retrieval.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerResponse'
+              example:
+                success: true
+                campaign_id: poc_20261007_11111111-2222-4333-8444-555555555555
+                campaign_type: educational_introduction
+                partner_segment: professional_services_coi
+                message_angle: Protect the advisory relationship with useful funding education and a client-controlled
+                  introduction.
+                email_subjects:
+                - A referral conversation for Example Advisory
+                - Funding education for local service businesses
+                first_touch_message: 'Hi Alex,
+
+
+                  I am reaching out to explore whether a funding-education connection could be useful.
+
+
+                  A possible discussion topic is supporting business owners in local service businesses (Western
+                  New York).
+
+
+                  A useful starting point could be funding education that preserves your advisory role and keeps
+                  the client in control of an introduction.
+
+
+                  Which part of the client experience would you most want to protect?
+
+
+                  Any introduction should follow the client''s permission and your communication preferences.
+
+
+                  Would a short introduction to our referral process be useful?'
+                follow_up_sequence:
+                - step: 1
+                  delay_days: 3
+                  channel: email
+                  message: Following up on a possible referral conversation. Would a short introduction to our referral
+                    process be useful?
+                - step: 2
+                  delay_days: 7
+                  channel: email
+                  message: Should I close the loop for now, or is there a better time to reconnect?
+                call_notes:
+                - Ask permission to continue. I am reaching out to explore whether a funding-education connection
+                  could be useful. A possible discussion topic is supporting business owners in local service businesses
+                  (Western New York). Would a short introduction to our referral process be useful? Record contact
+                  preferences; do not request borrower records.
+                - Discuss professional services coi needs without assuming client demand.
+                - Agree on handoff ownership, confidentiality, and follow-up frequency.
+                linkedin_message: Hi Alex, I am reaching out to explore whether a funding-education connection could
+                  be useful. Would a short introduction to our referral process be useful?
+                personalization_context:
+                  company_name: Example Advisory
+                  niche: local service businesses
+                  target_client_type: business owners
+                  geographic_focus: Western New York
+                  notes: 'Synthetic example: prefers educational materials.'
+                  information_basis: caller_provided_unverified
+                sequence_policy: Suggested delays are measured from first touch. Stop on reply or opt-out; use only
+                  permitted channels and existing contact preferences.
+                recommended_next_step: share_referral_process_overview
+                message: Partner outreach draft and campaign route prepared. No outreach was sent by this handler.
+                webhook_status: not_configured
+        '400':
+          description: Missing, invalid, unsupported, or unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: validation_error
+                message: Missing, invalid, unsupported, or unauthorized request.
+        '405':
+          description: Only POST requests are allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: invalid_method
+                message: Only POST requests are allowed.
+          headers:
+            Allow:
+              schema:
+                type: string
+                const: POST
+        '500':
+          description: The partner-development draft could not be prepared.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: generation_failed
+                message: The partner-development draft could not be prepared.
+        '502':
+          description: Draft prepared, but webhook delivery could not be confirmed. Check downstream state before
+            retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: forwarding_failed
+                message: Draft prepared, but webhook delivery could not be confirmed. Check downstream state before
+                  retrying.
+components:
+  schemas:
+    PartnerRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - source
+      - action_type
+      - company_name
+      - partner_category
+      - niche
+      - target_client_type
+      - relationship_stage
+      - outreach_goal
+      - tone
+      - channel
+      properties:
+        source:
+          type: string
+          enum:
+          - custom_gpt
+          - website
+          - internal_tool
+          - webhook_test
+        company_name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+        partner_category:
+          type: string
+          enum:
+          - accountant_cpa
+          - bookkeeper
+          - tax_advisor
+          - attorney
+          - small_business_attorney
+          - business_broker
+          - commercial_real_estate
+          - merchant_services
+          - payroll_provider
+          - fractional_cfo
+          - equipment_vendor
+          - insurance_agent
+          - franchise_consultant
+          - local_business_association
+          - industry_consultant
+          - ecommerce_consultant
+          - restaurant_consultant
+          - construction_consultant
+          - trucking_logistics_consultant
+          - healthcare_practice_consultant
+          - other
+        relationship_stage:
+          type: string
+          enum:
+          - cold
+          - aware
+          - warm
+          - existing_relationship
+          - former_partner
+          - inactive_partner
+        notes:
+          type: string
+          maxLength: 4000
+          description: Optional non-sensitive business context, supplied by the caller and not independently verified.
+            Never include borrower records, secrets, or purported approved compensation terms.
+        shared_secret:
+          type: string
+          maxLength: 500
+          writeOnly: true
+          description: Required only when PARTNER_OUTREACH_CAMPAIGN_SHARED_SECRET is configured. Excluded from responses
+            and forwarded payloads; not a source of business authorization.
+        action_type:
+          type: string
+          const: partner_outreach_campaign
+        prospect_id:
+          type: string
+          maxLength: 200
+        contact_name:
+          type: string
+          maxLength: 160
+        niche:
+          type: string
+          maxLength: 160
+          minLength: 1
+          pattern: \S
+        target_client_type:
+          type: string
+          maxLength: 160
+          minLength: 1
+          pattern: \S
+        outreach_goal:
+          type: string
+          enum:
+          - initial_introduction
+          - partner_program_invite
+          - schedule_call
+          - reactivate
+          - request_referral_relationship
+          - educational_touch
+          - event_invitation
+          - co_marketing
+          - follow_up
+        tone:
+          type: string
+          enum:
+          - professional
+          - friendly
+          - consultative
+          - concise
+        channel:
+          type: string
+          enum:
+          - email
+          - linkedin
+          - phone
+          - sms
+          - multi_channel
+        geographic_focus:
+          type: string
+          maxLength: 300
+    PartnerResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - success
+      - campaign_id
+      - campaign_type
+      - partner_segment
+      - message_angle
+      - email_subjects
+      - first_touch_message
+      - follow_up_sequence
+      - call_notes
+      - linkedin_message
+      - personalization_context
+      - sequence_policy
+      - recommended_next_step
+      - message
+      - webhook_status
+      properties:
+        success:
+          type: boolean
+          const: true
+        campaign_id:
+          type: string
+          pattern: ^poc_[0-9]{8}_[0-9a-f-]{36}$
+        campaign_type:
+          type: string
+        partner_segment:
+          type: string
+          enum:
+          - professional_services_coi
+          - embedded_referral_channel
+          - transaction_partner
+          - business_network
+        message_angle:
+          type: string
+        email_subjects:
+          type: array
+          items:
+            type: string
+        first_touch_message:
+          type: string
+        follow_up_sequence:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - step
+            - delay_days
+            - channel
+            - message
+            properties:
+              step:
+                type: integer
+              delay_days:
+                type: integer
+              channel:
+                type: string
+                enum:
+                - email
+                - linkedin
+                - phone
+                - sms
+              message:
+                type: string
+          description: Suggested delays in days from the first touch, not from the previous step. Multi-channel
+            starts with email, then LinkedIn and email. Honor channel permission and suppress after reply or opt-out.
+        call_notes:
+          type: array
+          items:
+            type: string
+        linkedin_message:
+          type: string
+        personalization_context:
+          type: object
+          additionalProperties: false
+          required:
+          - company_name
+          - niche
+          - target_client_type
+          - geographic_focus
+          - notes
+          - information_basis
+          properties:
+            company_name:
+              type: string
+            niche:
+              type: string
+            target_client_type:
+              type: string
+            geographic_focus:
+              type:
+              - string
+              - 'null'
+            notes:
+              type:
+              - string
+              - 'null'
+            information_basis:
+              type: string
+          description: Internal caller-provided context. Do not send this object or its notes as partner-facing
+            copy.
+        sequence_policy:
+          type: string
+        recommended_next_step:
+          type: string
+        message:
+          type: string
+        webhook_status:
+          type: string
+          enum:
+          - forwarded
+          - not_configured
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - success
+      - error
+      - message
+      properties:
+        success:
+          type: boolean
+          const: false
+        error:
+          type: string
+          enum:
+          - validation_error
+          - invalid_method
+          - generation_failed
+          - forwarding_failed
+        message:
+          type: string
+        campaign_id:
+          type: string
+          description: Present after generation starts (500/502); use for tracing, not retry deduplication.

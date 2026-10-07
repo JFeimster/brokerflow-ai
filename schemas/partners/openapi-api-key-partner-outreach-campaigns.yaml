@@ -1,8 +1,10 @@
 openapi: 3.1.0
+x-brokerflow-status: reference-only
+x-brokerflow-canonical-campaign-schema: ../no-auth-partner-outreach-campaign.schema.yaml
 info:
   title: BrokerFlow Partner Outreach Campaigns API
   version: 1.0.0
-  description: API-key protected endpoints for planning partner outreach campaigns, queueing outreach tasks, and tracking outreach status. This schema does not send partner-facing messages automatically.
+  description: Reference-only API-key design for campaign persistence, task queues, and status lookup; these routes have no production handler. For production draft generation and optional webhook routing, import ../no-auth-partner-outreach-campaign.schema.yaml. Legacy review flags below do not govern the production action.
 servers:
   - url: https://brokerflow-ai.vercel.app/api
 components:
@@ -26,7 +28,8 @@ security:
 paths:
   /partner-outreach/campaigns:
     post:
-      operationId: createPartnerOutreachCampaign
+      operationId: createLegacyPartnerOutreachCampaignPlan
+      deprecated: true
       summary: Create an internal partner outreach campaign plan
       x-openai-isConsequential: true
       requestBody:

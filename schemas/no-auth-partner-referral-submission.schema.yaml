@@ -1,0 +1,108 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Referral Submission Action
+  version: 1.0.0
+  description: Capture partner referral details and contact permission for intake and workflow routing; readiness does not mean qualification.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+paths:
+  /api/no-auth/partner-referral:
+    post:
+      operationId: submitPartnerReferral
+      summary: Submit a partner referral
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartnerReferralRequest' }
+            example:
+              source: custom_gpt
+              action_type: partner_referral
+              partner_id: partner_123
+              partner_name: Alex Rivera
+              partner_email: alex@example.com
+              partner_company: Rivera Advisory
+              partner_category: accountant_cpa
+              referral_type: working_capital
+              borrower_name: Jordan Lee
+              business_name: Lee Design Studio
+              borrower_email: jordan@example.com
+              borrower_phone: '2125550100'
+              borrower_state: NY
+              requested_amount: 75000
+              loan_purpose: Purchase inventory
+              relationship_to_borrower: client
+              permission_to_contact: true
+              warm_intro_available: true
+              referral_notes: Owner requested an introduction.
+      responses:
+        '200':
+          description: Referral captured
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PartnerReferralResponse' }
+              example: { success: true, referral_id: 'prf_20261007_123e4567-e89b-12d3-a456-426614174000', attribution_status: attributed, referral_status: received, recommended_next_step: start_warm_introduction_workflow, borrower_intake_ready: true, lender_fit_routing_ready: true, message: 'Referral captured for workflow routing. Readiness flags describe supplied information only and do not indicate borrower qualification, approval, or funding.', webhook_status: not_configured }
+        '400':
+          description: Invalid request or request secret
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, error: validation_error, message: 'Invalid or missing shared_secret.' }
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '502':
+          description: Webhook delivery was not confirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+components:
+  schemas:
+    PartnerReferralRequest:
+      type: object
+      additionalProperties: false
+      required: [source, action_type, partner_name, referral_type, permission_to_contact, warm_intro_available]
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type: { type: string, const: partner_referral }
+        partner_id: { type: string, maxLength: 120 }
+        partner_name: { type: string, minLength: 1, maxLength: 160 }
+        partner_email: { type: string, format: email, maxLength: 254 }
+        partner_company: { type: string, maxLength: 200 }
+        partner_category: { type: string, enum: [accountant_cpa, bookkeeper, tax_advisor, attorney, small_business_attorney, business_broker, commercial_real_estate, merchant_services, payroll_provider, fractional_cfo, equipment_vendor, insurance_agent, franchise_consultant, local_business_association, industry_consultant, ecommerce_consultant, restaurant_consultant, construction_consultant, trucking_logistics_consultant, healthcare_practice_consultant, other] }
+        referral_type: { type: string, enum: [business_funding, commercial_real_estate, equipment_financing, sba_or_bank, residential_mortgage, acquisition_financing, working_capital, other] }
+        borrower_name: { type: string, maxLength: 160 }
+        business_name: { type: string, maxLength: 200 }
+        borrower_email: { type: string, format: email, maxLength: 254 }
+        borrower_phone: { type: string, maxLength: 40 }
+        borrower_state: { type: string, maxLength: 80 }
+        requested_amount: { type: number, minimum: 0, maximum: 100000000000 }
+        loan_purpose: { type: string, maxLength: 1000 }
+        relationship_to_borrower: { type: string, enum: [client, customer, prospect, professional_contact, business_owner_contact, member, vendor_customer, buyer, seller, other] }
+        permission_to_contact: { type: boolean }
+        warm_intro_available: { type: boolean }
+        referral_notes: { type: string, maxLength: 4000 }
+        shared_secret: { type: string, maxLength: 500, writeOnly: true }
+    PartnerReferralResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        referral_id: { type: string }
+        attribution_status: { type: string, enum: [attributed, unverified] }
+        referral_status: { type: string, const: received }
+        recommended_next_step: { type: string }
+        borrower_intake_ready: { type: boolean }
+        lender_fit_routing_ready: { type: boolean }
+        message: { type: string }
+        webhook_status: { type: string, enum: [forwarded, not_configured] }
+      required: [success, referral_id, attribution_status, referral_status, recommended_next_step, borrower_intake_ready, lender_fit_routing_ready, message, webhook_status]
+    ErrorResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: false }
+        error: { type: string }
+        message: { type: string }
+      required: [success, error, message]

@@ -199,3 +199,4 @@ logging is descriptive only. Webhook delivery is not durably deduplicated.
 - `docs/internal-partner-action-packs-test-plan.md` — consolidated validation and regression plan.
 - `docs/partner-action-auth-boundary-review.md` — current auth classification and future protections.
 - `docs/partner-action-idempotency-persistence-plan.md` — retry, storage, deduplication, and audit recommendations.
+- `docs/partner-action-deployment-readiness.md` — current Vercel, auth, persistence, GPT Builder, and smoke-test readiness.

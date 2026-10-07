@@ -17,10 +17,10 @@
   "homepage": "https://brokerflow-ai.vercel.app",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/brokerflow-ai.git"
+    "url": "https://github.com/JFeimster/brokerflow-ai.git"
   },
   "bugs": {
-    "url": "https://github.com/your-org/brokerflow-ai/issues"
+    "url": "https://github.com/JFeimster/brokerflow-ai/issues"
   },
   "type": "module",
   "main": "script.js",

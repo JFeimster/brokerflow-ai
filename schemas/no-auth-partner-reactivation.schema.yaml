@@ -1,0 +1,134 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Reactivation Action
+  version: 1.0.0
+  description: Classifies dormant partner context and prepares a bounded, channel-aware reactivation workflow.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+paths:
+  /api/no-auth/partner-reactivation:
+    post:
+      operationId: triggerPartnerReactivation
+      summary: Prepare a partner reactivation or nurture workflow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartnerRequest' }
+            example:
+              source: custom_gpt
+              action_type: partner_reactivation
+              partner_id: partner_123
+              partner_name: Alex Rivera
+              company_name: Rivera Advisory
+              partner_category: accountant_cpa
+              reactivation_segment: inactive_90_days
+              last_activity_date: '2026-06-15'
+              last_referral_date: '2026-04-20'
+              relationship_strength: established
+              preferred_channel: email
+              known_context: Previously requested seasonal liquidity resources.
+              notes: Follow up after the quarterly close.
+      responses:
+        '200':
+          description: Reactivation workflow prepared
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PartnerResponse' }
+              example:
+                success: true
+                reactivation_id: prx_20261007_123e4567-e89b-12d3-a456-426614174000
+                reactivation_segment: inactive_90_days
+                priority: high
+                recommended_message: Hi Alex Rivera, it has been a while since we connected. We have updated partner resources available, and I wanted to ask whether this partnership still fits your current priorities.
+                recommended_channel: email
+                recommended_offer_or_angle: new resources and whether the partnership still fits
+                follow_up_schedule:
+                  - { day: 0, channel: email, goal: personalized_reengagement }
+                  - { day: 10, channel: email, goal: share_updated_resources }
+                recommended_next_step: ask_whether_partnership_still_fits
+                message: Partner reactivation workflow prepared with a bounded follow-up cadence.
+                webhook_status: not_configured
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, error: validation_error, message: reactivation_segment must be one of the supported values. }
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, error: invalid_method, message: Only POST requests are allowed. }
+        '500':
+          description: Reactivation plan generation failed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, reactivation_id: prx_20261007_123e4567-e89b-12d3-a456-426614174000, error: generation_failed, message: The partner-development draft could not be prepared. }
+        '502':
+          description: Downstream webhook delivery was not confirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, reactivation_id: prx_20261007_123e4567-e89b-12d3-a456-426614174000, error: forwarding_failed, message: 'Draft prepared, but webhook delivery could not be confirmed. Check downstream state before retrying.' }
+components:
+  schemas:
+    PartnerRequest:
+      type: object
+      additionalProperties: false
+      required: [source, action_type, reactivation_segment]
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type: { const: partner_reactivation }
+        partner_id: { type: string, maxLength: 200 }
+        partner_name: { type: string, maxLength: 160 }
+        company_name: { type: string, maxLength: 200 }
+        partner_category:
+          type: string
+          enum: [accountant_cpa, bookkeeper, tax_advisor, attorney, small_business_attorney, business_broker, commercial_real_estate, merchant_services, payroll_provider, fractional_cfo, equipment_vendor, insurance_agent, franchise_consultant, local_business_association, industry_consultant, ecommerce_consultant, restaurant_consultant, construction_consultant, trucking_logistics_consultant, healthcare_practice_consultant, other]
+        reactivation_segment: { type: string, enum: [signed_up_no_referrals, inactive_30_days, inactive_60_days, inactive_90_days, high_value_dormant_partner, prospect_never_contacted, prospect_contacted_no_response, former_active_partner, event_follow_up, seasonal_reactivation] }
+        last_activity_date: { type: string, format: date, maxLength: 10 }
+        last_referral_date: { type: string, format: date, maxLength: 10 }
+        relationship_strength: { type: string, enum: [new, developing, established, high_value, unknown] }
+        preferred_channel: { type: string, enum: [email, linkedin, phone, sms, multi_channel] }
+        known_context: { type: string, maxLength: 2000 }
+        notes: { type: string, maxLength: 4000 }
+        shared_secret: { type: string, maxLength: 500, writeOnly: true }
+    FollowUpStep:
+      type: object
+      additionalProperties: false
+      required: [day, channel, goal]
+      properties:
+        day: { type: integer, minimum: 0 }
+        channel: { type: string, enum: [email, linkedin, phone, sms] }
+        goal: { type: string }
+    PartnerResponse:
+      type: object
+      additionalProperties: false
+      required: [success, reactivation_id, reactivation_segment, priority, recommended_message, recommended_channel, recommended_offer_or_angle, follow_up_schedule, recommended_next_step, message, webhook_status]
+      properties:
+        success: { const: true }
+        reactivation_id: { type: string }
+        reactivation_segment: { type: string, enum: [signed_up_no_referrals, inactive_30_days, inactive_60_days, inactive_90_days, high_value_dormant_partner, prospect_never_contacted, prospect_contacted_no_response, former_active_partner, event_follow_up, seasonal_reactivation] }
+        priority: { type: string, enum: [low, normal, high] }
+        recommended_message: { type: string }
+        recommended_channel: { type: string, enum: [email, linkedin, phone, sms, multi_channel] }
+        recommended_offer_or_angle: { type: string }
+        follow_up_schedule: { type: array, items: { $ref: '#/components/schemas/FollowUpStep' } }
+        recommended_next_step: { type: string }
+        message: { type: string }
+        webhook_status: { type: string, enum: [forwarded, not_configured] }
+    ErrorResponse:
+      type: object
+      required: [success, error, message]
+      properties:
+        success: { const: false }
+        reactivation_id: { type: string }
+        error: { type: string, enum: [validation_error, invalid_method, generation_failed, forwarding_failed] }
+        message: { type: string }
+x-brokerflow-env:
+  PARTNER_REACTIVATION_WEBHOOK_URL: Optional downstream workflow URL.
+  PARTNER_REACTIVATION_SHARED_SECRET: Optional request-body secret.
+  WEBHOOK_SHARED_SECRET: Optional shared outbound x-brokerflow-secret header.

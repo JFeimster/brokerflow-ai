@@ -1,0 +1,107 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Affiliate Partner Signup
+  version: 1.0.0
+  description: Submit partner signup details to the production BrokerFlow Vercel endpoint. Signup is recorded for onboarding and does not approve or activate a partner.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+security: []
+paths:
+  /api/no-auth/affiliate-partner-signup:
+    post:
+      operationId: submitAffiliatePartnerSignup
+      summary: Submit an affiliate or partner signup
+      description: Captures partner, audience, consent, and onboarding details. No borrower decision or partner activation is made.
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AffiliatePartnerSignupRequest'
+            examples:
+              accountant:
+                value:
+                  source: custom_gpt
+                  action_type: affiliate_partner_signup
+                  partner_name: Jordan Lee
+                  company_name: Lee Advisory
+                  email: jordan@example.com
+                  partner_type: referral_partner
+                  business_type: accountant_cpa
+                  state: NY
+                  primary_audience: Small business owners
+                  expected_referral_volume: 4
+                  preferred_contact_method: email
+                  compliance_acknowledged: true
+                  consent_to_contact: true
+      responses:
+        '200':
+          description: Signup captured and onboarding priority assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AffiliatePartnerSignupResponse'
+              example:
+                success: true
+                partner_signup_id: aps_20261007_ab12cd34ef56
+                status: received
+                partner_segment: high_potential_referral_partner
+                onboarding_priority: high
+                recommended_next_step: schedule_partner_discovery
+                message: Partner signup captured for onboarding follow-up.
+        '400':
+          description: Missing, invalid, or unauthorized request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '405':
+          description: Only POST is supported
+components:
+  schemas:
+    AffiliatePartnerSignupRequest:
+      type: object
+      additionalProperties: false
+      required: [source, action_type, partner_name, email, partner_type, business_type, compliance_acknowledged, consent_to_contact]
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type: { type: string, const: affiliate_partner_signup }
+        partner_name: { type: string, minLength: 1, maxLength: 160 }
+        company_name: { type: string, maxLength: 200 }
+        email: { type: string, format: email, maxLength: 254 }
+        phone: { type: string, maxLength: 40 }
+        partner_type:
+          type: string
+          enum: [affiliate, referral_partner, channel_partner, strategic_partner, broker_partner, professional_services_partner, unknown]
+        business_type:
+          type: string
+          enum: [accountant_cpa, bookkeeper, tax_advisor, small_business_attorney, business_broker, commercial_real_estate, merchant_services, payroll_provider, fractional_cfo, equipment_vendor, insurance_agent, franchise_consultant, local_business_association, industry_consultant, ecommerce_consultant, restaurant_consultant, construction_consultant, trucking_logistics_consultant, healthcare_practice_consultant, other]
+        website: { type: string, format: uri, maxLength: 500 }
+        state: { type: string, maxLength: 80 }
+        primary_audience: { type: string, maxLength: 500 }
+        expected_referral_volume: { type: integer, minimum: 0, maximum: 100000 }
+        preferred_contact_method: { type: string, enum: [email, phone, text, video_call, no_preference] }
+        referral_experience: { type: string, maxLength: 2000 }
+        compliance_acknowledged: { type: boolean, const: true }
+        consent_to_contact: { type: boolean, const: true }
+        notes: { type: string, maxLength: 4000 }
+        shared_secret: { type: string, maxLength: 500, writeOnly: true }
+    AffiliatePartnerSignupResponse:
+      type: object
+      required: [success, partner_signup_id, status, partner_segment, onboarding_priority, recommended_next_step, message]
+      properties:
+        success: { type: boolean, const: true }
+        partner_signup_id: { type: string }
+        status: { type: string, enum: [received, onboarding_followup_needed] }
+        partner_segment: { type: string, enum: [high_potential_referral_partner, developing_partner, general_partner_prospect] }
+        onboarding_priority: { type: string, enum: [low, normal, high] }
+        recommended_next_step: { type: string, enum: [schedule_partner_discovery, send_onboarding_information, review_partner_profile] }
+        message: { type: string }
+    ErrorResponse:
+      type: object
+      required: [success, error, message]
+      properties:
+        success: { type: boolean, const: false }
+        error: { type: string }
+        message: { type: string }

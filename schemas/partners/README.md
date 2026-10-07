@@ -17,6 +17,27 @@ These schemas are designed for Custom GPT Actions and automation backends such a
 
 ## Schema Files
 
+### Production Action schema authority
+
+The legacy `openapi-no-auth-partner-signup.yaml` and
+`openapi-no-auth-channel-partner-prospect.yaml` files below are **reference-only
+legacy schemas**. They describe earlier nested webhook envelopes at placeholder
+`/webhook/...` URLs. They are not the production GPT Action contracts. The
+canonical production contracts and Vercel handlers are:
+
+| Production Action | Canonical schema |
+| --- | --- |
+| `submitAffiliatePartnerSignup` | `../no-auth-affiliate-partner-signup.schema.yaml` |
+| `captureChannelPartnerProspect` | `../no-auth-channel-partner-prospect-capture.schema.yaml` |
+| `scoreCoiPartnerProspect` | `../no-auth-coi-niche-scoring.schema.yaml` |
+
+The production schemas flatten useful partner, audience, contact, and fit
+signals from the legacy nested payloads and point directly at the Vercel API.
+Use those files when importing these three Actions. The API-key
+`openapi-api-key-partner-fit-scoring.yaml` remains a distinct CRM fit-scoring
+and segment-update contract; it is not a duplicate of the no-auth COI
+prioritization endpoint.
+
 | File | Auth | Purpose |
 | --- | --- | --- |
 | `openapi-no-auth-partner-signup.yaml` | None | Capture affiliate/partner signups from GPT, Tally, or public forms. |

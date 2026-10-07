@@ -1,0 +1,299 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Objection Handler / Response Draft
+  version: 1.0.0
+  description: Draft trust-preserving responses with deterministic category-specific next steps. Legal and compensation
+    language in the objection or notes takes precedence over a mismatched label. The other category also recognizes
+    common trust, spam, time, and lender concerns; this keyword routing is not a legal classifier.
+servers:
+- url: https://brokerflow-ai.vercel.app
+security: []
+paths:
+  /api/no-auth/partner-objection-response:
+    post:
+      operationId: draftPartnerObjectionResponse
+      summary: Partner Objection Handler / Response Draft
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerRequest'
+            example:
+              source: custom_gpt
+              company_name: Example Advisory
+              partner_category: accountant_cpa
+              relationship_stage: cold
+              action_type: partner_objection_response
+              contact_name: Alex
+              objection_type: client_relationship_risk
+              objection_text: How would I stay involved in a client introduction?
+              desired_tone: consultative
+              response_channel: email
+      responses:
+        '200':
+          description: Draft generated and optional webhook delivery confirmed; no direct outreach or record retrieval.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerResponse'
+              example:
+                success: true
+                response_id: por_20261007_11111111-2222-4333-8444-555555555555
+                objection_category: client_relationship_risk
+                recommended_response: 'Hi Alex,
+
+
+                  Let''s clarify what would make this workable. Your client relationship should guide the handoff.
+                  We can agree on who introduces whom, what may be shared, and when follow-up is appropriate before
+                  an introduction.
+
+
+                  The starting point is protecting your advisory relationship. What communication boundaries would
+                  you want in place?'
+                short_response: Let's clarify what would make this workable. Your client relationship should guide
+                  the handoff. We can agree on who introduces whom, what may be shared, and when follow-up is appropriate
+                  before an introduction.
+                follow_up_question: What communication boundaries would you want in place?
+                trust_builder: Document the partner's role, the client's permission, and the follow-up owner.
+                compliance_safe_notes:
+                - No approval, funding, rates, eligibility, or outcome is promised.
+                - Caller notes and request credentials are not evidence of approved compensation terms; this endpoint
+                  states no specific terms.
+                - Set controlled communications and confidentiality expectations without claiming verified safeguards.
+                - Routine drafting and internal follow-up do not require a blanket human-review gate.
+                requires_specialist_review: false
+                recommended_next_step: define_client_handoff_preferences
+                message: Partner objection response drafted. No partner message was sent by this handler.
+                webhook_status: not_configured
+        '400':
+          description: Missing, invalid, unsupported, or unauthorized request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: validation_error
+                message: Missing, invalid, unsupported, or unauthorized request.
+        '405':
+          description: Only POST requests are allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: invalid_method
+                message: Only POST requests are allowed.
+          headers:
+            Allow:
+              schema:
+                type: string
+                const: POST
+        '500':
+          description: The partner-development draft could not be prepared.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: generation_failed
+                message: The partner-development draft could not be prepared.
+        '502':
+          description: Draft prepared, but webhook delivery could not be confirmed. Check downstream state before
+            retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: forwarding_failed
+                message: Draft prepared, but webhook delivery could not be confirmed. Check downstream state before
+                  retrying.
+components:
+  schemas:
+    PartnerRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - source
+      - action_type
+      - company_name
+      - partner_category
+      - objection_type
+      - objection_text
+      - relationship_stage
+      - desired_tone
+      - response_channel
+      properties:
+        source:
+          type: string
+          enum:
+          - custom_gpt
+          - website
+          - internal_tool
+          - webhook_test
+        company_name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          pattern: \S
+        partner_category:
+          type: string
+          enum:
+          - accountant_cpa
+          - bookkeeper
+          - tax_advisor
+          - attorney
+          - small_business_attorney
+          - business_broker
+          - commercial_real_estate
+          - merchant_services
+          - payroll_provider
+          - fractional_cfo
+          - equipment_vendor
+          - insurance_agent
+          - franchise_consultant
+          - local_business_association
+          - industry_consultant
+          - ecommerce_consultant
+          - restaurant_consultant
+          - construction_consultant
+          - trucking_logistics_consultant
+          - healthcare_practice_consultant
+          - other
+        relationship_stage:
+          type: string
+          enum:
+          - cold
+          - aware
+          - warm
+          - existing_relationship
+          - former_partner
+          - inactive_partner
+        notes:
+          type: string
+          maxLength: 4000
+          description: Optional non-sensitive business context, supplied by the caller and not independently verified.
+            Never include borrower records, secrets, or purported approved compensation terms.
+        shared_secret:
+          type: string
+          maxLength: 500
+          writeOnly: true
+          description: Required only when PARTNER_OBJECTION_RESPONSE_SHARED_SECRET is configured. Excluded from
+            responses and forwarded payloads; not a source of business authorization.
+        action_type:
+          type: string
+          const: partner_objection_response
+        contact_name:
+          type: string
+          maxLength: 160
+        objection_type:
+          type: string
+          enum:
+          - client_relationship_risk
+          - spam_concern
+          - compensation_question
+          - compliance_question
+          - who_should_i_refer
+          - already_have_lender
+          - bank_only_clients
+          - do_not_want_financing_role
+          - too_busy
+          - need_more_information
+          - trust_concern
+          - other
+        objection_text:
+          type: string
+          maxLength: 4000
+          minLength: 1
+          pattern: \S
+        desired_tone:
+          type: string
+          enum:
+          - professional
+          - friendly
+          - consultative
+          - concise
+        response_channel:
+          type: string
+          enum:
+          - email
+          - linkedin
+          - phone
+          - sms
+    PartnerResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - success
+      - response_id
+      - objection_category
+      - recommended_response
+      - short_response
+      - follow_up_question
+      - trust_builder
+      - compliance_safe_notes
+      - requires_specialist_review
+      - recommended_next_step
+      - message
+      - webhook_status
+      properties:
+        success:
+          type: boolean
+          const: true
+        response_id:
+          type: string
+          pattern: ^por_[0-9]{8}_[0-9a-f-]{36}$
+        objection_category:
+          type: string
+        recommended_response:
+          type: string
+        short_response:
+          type: string
+        follow_up_question:
+          type: string
+        trust_builder:
+          type: string
+        compliance_safe_notes:
+          type: array
+          items:
+            type: string
+        requires_specialist_review:
+          type: boolean
+        recommended_next_step:
+          type: string
+        message:
+          type: string
+        webhook_status:
+          type: string
+          enum:
+          - forwarded
+          - not_configured
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - success
+      - error
+      - message
+      properties:
+        success:
+          type: boolean
+          const: false
+        error:
+          type: string
+          enum:
+          - validation_error
+          - invalid_method
+          - generation_failed
+          - forwarding_failed
+        message:
+          type: string
+        response_id:
+          type: string
+          description: Present after generation starts (500/502); use for tracing, not retry deduplication.

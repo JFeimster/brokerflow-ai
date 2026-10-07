@@ -1,0 +1,94 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Attribution Log Action
+  version: 1.0.0
+  description: Log referral attribution and descriptive commission workflow states; this endpoint is log-only and cannot authorize payment.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+paths:
+  /api/no-auth/partner-attribution-log:
+    post:
+      operationId: logPartnerAttribution
+      summary: Log partner attribution and commission status metadata
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AttributionLogRequest' }
+            example:
+              source: custom_gpt
+              action_type: partner_attribution_log
+              partner_id: partner_123
+              partner_name: Alex Rivera
+              referral_id: prf_123
+              borrower_or_business_name: Lee Design Studio
+              attribution_status: attributed
+              commission_status: pending_completion
+              payout_stage: awaiting_deal_completion
+              attribution_notes: Source captured from partner referral.
+              dispute_flag: false
+              logged_by: operations
+      responses:
+        '200':
+          description: Attribution metadata logged
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttributionLogResponse' }
+              example: { success: true, attribution_log_id: 'pal_20261007_123e4567-e89b-12d3-a456-426614174000', attribution_status: attributed, commission_status: pending_completion, payout_stage: awaiting_deal_completion, requires_review: false, recommended_next_step: await_deal_completion, message: 'Attribution and commission metadata logged for workflow use only. This request does not authorize payment, calculate a binding commission, or update a private payout ledger.', webhook_status: not_configured }
+        '400':
+          description: Invalid request or request secret
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, error: validation_error, message: 'Invalid or missing shared_secret.' }
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '502':
+          description: Webhook delivery was not confirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+components:
+  schemas:
+    AttributionLogRequest:
+      type: object
+      additionalProperties: false
+      required: [source, action_type, partner_id, referral_id, attribution_status, commission_status, payout_stage, dispute_flag]
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type: { type: string, const: partner_attribution_log }
+        partner_id: { type: string, minLength: 1, maxLength: 120 }
+        partner_name: { type: string, maxLength: 160 }
+        referral_id: { type: string, minLength: 1, maxLength: 120 }
+        borrower_or_business_name: { type: string, maxLength: 200 }
+        attribution_status: { type: string, enum: [unverified, attributed, duplicate_check_needed, commission_eligible, commission_not_eligible, disputed] }
+        commission_status: { type: string, enum: [not_applicable, unknown, pending_eligibility, eligible, pending_completion, pending_payment, paid_external_system, not_eligible, disputed] }
+        payout_stage: { type: string, enum: [not_applicable, not_started, awaiting_deal_completion, awaiting_review, approved_external_system, scheduled_external_system, paid_external_system] }
+        attribution_notes: { type: string, maxLength: 2000 }
+        dispute_flag: { type: boolean }
+        logged_by: { type: string, maxLength: 160 }
+        shared_secret: { type: string, maxLength: 500, writeOnly: true }
+    AttributionLogResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        attribution_log_id: { type: string }
+        attribution_status: { type: string }
+        commission_status: { type: string }
+        payout_stage: { type: string }
+        requires_review: { type: boolean }
+        recommended_next_step: { type: string }
+        message: { type: string }
+        webhook_status: { type: string, enum: [forwarded, not_configured] }
+      required: [success, attribution_log_id, attribution_status, commission_status, payout_stage, requires_review, recommended_next_step, message, webhook_status]
+    ErrorResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: false }
+        error: { type: string }
+        message: { type: string }
+      required: [success, error, message]

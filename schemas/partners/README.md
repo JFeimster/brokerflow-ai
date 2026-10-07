@@ -36,6 +36,9 @@ canonical production contracts and Vercel handlers are:
 | `generatePartnerOnboardingChecklist` | `../no-auth-partner-onboarding-checklist.schema.yaml` |
 | `requestPartnerEnablementContent` | `../no-auth-partner-enablement-content.schema.yaml` |
 | `triggerPartnerReactivation` | `../no-auth-partner-reactivation.schema.yaml` |
+| `submitPartnerReferral` | `../no-auth-partner-referral-submission.schema.yaml` |
+| `draftPartnerStatusUpdate` | `../no-auth-partner-status-update-draft.schema.yaml` |
+| `logPartnerAttribution` | `../no-auth-partner-attribution-log.schema.yaml` |
 
 The production schemas flatten useful partner, audience, contact, and fit
 signals from legacy payloads and point directly at the Vercel API. Use those
@@ -51,6 +54,14 @@ canonical Vercel action schema above. Routine enablement, onboarding, and
 bounded reactivation work may run automatically. Human review remains for
 legal/compliance uncertainty, compensation disputes or payout authorization,
 private-record retrieval, and final regulated borrower decisions.
+
+The legacy `openapi-no-auth-referral-lead-intake.yaml` nested webhook contract
+is reference-only; `submitPartnerReferral` in the canonical Vercel schema is
+the production referral action. `openapi-api-key-partner-attribution.yaml`
+remains a distinct protected event/read API and does not duplicate the new
+log-only `logPartnerAttribution` action. Referral submission hands off through
+configured orchestration to borrower intake, lender-fit routing, document and
+review workflows; no unavailable endpoint is called directly.
 
 `openapi-api-key-partner-outreach-campaigns.yaml` is a **reference-only API-key
 design**, not an implemented production route. Its legacy creation operation

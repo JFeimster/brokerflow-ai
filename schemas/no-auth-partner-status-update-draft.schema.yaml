@@ -1,0 +1,97 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Partner Status Update Draft Action
+  version: 1.0.0
+  description: Prepare a partner-safe status message with minimal disclosure and no funding promises.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+paths:
+  /api/no-auth/partner-status-update-draft:
+    post:
+      operationId: draftPartnerStatusUpdate
+      summary: Draft a partner-safe deal status update
+      x-openai-isConsequential: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StatusUpdateRequest' }
+            example:
+              source: custom_gpt
+              action_type: partner_status_update_draft
+              partner_id: partner_123
+              partner_name: Alex Rivera
+              referral_id: prf_123
+              deal_stage: documents_pending
+              update_type: document_update
+              borrower_disclosure_level: minimal
+              communication_channel: email
+              tone: professional
+              known_status: Waiting for requested information
+              allowed_details: []
+              restricted_details: []
+              notes: Prepare for partner review.
+      responses:
+        '200':
+          description: Safe status draft prepared
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StatusUpdateResponse' }
+              example: { success: true, status_update_id: 'psu_20261007_123e4567-e89b-12d3-a456-426614174000', safe_partner_update: 'We are waiting on requested information.', disclosure_level: minimal, do_not_share_items: ['Credit scores or reports', 'Bank balances or account details'], recommended_next_step: coordinate_requested_information, message: 'Partner-safe status draft prepared. Review the recipient and any consent basis before sending; no funding or lender outcome is promised.', webhook_status: not_configured }
+        '400':
+          description: Invalid request or request secret
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { success: false, error: validation_error, message: 'Invalid or missing shared_secret.' }
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '502':
+          description: Webhook delivery was not confirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+components:
+  schemas:
+    StatusUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [source, action_type, referral_id, deal_stage, update_type]
+      properties:
+        source: { type: string, enum: [custom_gpt, website, internal_tool, webhook_test] }
+        action_type: { type: string, const: partner_status_update_draft }
+        partner_id: { type: string, maxLength: 120 }
+        partner_name: { type: string, maxLength: 160 }
+        referral_id: { type: string, minLength: 1, maxLength: 120 }
+        deal_stage: { type: string, enum: [referral_received, borrower_contacted, intake_in_progress, documents_requested, documents_pending, documents_received, lender_fit_review, options_under_review, submission_preparation, submitted, pending_lender_response, additional_information_needed, closed_funded, closed_not_funded, inactive, withdrawn] }
+        update_type: { type: string, enum: [acknowledgment, progress_update, document_update, review_update, submission_update, delay_update, completion_update, inactive_update] }
+        borrower_disclosure_level: { type: string, enum: [minimal, standard_partner, expanded_with_consent], default: minimal }
+        communication_channel: { type: string, enum: [email, sms, phone_note, linkedin, internal_draft] }
+        tone: { type: string, enum: [professional, friendly, consultative, concise] }
+        known_status: { type: string, maxLength: 1000 }
+        allowed_details: { type: array, maxItems: 20, items: { type: string, maxLength: 300 } }
+        restricted_details: { type: array, maxItems: 20, items: { type: string, maxLength: 300 } }
+        notes: { type: string, maxLength: 2000 }
+        shared_secret: { type: string, maxLength: 500, writeOnly: true }
+    StatusUpdateResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        status_update_id: { type: string }
+        safe_partner_update: { type: string }
+        disclosure_level: { type: string, enum: [minimal, standard_partner, expanded_with_consent] }
+        do_not_share_items: { type: array, items: { type: string } }
+        recommended_next_step: { type: string }
+        message: { type: string }
+        webhook_status: { type: string, enum: [forwarded, not_configured] }
+      required: [success, status_update_id, safe_partner_update, disclosure_level, do_not_share_items, recommended_next_step, message, webhook_status]
+    ErrorResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: false }
+        error: { type: string }
+        message: { type: string }
+      required: [success, error, message]

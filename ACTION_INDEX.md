@@ -15,6 +15,9 @@
 | Partner Onboarding Checklist Generator | `generatePartnerOnboardingChecklist` | `POST /api/no-auth/partner-onboarding-checklist` | `schemas/no-auth-partner-onboarding-checklist.schema.yaml` | Generate partner-specific onboarding items and an internal next step; compensation remains descriptive only. |
 | Partner Training / Enablement Content Request | `requestPartnerEnablementContent` | `POST /api/no-auth/partner-enablement-content` | `schemas/no-auth-partner-enablement-content.schema.yaml` | Prepare tailored educational partner content without lending or funding promises. |
 | Partner Reactivation / Nurture Trigger | `triggerPartnerReactivation` | `POST /api/no-auth/partner-reactivation` | `schemas/no-auth-partner-reactivation.schema.yaml` | Select a deterministic reactivation route, message, channel, and bounded cadence. |
+| Partner Referral Submission | `submitPartnerReferral` | `POST /api/no-auth/partner-referral` | `schemas/no-auth-partner-referral-submission.schema.yaml` | Capture referral attribution, permission-to-contact, and downstream intake/routing readiness. |
+| Partner Deal Status Update Draft | `draftPartnerStatusUpdate` | `POST /api/no-auth/partner-status-update-draft` | `schemas/no-auth-partner-status-update-draft.schema.yaml` | Prepare a partner-safe update using controlled deal-stage language and minimal disclosure. |
+| Partner Commission / Attribution Log | `logPartnerAttribution` | `POST /api/no-auth/partner-attribution-log` | `schemas/no-auth-partner-attribution-log.schema.yaml` | Log attribution and descriptive commission workflow states without authorizing payment. |
 
 ## Automation Boundary
 
@@ -142,6 +145,34 @@ Human review should block only final regulated steps:
 - `templates/partner-reactivation-templates.md`
 - `docs/partner-reactivation-trigger-testing-checklist.md`
 
+### Partner Referral Submission
+
+- `actions/no-auth/partner-referral-submission-actions.md`
+- `schemas/no-auth-partner-referral-submission.schema.yaml`
+- `api/no-auth/partner-referral.js`
+- `knowledge/partner-referral-submission-guardrails.md`
+- `workflows/no-auth-partner-referral-submission-workflow.md`
+- `docs/partner-referral-submission-testing-checklist.md`
+
+### Partner Deal Status Update Draft
+
+- `actions/no-auth/partner-status-update-draft-actions.md`
+- `schemas/no-auth-partner-status-update-draft.schema.yaml`
+- `api/no-auth/partner-status-update-draft.js`
+- `knowledge/partner-status-update-guardrails.md`
+- `workflows/no-auth-partner-status-update-draft-workflow.md`
+- `templates/partner-status-update-templates.md`
+- `docs/partner-status-update-draft-testing-checklist.md`
+
+### Partner Commission / Attribution Log
+
+- `actions/no-auth/partner-attribution-log-actions.md`
+- `schemas/no-auth-partner-attribution-log.schema.yaml`
+- `api/no-auth/partner-attribution-log.js`
+- `knowledge/partner-attribution-guardrails.md`
+- `workflows/no-auth-partner-attribution-log-workflow.md`
+- `docs/partner-attribution-log-testing-checklist.md`
+
 Batch 2 runtime validation/forwarding is shared in `lib/partner-action-utils.js`.
 Run `node --test tests/partner-outreach-conversion.test.js` and
 `python scripts/validate-partner-outreach-conversion.py` (PyYAML + jsonschema).
@@ -152,3 +183,8 @@ for `createPartnerOutreachCampaign`.
 The older API-key onboarding schema and generic partner-followup webhook
 envelope are reference-only for checklist generation and segment-specific
 reactivation, respectively. Use the canonical Batch 3 schemas listed above.
+
+Batch 4 partner referrals hand off to borrower intake and lender-fit routing
+through configured workflow orchestration; the referral handler does not call
+other endpoints directly. Status drafts remain partner-safe, and attribution
+logging is descriptive only. Webhook delivery is not durably deduplicated.

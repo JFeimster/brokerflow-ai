@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#08131d" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Operations Console — BrokerFlow</title>
+  <meta name="description" content="BrokerFlow operations workspace demo." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/app.css" />
+</head>
+<body class="console-body">
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="app-brand" href="/app/dashboard" aria-label="BrokerFlow overview">
+        <span class="brand-symbol"><span></span><span></span><span></span></span>
+        <span><strong>brokerflow</strong><small>OPERATIONS</small></span>
+      </a>
+      <button class="workspace-switcher" type="button" data-modal="workspace"><span class="workspace-avatar">MC</span><span class="workspace-copy"><strong>Moonshine Capital</strong><small>Broker workspace</small></span><span class="chevron">⌄</span></button>
+      <p class="nav-label">WORKSPACE</p>
+      <nav class="side-nav" aria-label="Main navigation">
+        <a href="/app/dashboard" data-route="dashboard"><span class="nav-icon">◫</span>Overview</a>
+        <a href="/app/review-queue" data-route="review-queue"><span class="nav-icon">☷</span>Review queue<span class="nav-count" id="queue-count">4</span></a>
+        <a href="/app/deals" data-route="deals"><span class="nav-icon">◇</span>Deals &amp; pipeline</a>
+        <a href="/app/activity" data-route="activity"><span class="nav-icon">↻</span>Automation activity</a>
+      </nav>
+      <p class="nav-label nav-label-spaced">RELATIONSHIPS</p>
+      <nav class="side-nav" aria-label="Relationship navigation">
+        <a href="/app/partners" data-route="partners"><span class="nav-icon">♧</span>Partners</a>
+        <a href="/app/integrations" data-route="integrations"><span class="nav-icon">⌘</span>Integrations</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="human-review-note"><span class="shield-mark">✓</span><div><strong>Human-led decisions</strong><p>BrokerFlow organizes work. Your team owns every lending decision.</p></div></div>
+        <a class="settings-link" href="/app/settings" data-route="settings"><span class="nav-icon">⚙</span>Settings</a>
+        <button class="profile-button" type="button" data-modal="profile"><span class="profile-avatar">JF</span><span><strong>Jordan Feimster</strong><small>Administrator · Demo</small></span><span class="chevron">···</span></button>
+      </div>
+    </aside>
+    <div class="mobile-scrim" id="mobile-scrim"></div>
+    <main class="main-area">
+      <header class="topbar">
+        <button class="icon-button menu-button" id="menu-toggle" aria-label="Open navigation">☰</button>
+        <div class="breadcrumbs"><span>Workspace</span><i>/</i><strong id="breadcrumb-current">Overview</strong></div>
+        <div class="topbar-actions"><span class="demo-badge"><i></i> SAMPLE WORKSPACE</span><button class="icon-button" type="button" aria-label="Notifications" data-modal="notifications">♧<b class="notification-dot"></b></button><span class="topbar-divider"></span><span class="avatar-small">JF</span></div>
+      </header>
+      <section class="page-content" id="page-content" tabindex="-1"></section>
+      <footer class="app-footer"><span>BrokerFlow operations console</span><span>Sample data · No borrower decisions are made here</span></footer>
+    </main>
+  </div>
+  <div class="toast-region" id="toast-region" aria-live="polite"></div>
+  <script src="/data.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

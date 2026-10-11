@@ -3,7 +3,7 @@
 ---
 
 # BrokerFlow AI
-This folder holds the marketing + documentation site for **BrokerFlow AI**, the public face of the Loan Broker Automation Architect GPT. It is a content-first site: every page is authored in Markdown under `pages/`, then rendered by the front-end in the repo root (`index.html`, `styles.css`, `script.js`) and deployed to **brokerflow-ai.vercel.app**.
+This repository contains the **BrokerFlow** broker operations platform, its public site, and the existing Loan Broker Automation Architect GPT Actions. The public homepage is served from `index.html`; the responsive operations console lives at `/app/*` and is implemented in `app.html`, `app.css`, `app.js`, and `data.js`. The console uses clearly labeled sample records until an authenticated data source is configured. The existing API Actions, schemas, workflows, and knowledge files remain the separate GPT integration surface.
 > Compliance note: BrokerFlow AI **recommends, drafts, prepares, routes, and logs**. It never approves, declines, qualifies, guarantees, underwrites, or funds. All site copy uses review-safe language ("potential fit", "ready for broker review", "possible lender match", "based on information provided") and never says "approved", "guaranteed", "qualified", or "eligible".
 
 ---

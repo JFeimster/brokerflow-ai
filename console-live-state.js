@@ -12,6 +12,7 @@
   }
   window.BrokerFlowLiveState = {
     update,
+    canWrite(workspace) { return workspace?.can_write === true; },
     get(resource) { return errors[resource] || ""; },
     set(resource, message) { if (resource in errors) errors[resource] = message || ""; },
     reset() { errors.reviews = ""; errors.activity = ""; }

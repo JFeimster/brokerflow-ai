@@ -4,7 +4,8 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { webcrypto } from "node:crypto";
 import { TextEncoder } from "node:util";
-import { applyAction } from "../lib/reviews/service.js";
+import { applyAction, requireWorkspace } from "../lib/reviews/service.js";
+import { applyReviewFilters, parseReviewQuery } from "../lib/reviews/query.js";
 
 const read = path => readFileSync(new URL(path, import.meta.url), "utf8");
 function browserContext(script, additions = {}) {
@@ -137,4 +138,100 @@ test("each live endpoint failure is returned independently when the other reques
   assert.equal(reviews.data.length, 1);
   assert.equal(activity.source, "live-error");
   assert.equal(activity.error.code, "audit_access_denied");
+});
+
+test("live queue pages through older open reviews and sends full-dataset search and priority filters", async () => {
+  const rows = Array.from({ length: 205 }, (_, index) => ({
+    id: `review-${index}`,
+    review_request_id: `lmr_${index}`,
+    business_name: index === 175 ? "Long Ago Equipment Co" : `Business ${index}`,
+    requester_name: "Broker intake",
+    loan_purpose: "equipment_financing",
+    state: "NY",
+    requested_amount: 10000 + index,
+    status: index % 4 === 0 ? "reviewed" : index % 4 === 1 ? "in_review" : index % 4 === 2 ? "queued_for_human_review" : "needs_information",
+    urgency: ["low", "normal", "high", "same_day"][index % 4],
+    created_at: new Date(Date.UTC(2026, 0, 1) - index * 60000).toISOString()
+  }));
+  rows[175].status = "queued_for_human_review";
+  const requests = [];
+  const { window } = browserContext(read("../data.js"));
+  window.BrokerFlowAuth = {
+    config: { mode: "live" },
+    async request(path) {
+      const params = new URL(path, "https://console.example").searchParams;
+      requests.push(Object.fromEntries(params));
+      const priority = params.get("priority") || "All items";
+      const urgency = { High: ["high", "same_day"], Normal: ["normal"], Low: ["low"] }[priority];
+      const search = (params.get("search") || "").toLowerCase();
+      let filtered = rows.filter(row => !urgency || urgency.includes(row.urgency));
+      if (search) filtered = filtered.filter(row => [row.business_name, row.requester_name, row.review_request_id, row.loan_purpose, row.state].some(value => value.toLowerCase().includes(search)));
+      const offset = Number(params.get("cursor") || 0), limit = Number(params.get("limit"));
+      const items = filtered.slice(offset, offset + limit);
+      return {
+        items,
+        counts: {
+          open: rows.filter(row => row.status !== "reviewed").length,
+          high_priority: rows.filter(row => ["high", "same_day"].includes(row.urgency) && row.status !== "reviewed").length,
+          reviewed: rows.filter(row => row.status === "reviewed").length
+        },
+        total_count: filtered.length,
+        next_cursor: offset + items.length < filtered.length ? String(offset + items.length) : null
+      };
+    }
+  };
+  window.BrokerFlowSession = { workspace: { id: "org-1" } };
+
+  const first = await window.BrokerFlowData.get("reviews", { priority: "All items" });
+  assert.equal(first.data.length, 100);
+  assert.equal(first.nextCursor, "100");
+  assert.equal(first.data.some(row => row.id === "review-175"), false);
+  assert.equal(first.counts.open, rows.filter(row => row.status !== "reviewed").length);
+
+  const second = await window.BrokerFlowData.get("reviews", { priority: "All items", cursor: first.nextCursor });
+  assert.equal(second.data.length, 100);
+  assert.equal(second.data.some(row => row.id === "review-175"), true);
+  assert.equal(second.nextCursor, "200");
+
+  const search = await window.BrokerFlowData.get("reviews", { priority: "All items", search: "Long Ago Equipment Co" });
+  assert.equal(search.data.length, 1);
+  assert.equal(search.data[0].id, "review-175");
+  assert.equal(search.totalCount, 1);
+  const high = await window.BrokerFlowData.get("reviews", { priority: "High", search: "Long Ago" });
+  assert.equal(high.totalCount, 1);
+  assert.equal(requests[0].organization_id, "org-1");
+  assert.equal(requests[0].limit, "100");
+  assert.equal(requests[1].cursor, "100");
+  assert.equal(requests[3].priority, "High");
+});
+
+test("server review filters apply search and priority before pagination without weakening organization scope", () => {
+  const calls = [];
+  const query = {
+    in(field, values) { calls.push(["in", field, values]); return this; },
+    eq(field, value) { calls.push(["eq", field, value]); return this; },
+    or(expression) { calls.push(["or", expression]); return this; }
+  };
+  const filters = parseReviewQuery({ limit: "100", cursor: "100", priority: "High", search: "Old Business, (ignored)" });
+  applyReviewFilters(query, filters);
+  assert.equal(filters.cursor, 100);
+  assert.deepEqual(calls[0], ["in", "urgency", ["high", "same_day"]]);
+  assert.match(calls[1][1], /business_name\.ilike\./);
+  assert.doesNotMatch(calls[1][1], /, \(ignored\)/);
+  assert.throws(() => parseReviewQuery({ search: "x".repeat(81) }), { status: 422 });
+  assert.throws(() => parseReviewQuery({ priority: "Unknown" }), { status: 422 });
+});
+
+test("read-only workspaces retain read access but fail the server write gate; writers pass both gates", () => {
+  const { window } = browserContext(read("../console-live-state.js"));
+  const readOnly = { id: "org-1", can_read: true, can_write: false };
+  const writer = { id: "org-1", can_read: true, can_write: true };
+  assert.equal(window.BrokerFlowLiveState.canWrite(readOnly), false);
+  assert.equal(window.BrokerFlowLiveState.canWrite(writer), true);
+
+  const context = { workspaces: [{ id: "org-1", canRead: true, canWrite: false }] };
+  assert.equal(requireWorkspace(context, "org-1").canRead, true);
+  assert.throws(() => requireWorkspace(context, "org-1", true), { status: 403 });
+  context.workspaces[0].canWrite = true;
+  assert.equal(requireWorkspace(context, "org-1", true).canWrite, true);
 });

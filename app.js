@@ -8,6 +8,8 @@
   let datasets = {};
   let dealFilter = "all";
   let reviewFilter = "All items";
+  let reviewSearch = "";
+  let reviewSearchTimer = null;
   let activityFilter = "All activity";
   let sourceMode = "sample";
   let liveError = "";
@@ -15,6 +17,14 @@
   let liveSession = null;
   let liveReviewCounts = null;
   let liveActivityTotal = null;
+  let baseDataLoaded = false;
+  let activityWorkspaceId = null;
+  let reviewQueryKey = null;
+  let reviewQueryGeneration = 0;
+  let reviewLoadingGeneration = null;
+  let reviewNextCursor = null;
+  let reviewTotalCount = 0;
+  let reviewPageLoading = false;
   const money = value => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   function routeFromPath() { const route = location.pathname.replace(/^\/app\/?/, "").replace(/\/$/, ""); return titles[route] ? route : "dashboard"; }
@@ -40,22 +50,93 @@
     if (sourceMode === "live") window.BROKERFLOW_FORCE_LIVE = true;
     await render();
   }
-  async function loadData() {
-    const resources = ["deals", "reviews", "partners", "activity", "integrations"];
-    await Promise.all(resources.map(async resource => {
-      const result = await window.BrokerFlowData.get(resource);
-      datasets[resource] = result.data;
-      if (resource === "reviews" && result.source === "live") liveReviewCounts = result.counts;
-      if (resource === "activity" && result.source === "live") liveActivityTotal = result.totalCount;
-      liveState.update(resource, result);
-    }));
+  async function loadReviewPage(cursor, append, generation = reviewQueryGeneration) {
+    if (generation !== reviewQueryGeneration || (append && reviewPageLoading)) return;
+    reviewPageLoading = true;
+    reviewLoadingGeneration = generation;
+    const result = await window.BrokerFlowData.get("reviews", { cursor, priority: reviewFilter, search: reviewSearch });
+    if (generation !== reviewQueryGeneration) return;
+    liveState.update("reviews", result);
+    if (result.source === "live-error") {
+      if (!append) datasets.reviews = [];
+      reviewPageLoading = false;
+      reviewLoadingGeneration = null;
+      return;
+    }
+    if (result.source === "live") {
+      const rows = result.data || [];
+      datasets.reviews = append ? [...datasets.reviews, ...rows.filter(row => !datasets.reviews.some(existing => existing.id === row.id))] : rows;
+      liveReviewCounts = result.counts;
+      reviewTotalCount = result.totalCount;
+      reviewNextCursor = result.nextCursor;
+    } else {
+      datasets.reviews = result.data || [];
+      liveReviewCounts = null;
+      reviewNextCursor = null;
+      reviewTotalCount = datasets.reviews.length;
+    }
+    reviewPageLoading = false;
+    reviewLoadingGeneration = null;
+  }
+  async function loadData({ refresh = false } = {}) {
+    if (!baseDataLoaded || refresh) {
+      await Promise.all(["deals", "partners", "integrations"].map(async resource => {
+        const result = await window.BrokerFlowData.get(resource);
+        datasets[resource] = result.data;
+      }));
+      baseDataLoaded = true;
+    }
+    if (sourceMode !== "live") {
+      if (!datasets.reviews || refresh) {
+        const [reviews, activity] = await Promise.all([window.BrokerFlowData.get("reviews"), window.BrokerFlowData.get("activity")]);
+        datasets.reviews = reviews.data;
+        datasets.activity = activity.data;
+      }
+      return;
+    }
+    const workspaceId = window.BrokerFlowSession?.workspace?.id || null;
+    if (!workspaceId) {
+      datasets.reviews = [];
+      datasets.activity = [];
+      liveReviewCounts = null;
+      reviewNextCursor = null;
+      reviewTotalCount = 0;
+      reviewQueryKey = null;
+      reviewQueryGeneration++;
+      return;
+    }
+    if (refresh || activityWorkspaceId !== workspaceId) {
+      const result = await window.BrokerFlowData.get("activity");
+      datasets.activity = result.data;
+      if (result.source === "live") liveActivityTotal = result.totalCount;
+      liveState.update("activity", result);
+      activityWorkspaceId = workspaceId;
+    }
+    const queryKey = JSON.stringify([workspaceId, reviewFilter, reviewSearch]);
+    if (refresh || reviewQueryKey !== queryKey) {
+      reviewQueryKey = queryKey;
+      reviewQueryGeneration++;
+      reviewNextCursor = null;
+      reviewTotalCount = 0;
+      liveReviewCounts = null;
+      datasets.reviews = [];
+      await loadReviewPage(null, false, reviewQueryGeneration);
+    }
+  }
+  async function loadMoreReviews() {
+    if (reviewNextCursor === null || reviewPageLoading) return;
+    const pending = loadReviewPage(reviewNextCursor, true, reviewQueryGeneration);
+    render();
+    await pending;
+    await render();
   }
   function navigate(route) {
     if (!titles[route]) return;
+    if (reviewSearchTimer) clearTimeout(reviewSearchTimer);
     currentRoute = route; history.pushState({}, "", "/app/" + route); render(); toggleMobile(false); window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  async function render() {
-    await loadData();
+  async function render(options = {}) {
+    await loadData(options);
     $("#breadcrumb-current").textContent = titles[currentRoute];
     $$("[data-route]").forEach(link => link.classList.toggle("active", link.dataset.route === currentRoute));
     const views = { dashboard: dashboardView, "review-queue": reviewView, deals: dealsView, activity: activityView, partners: partnersView, integrations: integrationsView, settings: settingsView };
@@ -98,11 +179,14 @@
     const highCount = sourceMode === "live" ? (liveReviewCounts?.high_priority||0) : openReviews.filter(item => item.priority === "High").length;
     const standardCount = openReviews.filter(item => item.priority !== "High").length;
     const doneCount = sourceMode === "live" ? (liveReviewCounts?.reviewed||0) : datasets.reviews.filter(item => item.status === "Done").length;
-    const filtered = datasets.reviews.filter(item => (sourceMode === "live" || item.status !== "Done") && (reviewFilter === "All items" || item.priority === reviewFilter || item.reason === reviewFilter));
-    const rows = filtered.map(item => `<article class="review-item" data-searchable="${esc((item.company+" "+item.request+" "+item.reason+" "+item.id).toLowerCase())}"><div class="review-priority ${item.priority.toLowerCase()}"></div>${initials(item.company, item.initials, item.color)}<div class="review-main"><div class="review-titleline"><h3>${esc(item.company)}</h3><span class="review-id">${esc(item.id)}</span></div><p>${esc(item.reason)} · ${esc(item.request)}</p><div class="review-meta"><span>◷ ${esc(item.time)}</span><span>Assigned to ${esc(item.owner)}</span></div></div><div class="review-side"><strong>${money(item.amount)}</strong><small>${esc(item.contact)}</small><button class="button button-outline button-sm" data-open-review="${esc(item.id)}">Review details</button></div></article>`).join("") || `<div class="empty-state">${sourceMode === "live" ? "No reviews match this filter." : "No sample items match this filter."}</div>`;
     const live = sourceMode === "live";
+    const filtered = live ? datasets.reviews : datasets.reviews.filter(item => item.status !== "Done" && (reviewFilter === "All items" || item.priority === reviewFilter || item.reason === reviewFilter));
+    const rows = filtered.map(item => `<article class="review-item" data-searchable="${esc((item.company+" "+item.request+" "+item.reason+" "+item.id).toLowerCase())}"><div class="review-priority ${item.priority.toLowerCase()}"></div>${initials(item.company, item.initials, item.color)}<div class="review-main"><div class="review-titleline"><h3>${esc(item.company)}</h3><span class="review-id">${esc(item.id)}</span></div><p>${esc(item.reason)} · ${esc(item.request)}</p><div class="review-meta"><span>◷ ${esc(item.time)}</span><span>Assigned to ${esc(item.owner)}</span></div></div><div class="review-side"><strong>${money(item.amount)}</strong><small>${esc(item.contact)}</small><button class="button button-outline button-sm" data-open-review="${esc(item.id)}">Review details</button></div></article>`).join("") || `<div class="empty-state">${sourceMode === "live" ? "No reviews match this filter." : "No sample items match this filter."}</div>`;
+    const canWrite = live && liveState.canWrite(window.BrokerFlowSession?.workspace);
     const summary = live && window.BrokerFlowSession?.workspace ? `<div class="queue-summary"><div><strong>${liveReviewCounts?.open??"—"}</strong><small>Open reviews</small></div><div><strong>${liveReviewCounts?.high_priority??"—"}</strong><small>High priority</small></div><div><strong>${liveReviewCounts?.reviewed??"—"}</strong><small>Reviewed</small></div><div class="summary-note">Live organization data</div></div>` : `<div class="queue-summary"><div><span class="summary-dot high-dot"></span><strong>${highCount}</strong><small>High priority</small></div><div><span class="summary-dot normal-dot"></span><strong>${standardCount}</strong><small>Standard review</small></div><div><span class="summary-dot done-dot"></span><strong>${doneCount}</strong><small>Completed today</small></div><div class="summary-note">All records on this page are illustrative sample data.</div></div>`;
-    return `${pageHeading(live ? "LIVE BROKER WORKSPACE" : "BROKER WORKSPACE", "Review queue", "These are operational review statuses. Lending decisions remain with your team.", live ? `<button class="button button-primary" data-action="new-review">＋ <span>New review</span></button><button class="button button-quiet" data-action="refresh">↻ <span>Refresh</span></button>` : `<button class="button button-quiet" data-action="refresh">↻ <span>Refresh</span></button>`)}${summary}<div class="toolbar"><div class="filter-tabs" role="tablist" aria-label="Filter review items">${["All items", "High", "Normal", "Low"].map(label => `<button role="tab" aria-selected="${reviewFilter === label}" class="filter-tab ${reviewFilter === label ? "selected" : ""}" data-review-filter="${label}">${label}</button>`).join("")}</div><label class="search-field"><span>⌕</span><input type="search" placeholder="Search queue" data-local-search="review" aria-label="Search queue" /></label></div><div class="review-list">${live && !window.BrokerFlowSession?.workspace ? `<div class="empty-state">Choose an authorized organization to view its review queue.</div>` : live && liveState.get("reviews") ? `<div class="empty-state" role="alert">Live review data could not be loaded. ${esc(liveState.get("reviews"))}</div>` : rows}</div><p class="page-footnote">Review tools organize supplied information. They do not establish borrower eligibility, approval, or funding.</p>`;
+    const pagination = live && reviewNextCursor !== null ? `<div class="table-bottom"><span>Showing ${datasets.reviews.length} of ${reviewTotalCount} matching reviews</span><button class="button button-quiet" data-action="load-more-reviews" ${reviewPageLoading ? "disabled" : ""}>${reviewPageLoading ? "Loading…" : "Load more reviews"}</button></div>` : live && window.BrokerFlowSession?.workspace ? `<div class="table-bottom"><span>Showing ${datasets.reviews.length} of ${reviewTotalCount} matching reviews</span></div>` : "";
+    const headingActions = live ? `${canWrite ? `<button class="button button-primary" data-action="new-review">＋ <span>New review</span></button>` : ""}<button class="button button-quiet" data-action="refresh">↻ <span>Refresh</span></button>` : `<button class="button button-quiet" data-action="refresh">↻ <span>Refresh</span></button>`;
+    return `${pageHeading(live ? "LIVE BROKER WORKSPACE" : "BROKER WORKSPACE", "Review queue", "These are operational review statuses. Lending decisions remain with your team.", headingActions)}${summary}<div class="toolbar"><div class="filter-tabs" role="tablist" aria-label="Filter review items">${["All items", "High", "Normal", "Low"].map(label => `<button role="tab" aria-selected="${reviewFilter === label}" class="filter-tab ${reviewFilter === label ? "selected" : ""}" data-review-filter="${label}">${label}</button>`).join("")}</div><label class="search-field"><span>⌕</span><input type="search" placeholder="Search queue" value="${esc(reviewSearch)}" data-local-search="review" aria-label="Search queue" maxlength="80" /></label></div><div class="review-list">${live && !window.BrokerFlowSession?.workspace ? `<div class="empty-state">Choose an authorized organization to view its review queue.</div>` : live && liveState.get("reviews") ? `<div class="empty-state" role="alert">Live review data could not be loaded. ${esc(liveState.get("reviews"))}</div>` : rows}${pagination}</div><p class="page-footnote">Review tools organize supplied information. They do not establish borrower eligibility, approval, or funding.</p>`;
   }
   function dealsView() {
     const stages = [{ key: "all", label: "All deals" }, { key: "intake", label: "Intake" }, { key: "documents", label: "Documents" }, { key: "review", label: "Review" }, { key: "matching", label: "Lender matching" }];
@@ -134,7 +218,16 @@
     $$('[data-review-filter]').forEach(button => button.addEventListener("click", () => { reviewFilter = button.dataset.reviewFilter; render(); }));
     $$('[data-deal-filter]').forEach(button => button.addEventListener("click", () => { dealFilter = button.dataset.dealFilter; render(); }));
     const activitySelect = $("#activity-filter"); if (activitySelect) activitySelect.addEventListener("change", () => { activityFilter = activitySelect.value; render(); });
-    $$('[data-local-search]').forEach(input => input.addEventListener("input", () => { const term = input.value.trim().toLowerCase(); $$('[data-searchable]').forEach(row => { row.hidden = !row.dataset.searchable.includes(term); }); }));
+    $$('[data-local-search]').forEach(input => input.addEventListener("input", () => {
+      if (input.dataset.localSearch === "review" && sourceMode === "live") {
+        if (reviewSearchTimer) clearTimeout(reviewSearchTimer);
+        const value = input.value.slice(0, 80);
+        reviewSearchTimer = setTimeout(() => { reviewSearch = value.trim(); reviewQueryKey = null; render(); }, 300);
+        return;
+      }
+      const term = input.value.trim().toLowerCase();
+      $$('[data-searchable]').forEach(row => { row.hidden = !row.dataset.searchable.includes(term); });
+    }));
     $$('[data-open-review]').forEach(button => button.addEventListener("click", () => openReview(button.dataset.openReview)));
     $$('[data-open-deal]').forEach(button => button.addEventListener("click", () => openDeal(button.dataset.openDeal)));
     $$('[data-open-partner]').forEach(button => button.addEventListener("click", () => openPartner(button.dataset.openPartner)));
@@ -184,12 +277,13 @@
       const key = await window.BrokerFlowIdempotency.key(scope, payload);
       await window.BrokerFlowAuth.request("/api/console/review-action",{method:"POST",body:JSON.stringify({...payload,idempotency_key:key})});
       await window.BrokerFlowIdempotency.complete(scope, payload);
-      closeModal(); toast("Review status saved."); await render();
+      closeModal(); toast("Review status saved."); await render({refresh:true});
     }
     catch(error){button.disabled=false;toast(error.message||"Unable to save review action.");}
   }
   function createLiveReview() {
     if(!liveSession?.user||!window.BrokerFlowSession?.workspace){toast("Sign in and choose an authorized organization first.");return;}
+    if(!liveState.canWrite(window.BrokerFlowSession.workspace)){toast("This organization is read-only for your account.");return;}
     modal("Create human review request",`<p class="modal-copy">This creates an operational review task. It does not make a lending decision.</p><label class="modal-field">Business name<input id="new-review-business" maxlength="160" required /></label><label class="modal-field">Borrower type<select id="new-review-type"><option value="business">Business</option><option value="commercial_borrower">Commercial borrower</option><option value="individual">Individual</option><option value="real_estate_investor">Real estate investor</option></select></label><label class="modal-field">Loan purpose<select id="new-review-purpose"><option value="business_working_capital">Business working capital</option><option value="equipment_financing">Equipment financing</option><option value="commercial_real_estate">Commercial real estate</option><option value="debt_consolidation">Debt consolidation</option><option value="other">Other</option></select></label><label class="modal-field">Requested amount<input id="new-review-amount" type="number" min="1" max="1000000000" required /></label><label class="modal-field">State<input id="new-review-state" maxlength="2" required /></label><label class="modal-field">Priority<select id="new-review-urgency"><option value="normal">Normal</option><option value="high">High</option><option value="same_day">Same day</option><option value="low">Low</option></select></label>`, `<button class="button button-quiet" data-close-modal>Cancel</button><button class="button button-primary" id="submit-new-review">Create review</button>`);
     $("#submit-new-review").addEventListener("click",async event=>{
       const b=event.currentTarget; b.disabled=true;
@@ -201,7 +295,7 @@
         const key=await window.BrokerFlowIdempotency.key(scope,payload);
         await window.BrokerFlowAuth.request("/api/console/reviews",{method:"POST",headers:{"Idempotency-Key":key},body:JSON.stringify(payload)});
         await window.BrokerFlowIdempotency.complete(scope,payload);
-        closeModal();toast("Review request created.");await render();
+        closeModal();toast("Review request created.");await render({refresh:true});
       }catch(error){b.disabled=false;toast(error.message||"Unable to create review.");}
     });
   }
@@ -213,7 +307,8 @@
     if (action === "sign-out") { window.BrokerFlowAuth.signOut(); return; }
     if (action === "select-workspace") { const id=$("#live-org-select")?.value;const workspace=liveSession?.workspaces?.find(item=>item.id===id);if(!workspace){toast("Choose an organization you are authorized to access.");return;}window.BrokerFlowSession={...liveSession,workspace};liveError="";liveState.reset();render();return; }
     if (action === "new-review") { createLiveReview(); return; }
-    if (action === "refresh") { render().then(()=>toast(sourceMode === "live" ? "Live review data refreshed." : "Sample workspace refreshed.")); return; }
+    if (action === "load-more-reviews") { loadMoreReviews(); return; }
+    if (action === "refresh") { render({ refresh: true }).then(()=>toast(sourceMode === "live" ? "Live review data refreshed." : "Sample workspace refreshed.")); return; }
     if (action === "export-sample") { const csv = ["Deal,ID,Stage,Requested amount", ...datasets.deals.map(d => `"${d.company}",${d.id},"${d.stage}",${d.amount}`)].join("\n"); const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); link.download = "brokerflow-sample-overview.csv"; link.click(); URL.revokeObjectURL(link.href); toast("Sample overview exported."); return; }
     const details = { "new-deal": ["New deal", "<p class='modal-copy'>Deal creation is a preview in this sample workspace. No CRM record will be created.</p><label class='modal-field'>Business name<input placeholder='Enter a business name' /></label><label class='modal-field'>Requested amount<input type='number' min='0' placeholder='e.g. 125000' /></label>"], "add-partner": ["Add partner", "<p class='modal-copy'>Partner entry is a preview in this sample workspace. No CRM record will be created.</p><label class='modal-field'>Partner name<input placeholder='Enter partner name' /></label><label class='modal-field'>Partner type<select><option>Accounting firm</option><option>Business advisory</option><option>Commercial real estate</option><option>Other</option></select></label>"], "activity-detail": ["Sample workflow event", "<p class='modal-copy'>This is an illustrative activity record. No external workflow ran from this screen.</p>"] };
     if (details[action]) modal(details[action][0], details[action][1], `<button class="button button-quiet" data-close-modal>Cancel</button><button class="button button-primary" data-preview-save>Save preview</button>`);

@@ -35,8 +35,13 @@
     { "source": "/api/no-auth/create-agency-client-roadmap", "destination": "/api/no-auth/ops-router" },
     { "source": "/api/no-auth/recommend-paid-service-path", "destination": "/api/no-auth/ops-router" },
     { "source": "/api/no-auth/create-project-scope", "destination": "/api/no-auth/ops-router" },
-    { "source": "/app", "destination": "/app.html" },
-    { "source": "/app/:path*", "destination": "/app.html" }
+    { "source": "/app/dashboard", "destination": "/app" },
+    { "source": "/app/review-queue", "destination": "/app" },
+    { "source": "/app/deals", "destination": "/app" },
+    { "source": "/app/activity", "destination": "/app" },
+    { "source": "/app/partners", "destination": "/app" },
+    { "source": "/app/integrations", "destination": "/app" },
+    { "source": "/app/settings", "destination": "/app" }
   ],
   "redirects": [
     { "source": "/home", "destination": "/", "permanent": true },

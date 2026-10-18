@@ -1,10 +1,16 @@
 # Action Index
 
+## Protected Integration Actions
+
+| Action | Operation ID | API Endpoint | Schema | Purpose |
+| --- | --- | --- | --- | --- |
+| Persisted Lender Match Review Ingestion | `createPersistedLenderMatchReview` | `POST /api/ingest/lender-match-review` | `schemas/brokerflow-review-ingestion.schema.yaml` | Create a durable organization-scoped human review using a separate integration bearer secret and idempotency key. Requires explicit owner provisioning; does not make lending decisions. |
+
 ## No-Auth GPT Actions
 
 | Action | Operation ID | API Endpoint | Schema | Purpose |
 | --- | --- | --- | --- | --- |
-| Lender Match Review | `requestLenderMatchReview` | `POST /api/no-auth/lender-match-review` | `schemas/no-auth-lender-match-review.schema.yaml` | Queue a scenario for controlled manual review when required. |
+| Lender Match Review | `requestLenderMatchReview` | `POST /api/no-auth/lender-match-review` | `schemas/no-auth-lender-match-review.schema.yaml` | Legacy nonpersistent compatibility acknowledgment with optional webhook forwarding; use the protected ingestion Action for durable storage. |
 | Automated Lender Fit Routing | `routeLenderFitScenario` | `POST /api/no-auth/lender-fit-routing` | `schemas/no-auth-automated-lender-fit-routing.schema.yaml` | Score/rank/route a funding scenario and trigger downstream workflow actions. |
 | Affiliate Partner Signup | `submitAffiliatePartnerSignup` | `POST /api/no-auth/affiliate-partner-signup` | `schemas/no-auth-affiliate-partner-signup.schema.yaml` | Capture partner consent and profile details, then assign an internal onboarding segment and next step. |
 | Channel Partner Prospect Capture | `captureChannelPartnerProspect` | `POST /api/no-auth/channel-partner-prospect` | `schemas/no-auth-channel-partner-prospect-capture.schema.yaml` | Capture and prioritize COI prospects for internal business-development follow-up. |

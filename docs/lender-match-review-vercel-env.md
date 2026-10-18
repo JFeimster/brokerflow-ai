@@ -4,7 +4,7 @@ File path: `docs/lender-match-review-vercel-env.md`
 
 ## Required
 
-No environment variables are strictly required for local testing. With no webhook configured, the serverless function logs the payload and returns a success response.
+With no webhook configured, the legacy compatibility endpoint returns `persisted: false` and does not log the submitted payload. It is not the durable private review queue. Use the protected `/api/ingest/lender-match-review` endpoint described in [PR #26 setup](./pr26-live-review-queue.md) for persisted reviews.
 
 ## Optional
 
@@ -22,4 +22,4 @@ Optional header-level secret sent to the downstream automation workflow as `x-br
 
 ## Endpoint
 
-`POST https://brokerflow-ai.vercel.app/api/no-auth/lender-match-review`
+`POST https://brokerflow-ai.vercel.app/api/no-auth/lender-match-review` (legacy compatibility/webhook behavior only; never returns `persisted: true`)

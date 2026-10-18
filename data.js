@@ -41,6 +41,21 @@
   };
   const config = window.BROKERFLOW_CLIENT_CONFIG || {};
   async function get(resource) {
+    const auth = window.BrokerFlowAuth;
+    if (auth && (auth.config?.mode === "live" || window.BROKERFLOW_FORCE_LIVE)) {
+      if (!window.BrokerFlowSession?.workspace) return { data: [], source: "live-unauthenticated" };
+      if (resource === "reviews" || resource === "activity") {
+        const path = resource === "reviews" ? "/api/console/reviews" : "/api/console/activity";
+        const query = new URLSearchParams({ organization_id: window.BrokerFlowSession.workspace.id, limit: resource === "reviews" ? "100" : "100" });
+        try {
+          const result = await auth.request(path + "?" + query);
+          const items = result.items || [];
+          if (resource === "reviews") return { data: items.map(row => ({ ...row, id: row.id, company: row.business_name || row.requester_name, contact: "", initials: (row.business_name || row.requester_name || "R").split(/\s+/).map(x => x[0]).slice(0,2).join("").toUpperCase(), request: String(row.loan_purpose || "").replaceAll("_", " "), amount: Number(row.requested_amount), priority: ({same_day:"High",high:"High",normal:"Normal",low:"Low"})[row.urgency] || "Normal", reason: String(row.status).replaceAll("_", " "), detail: row.scenario?.notes || "Broker review required.", time: new Date(row.created_at).toLocaleString(), owner: row.created_by || "Trusted integration", color: "teal" })), counts: result.counts, source: "live" };
+          return { data: items.map(row => ({ ...row, type: "review", title: ({review_created:"Review created",review_started:"Review started",information_requested:"Additional information requested",review_marked_reviewed:"Review marked reviewed"})[row.event_type] || "Review activity", description: `${row.actor_source === "trusted_integration" ? "Trusted integration" : `Broker ${row.actor_user_id || "action"}`} · ${row.previous_status ? row.previous_status.replaceAll("_", " ")+" → " : ""}${row.new_status.replaceAll("_", " ")}${row.note ? " · "+row.note : ""}`, status: row.new_status.replaceAll("_", " "), time: new Date(row.created_at).toLocaleString(), icon: "☷", color: "teal" })), totalCount: result.total_count, source: "live" };
+        } catch (error) { return { data: [], source: "live-error", error }; }
+      }
+      return { data: sample[resource] || [], source: "sample" };
+    }
     if (config.apiBase && typeof config.getAccessToken === "function" && config.resources && config.resources[resource]) {
       try {
         const token = await config.getAccessToken();

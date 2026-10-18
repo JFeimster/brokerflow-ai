@@ -1,0 +1,59 @@
+openapi: 3.1.0
+info:
+  title: BrokerFlow Protected Review Ingestion
+  version: 1.0.0
+  description: Creates a persisted human review in one explicitly configured organization. Requires server-only SUPABASE_URL, SUPABASE_SECRET_KEY, BROKERFLOW_INGEST_API_KEY, and BROKERFLOW_INGEST_ORGANIZATION_ID plus an Idempotency-Key. This API performs no borrower decision or external submission. See docs/pr26-live-review-queue.md for setup and curl verification.
+servers:
+  - url: https://brokerflow-ai.vercel.app
+    description: Use only after the owner configures the protected integration.
+paths:
+  /api/ingest/lender-match-review:
+    post:
+      operationId: createPersistedLenderMatchReview
+      summary: Create a durable human review request
+      security:
+        - IntegrationBearer: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 16, maxLength: 200 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./no-auth-lender-match-review.schema.yaml#/components/schemas/LenderMatchReviewRequest"
+            example:
+              source: custom_gpt
+              action_type: lender_match_review
+              requester_name: Broker intake
+              borrower_type: business
+              business_name: Example Business
+              loan_purpose: equipment_financing
+              requested_amount: 185000
+              state: NY
+              human_review_required: true
+      responses:
+        "201":
+          description: Review and creation event committed atomically.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, review_request_id, status, next_step, persisted]
+                properties:
+                  success: { const: true }
+                  review_request_id: { type: string }
+                  status: { const: queued_for_human_review }
+                  next_step: { const: manual_review }
+                  persisted: { const: true }
+              example: { success: true, review_request_id: "lmr_opaque-reference", status: queued_for_human_review, next_step: manual_review, persisted: true }
+        "401": { description: Missing or invalid integration credential. }
+        "409": { description: Idempotency key reused with different content. }
+        "503": { description: Owner setup or persistence service unavailable. }
+components:
+  securitySchemes:
+    IntegrationBearer:
+      type: http
+      scheme: bearer

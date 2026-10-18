@@ -132,11 +132,11 @@ function sendJson(res, statusCode, payload) {
   return res.status(statusCode).json(payload);
 }
 
+import { randomUUID } from "node:crypto";
 function makeReviewRequestId() {
   const now = new Date();
   const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
-  const randomPart = Math.random().toString(36).slice(2, 8);
-  return `lmr_${datePart}_${randomPart}`;
+  return `lmr_${datePart}_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
 }
 
 function isBlank(value) {
@@ -301,11 +301,10 @@ async function forwardToAutomation(payload) {
   const webhookUrl = process.env.LENDER_MATCH_REVIEW_WEBHOOK_URL;
 
   if (!webhookUrl) {
-    console.log("No LENDER_MATCH_REVIEW_WEBHOOK_URL configured. Payload logged only.");
-    console.log(JSON.stringify(payload, null, 2));
+    console.info("Lender match review accepted by legacy compatibility endpoint; no persistence or webhook delivery configured.");
     return {
       forwarded: false,
-      destination: "console"
+      destination: "none"
     };
   }
 
@@ -394,11 +393,12 @@ export default async function handler(req, res) {
       success: true,
       review_request_id: reviewRequestId,
       status: "queued_for_human_review",
+      persisted: false,
       message: "Lender match review request created. A human reviewer must evaluate the scenario before any borrower-facing recommendation or lender submission.",
       next_step: "manual_review"
     });
   } catch (error) {
-    console.error("Lender match review error:", error);
+    console.error("Lender match review request failed.");
 
     return sendJson(res, 500, {
       success: false,

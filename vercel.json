@@ -34,7 +34,9 @@
     { "source": "/api/no-auth/generate-automation-audit", "destination": "/api/no-auth/ops-router" },
     { "source": "/api/no-auth/create-agency-client-roadmap", "destination": "/api/no-auth/ops-router" },
     { "source": "/api/no-auth/recommend-paid-service-path", "destination": "/api/no-auth/ops-router" },
-    { "source": "/api/no-auth/create-project-scope", "destination": "/api/no-auth/ops-router" }
+    { "source": "/api/no-auth/create-project-scope", "destination": "/api/no-auth/ops-router" },
+    { "source": "/app", "destination": "/app.html" },
+    { "source": "/app/:path*", "destination": "/app.html" }
   ],
   "redirects": [
     { "source": "/home", "destination": "/", "permanent": true },

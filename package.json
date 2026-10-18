@@ -2,7 +2,7 @@
   "name": "brokerflow-ai",
   "version": "1.0.0",
   "private": true,
-  "description": "The operating library and landing experience behind the Loan Broker Automation Architect GPT — borrower intake, document routing, alerts, and human-reviewed funding decisions.",
+  "description": "BrokerFlow broker operations platform with deal intake, review queues, partner workflows, automation activity, and ChatGPT integration.",
   "keywords": [
     "brokerflow",
     "loan-broker",
@@ -27,10 +27,11 @@
   "scripts": {
     "dev": "serve .",
     "start": "serve .",
-    "build": "echo \"Static site — no build step required\" && exit 0",
+    "build": "node --check app.js && node --check data.js && node --check script.js && node -e \"JSON.parse(require('fs').readFileSync('vercel.json', 'utf8')); console.log('Static site files and Vercel routing configuration are valid.')\"",
     "preview": "serve .",
     "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
-    "lint": "echo \"No linter configured for static site\" && exit 0"
+    "lint": "node --check app.js && node --check data.js && node --check script.js",
+    "test": "node --test tests/*.test.js"
   },
   "devDependencies": {
     "prettier": "^3.3.3",

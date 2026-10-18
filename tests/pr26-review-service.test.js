@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { assertTransition, STATUS, validateReview } from "../lib/reviews/validation.js";
+import { jsonBody } from "../lib/reviews/http.js";
 import session from "../api/console/session.js";
 import reviews from "../api/console/reviews.js";
 import activity from "../api/console/activity.js";
@@ -17,6 +18,7 @@ test("review validation keeps required fields, enums, amount bounds and human re
   assert.throws(()=>validateReview({...valid,requested_amount:0}),{status:422});
   assert.throws(()=>validateReview({...valid,requester_name:undefined}),{status:422});
   assert.throws(()=>validateReview({...valid,notes:"SSN 123-45-6789"}),{status:422});
+  assert.throws(()=>validateReview({...valid,notes:"Email borrower@example.com"}),{status:422});
 });
 test("review normalization stores only the approved scenario allowlist",()=>{
   const normalized=validateReview({...valid,phone:"555-0100",access_token:"secret",notes:"Check completeness"});
@@ -41,6 +43,9 @@ test("reviews route rejects unsupported methods and marks response no-store",asy
 test("activity route rejects unsupported methods",async()=>{
   const res=response();await activity({method:"POST",headers:{}},res);
   assert.equal(res.statusCode,405);assert.equal(res.headers.Allow,"GET");
+});
+test("JSON API bodies are capped before service validation",()=>{
+  assert.throws(()=>jsonBody({headers:{"content-type":"application/json"},body:{notes:"x".repeat(66000)}}),{status:413});
 });
 test("integration ingestion rejects absent credentials without persistence",async()=>{
   const res=response();await ingest({method:"POST",headers:{"content-type":"application/json",authorization:"Bearer invalid"},body:valid},res);

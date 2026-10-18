@@ -83,7 +83,7 @@ components:
           maxLength: 160
         business_name:
           type: string
-          maxLength: 180
+          maxLength: 160
         email:
           type: string
           format: email

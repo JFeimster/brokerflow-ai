@@ -27,10 +27,10 @@
   "scripts": {
     "dev": "serve .",
     "start": "serve .",
-    "build": "node --check app.js && node --check console-auth.js && node --check data.js && node --check script.js && node -e \"JSON.parse(require('fs').readFileSync('vercel.json', 'utf8')); console.log('Static site files and Vercel routing configuration are valid.')\"",
+    "build": "node --check app.js && node --check console-auth.js && node --check client-idempotency.js && node --check console-live-state.js && node --check data.js && node --check script.js && node -e \"JSON.parse(require('fs').readFileSync('vercel.json', 'utf8')); console.log('Static site files and Vercel routing configuration are valid.')\"",
     "preview": "serve .",
     "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
-    "lint": "node --check app.js && node --check console-auth.js && node --check data.js && node --check script.js && node --check lib/reviews/validation.js && node --check lib/reviews/service.js && node --check lib/reviews/http.js && node --check api/console/config.js && node --check api/console/session.js && node --check api/console/reviews.js && node --check api/console/review.js && node --check api/console/review-action.js && node --check api/console/activity.js && node --check api/ingest/lender-match-review.js && node --check api/no-auth/lender-match-review.js",
+    "lint": "node --check app.js && node --check console-auth.js && node --check client-idempotency.js && node --check console-live-state.js && node --check data.js && node --check script.js && node --check lib/reviews/validation.js && node --check lib/reviews/service.js && node --check lib/reviews/http.js && node --check api/console/config.js && node --check api/console/session.js && node --check api/console/reviews.js && node --check api/console/review.js && node --check api/console/review-action.js && node --check api/console/activity.js && node --check api/ingest/lender-match-review.js && node --check api/no-auth/lender-match-review.js",
     "test": "node --test tests/*.test.js"
   },
   "devDependencies": {

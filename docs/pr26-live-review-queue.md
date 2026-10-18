@@ -19,13 +19,13 @@ The current `platform-core` permission registry does not contain BrokerFlow revi
 3. Assign `read` and `audit` only to organization roles that may view review history; assign `write` only to the explicitly approved broker role. Assign these grants in that organization's `role_permissions` rows only. Do not infer access from existing admin/operator/member/partner roles.
 4. Verify that generic members/partners have no BrokerFlow grants and that the selected role assignments match the organization's review policy.
 
-The app fails closed when permissions are absent. A viewer with read/audit grants can list and inspect review items and events but cannot create or transition them.
+The app fails closed when permissions are absent. A viewer with read permission can list and inspect reviews without audit access; the activity view explains that review history permission is unavailable. A viewer with read/audit grants can inspect both areas but cannot create or transition reviews.
 
 ## Owner setup sequence
 
 1. Review this additive migration and test it against an approved isolated, disposable PostgreSQL/Supabase environment before touching the shared populated project. This task did not create a paid database branch or isolated project, and did not apply this migration.
 2. Separately authorize and apply `supabase/migrations/20261018000100_brokerflow_reviews.sql` to the selected target. It adds two prefixed tables, indexes, RLS, least-privilege grants, and two service-only atomic functions. No existing table, policy, trigger, integration, or data is replaced. For rollback, disable live traffic first; retain event data for audit, then use an owner-reviewed forward fix or a reviewed archival/drop plan. Do not blindly drop tables after real reviews exist.
-3. Confirm Supabase Auth email OTP/magic links are enabled and add the console callback `/app/review-queue` to the allowed redirect URLs. Invite/create each broker through the owner process; no public bootstrap endpoint or universal admin is provided.
+3. Confirm Supabase Auth email OTP/magic links are enabled and add the console callback `/app/review-queue` to the allowed redirect URLs. The client sends `create_user: false` in the GoTrue OTP body, so users must be invited/provisioned by the owner process; no public bootstrap endpoint or universal admin is provided.
 4. Add the three permission definitions and organization-scoped role grants described above. Verify membership status and role assignments.
 5. Configure **Preview** Vercel variables first: `BROKERFLOW_CONSOLE_MODE=live`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `BROKERFLOW_INGEST_API_KEY`, and `BROKERFLOW_INGEST_ORGANIZATION_ID`. Keep the secret and ingest key server-only. Never add credentials to source or client variables. Production variables remain a separate release decision.
 6. Use an explicitly authorized organization ID for the ingestion binding. Configure the corresponding GPT Action as bearer-authenticated and send a unique `Idempotency-Key`; the legacy `/api/no-auth/lender-match-review` route remains nonpersistent and reports `persisted:false`.

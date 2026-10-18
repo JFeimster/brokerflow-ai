@@ -39,9 +39,12 @@ create table if not exists public.brokerflow_review_events (
   version integer not null check (version > 0),
   idempotency_hash text not null,
   request_fingerprint text not null,
+  result jsonb,
   created_at timestamptz not null default now(),
   unique (organization_id, review_id, action_actor_scope, idempotency_hash)
 );
+
+alter table public.brokerflow_review_events add column if not exists result jsonb;
 
 create index if not exists brokerflow_review_queue_idx on public.brokerflow_review_requests (organization_id, status, created_at desc);
 create index if not exists brokerflow_review_events_idx on public.brokerflow_review_events (organization_id, created_at desc);
@@ -83,28 +86,30 @@ declare v_key text := encode(sha256(convert_to(p_idempotency_key, 'UTF8')), 'hex
         v_event public.brokerflow_review_events%rowtype;
         v_previous_status text;
         v_event_type text;
+        v_result jsonb;
 begin
   select * into v_event from public.brokerflow_review_events where organization_id=p_organization_id and review_id=p_review_id and action_actor_scope=p_actor_user_id::text and idempotency_hash=v_key;
   if found then
     if v_event.request_fingerprint <> v_fingerprint then raise exception 'idempotency conflict' using errcode='23505'; end if;
     select * into v_review from public.brokerflow_review_requests where id=p_review_id and organization_id=p_organization_id;
-    return (to_jsonb(v_review) - 'create_idempotency_hash' - 'create_actor_scope' - 'request_fingerprint') || jsonb_build_object('duplicate',true);
+    return coalesce(v_event.result, (to_jsonb(v_review) - 'create_idempotency_hash' - 'create_actor_scope' - 'request_fingerprint') || jsonb_build_object('duplicate',true));
   end if;
   select * into v_review from public.brokerflow_review_requests where id=p_review_id and organization_id=p_organization_id for update;
   if not found then raise exception 'review missing' using errcode='P0002'; end if;
   select * into v_event from public.brokerflow_review_events where organization_id=p_organization_id and review_id=p_review_id and action_actor_scope=p_actor_user_id::text and idempotency_hash=v_key;
   if found then
     if v_event.request_fingerprint <> v_fingerprint then raise exception 'idempotency conflict' using errcode='23505'; end if;
-    return (to_jsonb(v_review) - 'create_idempotency_hash' - 'create_actor_scope' - 'request_fingerprint') || jsonb_build_object('duplicate',true);
+    return coalesce(v_event.result, (to_jsonb(v_review) - 'create_idempotency_hash' - 'create_actor_scope' - 'request_fingerprint') || jsonb_build_object('duplicate',true));
   end if;
   if v_review.version <> p_expected_version then raise exception 'review version conflict' using errcode='40001'; end if;
   v_previous_status := v_review.status;
   if not ((p_action='start_review' and v_review.status in ('queued_for_human_review','needs_information') and p_next_status='in_review') or (p_action='request_information' and v_review.status='in_review' and p_next_status='needs_information' and char_length(trim(p_note)) between 1 and 500) or (p_action='mark_reviewed' and v_review.status='in_review' and p_next_status='reviewed')) then raise exception 'invalid transition' using errcode='22023'; end if;
   v_event_type := case p_action when 'start_review' then 'review_started' when 'request_information' then 'information_requested' else 'review_marked_reviewed' end;
   update public.brokerflow_review_requests set status=p_next_status,version=version+1,updated_at=now() where id=p_review_id returning * into v_review;
-  insert into public.brokerflow_review_events(organization_id,review_id,event_type,actor_user_id,action_actor_scope,actor_source,previous_status,new_status,note,version,idempotency_hash,request_fingerprint)
-  values(p_organization_id,p_review_id,v_event_type,p_actor_user_id,p_actor_user_id::text,'user',v_previous_status,p_next_status,nullif(trim(p_note),''),v_review.version,v_key,v_fingerprint);
-  return (to_jsonb(v_review) - 'create_idempotency_hash' - 'create_actor_scope' - 'request_fingerprint') || jsonb_build_object('duplicate',false);
+  v_result := (to_jsonb(v_review) - 'create_idempotency_hash' - 'create_actor_scope' - 'request_fingerprint') || jsonb_build_object('duplicate',false);
+  insert into public.brokerflow_review_events(organization_id,review_id,event_type,actor_user_id,action_actor_scope,actor_source,previous_status,new_status,note,version,idempotency_hash,request_fingerprint,result)
+  values(p_organization_id,p_review_id,v_event_type,p_actor_user_id,p_actor_user_id::text,'user',v_previous_status,p_next_status,nullif(trim(p_note),''),v_review.version,v_key,v_fingerprint,v_result);
+  return v_result;
 end $$;
 
 revoke all on function public.brokerflow_create_review(uuid,uuid,text,jsonb) from public, anon, authenticated;

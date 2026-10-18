@@ -19,6 +19,9 @@ test("review validation keeps required fields, enums, amount bounds and human re
   assert.throws(()=>validateReview({...valid,requester_name:undefined}),{status:422});
   assert.throws(()=>validateReview({...valid,notes:"SSN 123-45-6789"}),{status:422});
   assert.throws(()=>validateReview({...valid,notes:"Email borrower@example.com"}),{status:422});
+  assert.throws(()=>validateReview({...valid,business_name:{name:"Example"}}),{status:422});
+  assert.throws(()=>validateReview({...valid,business_name:"x".repeat(161)}),{status:422});
+  assert.equal(validateReview({...valid,business_name:"  Example Business  "}).business_name,"Example Business");
 });
 test("review normalization stores only the approved scenario allowlist",()=>{
   const normalized=validateReview({...valid,phone:"555-0100",access_token:"secret",notes:"Check completeness"});

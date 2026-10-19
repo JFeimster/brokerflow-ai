@@ -92,7 +92,7 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
   const pool = new Pool({ connectionString: isolatedUrl.href, max: 12 });
   t.after(async () => {
     await pool.end();
-    await admin.query(`drop database ${databaseName} with (force)`);
+    await admin.query(`drop database ${databaseName}`);
     await admin.end();
   });
   const fixture = await readFile(fixturePath, "utf8");

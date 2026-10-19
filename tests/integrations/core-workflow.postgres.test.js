@@ -204,7 +204,7 @@ test(
         assert.equal(task.id, request.task_id);
         assert.equal(task.organization_id, fixture.organization_id);
         assert.equal(task.status, "open");
-        assert.equal(task.due_date, request.due_date);
+        assert.equal(task.due_date, args.due_date);
         assert.ok(
           request.missing_documents.includes("equipment_invoice_or_quote"),
         );
@@ -642,3 +642,4 @@ test(
     await client.closeWithServer();
   },
 );
+

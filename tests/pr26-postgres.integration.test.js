@@ -17,7 +17,8 @@ const partnerA = "10000000-0000-4000-8000-000000000003";
 const brokerB = "10000000-0000-4000-8000-000000000004";
 const migrationPaths = [
   new URL("../supabase/migrations/20261018000100_brokerflow_reviews.sql", import.meta.url),
-  new URL("../supabase/migrations/20261019000100_brokerflow_rate_limits.sql", import.meta.url)
+  new URL("../supabase/migrations/20261019000100_brokerflow_rate_limits.sql", import.meta.url),
+  new URL("../supabase/migrations/20261019125615_brokerflow_follow_up_tasks.sql", import.meta.url)
 ];
 const fixturePath = new URL("../supabase/tests/platform_core_baseline.sql", import.meta.url);
 
@@ -54,6 +55,22 @@ async function action(client, orgId, reviewId, actorId, actionName, note, expect
   return result.rows[0].result;
 }
 
+async function createTask(client, orgId, actorId, key, task) {
+  const result = await client.query(
+    "select public.brokerflow_create_follow_up_task($1::uuid,$2::uuid,$3::text,$4::jsonb) as result",
+    [orgId, actorId, key, JSON.stringify(task)]
+  );
+  return result.rows[0].result;
+}
+
+async function completeTask(client, orgId, taskId, actorId, key) {
+  const result = await client.query(
+    "select public.brokerflow_complete_follow_up_task($1::uuid,$2::uuid,$3::uuid,$4::text) as result",
+    [orgId, taskId, actorId, key]
+  );
+  return result.rows[0].result;
+}
+
 async function migrationBaselineSnapshot(pool) {
   const tables = await pool.query(`
     select c.relname as table_name,
@@ -78,15 +95,19 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
     const after = await migrationBaselineSnapshot(pool);
     assert.deepEqual(after.tables.filter(row => baseline.tables.some(base => base.table_name === row.table_name)), baseline.tables);
     assert.deepEqual(after.policies, baseline.policies);
-    assert.deepEqual(after.tables.map(row => row.table_name), [...baseline.tables.map(row => row.table_name), "brokerflow_rate_limits", "brokerflow_review_events", "brokerflow_review_requests"].sort());
-    const rls = await pool.query("select relname, relrowsecurity from pg_class where oid in ('public.brokerflow_review_requests'::regclass,'public.brokerflow_review_events'::regclass,'public.brokerflow_rate_limits'::regclass) order by relname");
+    assert.deepEqual(after.tables.map(row => row.table_name), [...baseline.tables.map(row => row.table_name), "brokerflow_follow_up_task_events", "brokerflow_follow_up_tasks", "brokerflow_rate_limits", "brokerflow_review_events", "brokerflow_review_requests"].sort());
+    const rls = await pool.query("select relname, relrowsecurity from pg_class where oid in ('public.brokerflow_review_requests'::regclass,'public.brokerflow_review_events'::regclass,'public.brokerflow_rate_limits'::regclass,'public.brokerflow_follow_up_tasks'::regclass,'public.brokerflow_follow_up_task_events'::regclass) order by relname");
     assert.deepEqual(rls.rows, [
+      { relname: "brokerflow_follow_up_task_events", relrowsecurity: true },
+      { relname: "brokerflow_follow_up_tasks", relrowsecurity: true },
       { relname: "brokerflow_rate_limits", relrowsecurity: true },
       { relname: "brokerflow_review_events", relrowsecurity: true },
       { relname: "brokerflow_review_requests", relrowsecurity: true }
     ]);
     const indexes = await pool.query("select indexname from pg_indexes where schemaname='public' and indexname like 'brokerflow_review_%_idx' order by indexname");
     assert.deepEqual(indexes.rows.map(row => row.indexname), ["brokerflow_review_events_idx", "brokerflow_review_events_review_idx", "brokerflow_review_queue_idx"]);
+    const taskIndexes = await pool.query("select indexname from pg_indexes where schemaname='public' and indexname like 'brokerflow_follow_up_%_idx' order by indexname");
+    assert.deepEqual(taskIndexes.rows.map(row => row.indexname), ["brokerflow_follow_up_task_events_task_idx", "brokerflow_follow_up_tasks_owner_idx", "brokerflow_follow_up_tasks_queue_idx", "brokerflow_follow_up_tasks_review_idx"]);
     const fks = await pool.query(`
       select conrelid::regclass::text as table_name, confrelid::regclass::text as referenced_table
       from pg_constraint where contype='f' and conrelid in ('public.brokerflow_review_requests'::regclass,'public.brokerflow_review_events'::regclass)
@@ -97,6 +118,18 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
       { table_name: "brokerflow_review_events", referenced_table: "organizations" },
       { table_name: "brokerflow_review_requests", referenced_table: "auth.users" },
       { table_name: "brokerflow_review_requests", referenced_table: "organizations" }
+    ]);
+    const taskForeignKeys = await pool.query(`
+      select distinct conrelid::regclass::text as table_name, confrelid::regclass::text as referenced_table
+      from pg_constraint where contype='f' and conrelid in ('public.brokerflow_follow_up_tasks'::regclass,'public.brokerflow_follow_up_task_events'::regclass)
+      order by table_name, referenced_table`);
+    assert.deepEqual(taskForeignKeys.rows, [
+      { table_name: "brokerflow_follow_up_task_events", referenced_table: "auth.users" },
+      { table_name: "brokerflow_follow_up_task_events", referenced_table: "brokerflow_follow_up_tasks" },
+      { table_name: "brokerflow_follow_up_task_events", referenced_table: "organizations" },
+      { table_name: "brokerflow_follow_up_tasks", referenced_table: "auth.users" },
+      { table_name: "brokerflow_follow_up_tasks", referenced_table: "brokerflow_review_requests" },
+      { table_name: "brokerflow_follow_up_tasks", referenced_table: "organizations" }
     ]);
   });
 
@@ -130,6 +163,66 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
     await assert.rejects(createReview(pool, orgA, brokerA, key, scenario({ requested_amount: 250000 })), error => error.code === "23505");
     const count = await pool.query("select count(*)::int as count from public.brokerflow_review_events where review_id=$1", [one.id]);
     assert.equal(count.rows[0].count, 1);
+  });
+
+  await t.test("follow-up tasks enforce organization references, persist attribution, and replay create and completion idempotently", async () => {
+    const review = await createReview(pool, orgA, brokerA, `task-review-${randomUUID()}`);
+    const key = `task-create-${randomUUID()}`;
+    const payload = { title: "Prepare broker follow-up", description: "Check the requested equipment quote.", task_type: "request_information", assigned_to: viewerA, review_id: review.id, due_date: "2026-10-25" };
+    const [first, concurrentReplay] = await Promise.all([
+      createTask(pool, orgA, brokerA, key, payload),
+      createTask(pool, orgA, brokerA, key, payload)
+    ]);
+    assert.equal(first.id, concurrentReplay.id);
+    assert.deepEqual([first.duplicate, concurrentReplay.duplicate].sort(), [false, true]);
+    assert.equal(first.assigned_to, viewerA);
+    assert.equal(first.review_id, review.id);
+    assert.equal(first.status, "open");
+    assert.equal(first.created_by, brokerA);
+    await assert.rejects(createTask(pool, orgA, brokerA, key, { ...payload, title: "Changed request" }), error => error.code === "23505");
+    const createdEvents = await pool.query("select event_type, actor_user_id, organization_id from public.brokerflow_follow_up_task_events where task_id=$1 order by created_at", [first.id]);
+    assert.deepEqual(createdEvents.rows, [{ event_type: "task_created", actor_user_id: brokerA, organization_id: orgA }]);
+
+    const completionKey = `task-complete-${randomUUID()}`;
+    const [completed, completionReplay] = await Promise.all([
+      completeTask(pool, orgA, first.id, brokerA, completionKey),
+      completeTask(pool, orgA, first.id, brokerA, completionKey)
+    ]);
+    assert.equal(completed.status, "completed");
+    assert.equal(completionReplay.status, "completed");
+    assert.deepEqual([completed.duplicate, completionReplay.duplicate].sort(), [false, true]);
+    assert.equal(completed.completed_by, brokerA);
+    assert.ok(completed.completed_at);
+    await assert.rejects(completeTask(pool, orgA, first.id, brokerA, `other-completion-${randomUUID()}`), error => error.code === "40001");
+    const taskEvents = await pool.query("select event_type, actor_user_id, organization_id from public.brokerflow_follow_up_task_events where task_id=$1 order by created_at", [first.id]);
+    assert.deepEqual(taskEvents.rows, [
+      { event_type: "task_created", actor_user_id: brokerA, organization_id: orgA },
+      { event_type: "task_completed", actor_user_id: brokerA, organization_id: orgA }
+    ]);
+    await assert.rejects(createTask(pool, orgA, brokerA, `task-cross-owner-${randomUUID()}`, { ...payload, assigned_to: brokerB }), error => error.code === "23503");
+    const reviewB = await createReview(pool, orgB, brokerB, `task-review-b-${randomUUID()}`);
+    await assert.rejects(createTask(pool, orgA, brokerA, `task-cross-review-${randomUUID()}`, { ...payload, review_id: reviewB.id }), error => error.code === "23503");
+    await assert.rejects(completeTask(pool, orgA, first.id, brokerB, `task-cross-complete-${randomUUID()}`), error => error.code === "42501");
+  });
+
+  await t.test("task and task-event writes roll back together when audit insertion fails", async () => {
+    const client = await pool.connect();
+    const key = `task-rollback-${randomUUID()}`;
+    try {
+      await client.query(`create function app_private.reject_test_task_event() returns trigger language plpgsql as $$ begin if current_setting('brokerflow_test.fail_task_event', true) = 'on' then raise exception 'synthetic task event failure'; end if; return new; end $$`);
+      await client.query("create trigger reject_test_task_event before insert on public.brokerflow_follow_up_task_events for each row execute function app_private.reject_test_task_event()");
+      await client.query("begin");
+      await client.query("select set_config('brokerflow_test.fail_task_event','on',true)");
+      await assert.rejects(createTask(client, orgA, brokerA, key, { title: "Synthetic rollback task", task_type: "other" }), /synthetic task event failure/);
+      await client.query("rollback");
+      const absent = await pool.query("select count(*)::int as count from public.brokerflow_follow_up_tasks where organization_id=$1 and created_by=$2 and create_idempotency_hash=encode(sha256(convert_to($3,'UTF8')),'hex')", [orgA, brokerA, key]);
+      assert.equal(absent.rows[0].count, 0);
+    } finally {
+      await client.query("rollback").catch(() => {});
+      await client.query("drop trigger if exists reject_test_task_event on public.brokerflow_follow_up_task_events");
+      await client.query("drop function if exists app_private.reject_test_task_event()");
+      client.release();
+    }
   });
 
   await t.test("trusted integration intake is organization-bound and immediately visible in the human review queue", async () => {
@@ -282,6 +375,46 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
     }
   });
 
+  await t.test("task tables and transactional task RPCs keep least-privilege grants", async () => {
+    for (const role of ["anon", "authenticated"]) {
+      const privileges = await pool.query(`
+        select has_table_privilege($1,'public.brokerflow_follow_up_tasks','SELECT') as can_read_tasks,
+               has_table_privilege($1,'public.brokerflow_follow_up_tasks','INSERT') as can_insert_tasks,
+               has_table_privilege($1,'public.brokerflow_follow_up_tasks','UPDATE') as can_update_tasks,
+               has_table_privilege($1,'public.brokerflow_follow_up_task_events','SELECT') as can_read_events,
+               has_table_privilege($1,'public.brokerflow_follow_up_task_events','INSERT') as can_insert_events,
+               has_function_privilege($1,'public.brokerflow_create_follow_up_task(uuid,uuid,text,jsonb)','EXECUTE') as can_create,
+               has_function_privilege($1,'public.brokerflow_complete_follow_up_task(uuid,uuid,uuid,text)','EXECUTE') as can_complete`, [role]);
+      assert.deepEqual(privileges.rows[0], { can_read_tasks: false, can_insert_tasks: false, can_update_tasks: false, can_read_events: false, can_insert_events: false, can_create: false, can_complete: false });
+    }
+    const service = await pool.query(`
+      select has_table_privilege('service_role','public.brokerflow_follow_up_tasks','SELECT') as can_read_tasks,
+             has_table_privilege('service_role','public.brokerflow_follow_up_tasks','INSERT') as can_insert_tasks,
+             has_table_privilege('service_role','public.brokerflow_follow_up_tasks','UPDATE') as can_update_tasks,
+             has_table_privilege('service_role','public.brokerflow_follow_up_task_events','SELECT') as can_read_events,
+             has_table_privilege('service_role','public.brokerflow_follow_up_task_events','INSERT') as can_insert_events,
+             has_function_privilege('service_role','public.brokerflow_create_follow_up_task(uuid,uuid,text,jsonb)','EXECUTE') as can_create,
+             has_function_privilege('service_role','public.brokerflow_complete_follow_up_task(uuid,uuid,uuid,text)','EXECUTE') as can_complete,
+             (select prosecdef from pg_proc where oid='public.brokerflow_create_follow_up_task(uuid,uuid,text,jsonb)'::regprocedure) as create_is_definer,
+             (select prosecdef from pg_proc where oid='public.brokerflow_complete_follow_up_task(uuid,uuid,uuid,text)'::regprocedure) as complete_is_definer`);
+    assert.deepEqual(service.rows[0], { can_read_tasks: true, can_insert_tasks: false, can_update_tasks: false, can_read_events: true, can_insert_events: false, can_create: true, can_complete: true, create_is_definer: true, complete_is_definer: true });
+    const client = await pool.connect();
+    try {
+      for (const role of ["anon", "authenticated"]) {
+        await client.query("reset role");
+        await client.query(`set role ${role}`);
+        await assert.rejects(client.query("select * from public.brokerflow_follow_up_tasks limit 1"), error => error.code === "42501");
+        await assert.rejects(client.query("select * from public.brokerflow_follow_up_task_events limit 1"), error => error.code === "42501");
+        await assert.rejects(client.query("select public.brokerflow_create_follow_up_task($1,$2,$3,$4::jsonb)", [orgA, brokerA, randomUUID(), JSON.stringify({ title: "Denied", task_type: "other" })]), error => error.code === "42501");
+        await assert.rejects(client.query("select public.brokerflow_complete_follow_up_task($1,$2,$3,$4)", [orgA, randomUUID(), brokerA, randomUUID()]), error => error.code === "42501");
+      }
+      await client.query("reset role");
+    } finally {
+      await client.query("reset role");
+      client.release();
+    }
+  });
+
   await t.test("synthetic platform-core membership policies and RPC organization predicates stay scoped", async () => {
     const client = await pool.connect();
     try {
@@ -305,6 +438,6 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
     const organizationAReviews = await pool.query("select count(*)::int as count from public.brokerflow_review_requests where organization_id=$1", [orgA]);
     const organizationBReviews = await pool.query("select count(*)::int as count from public.brokerflow_review_requests where organization_id=$1", [orgB]);
     assert.ok(organizationAReviews.rows[0].count > 0);
-    assert.equal(organizationBReviews.rows[0].count, 1);
+    assert.equal(organizationBReviews.rows[0].count, 2);
   });
 });

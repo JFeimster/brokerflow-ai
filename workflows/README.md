@@ -120,6 +120,7 @@ The full safety contract in `../actions/no-auth/actions-no-auth-risk-guardrails.
 
 ## 🔗 Related
 
+- Daily authenticated review queue digest (draft-only, organization-scoped) → [`daily_review_queue_digest.md`](daily_review_queue_digest.md)
 - Actions that trigger these → `../actions/README.md`
 - Schemas for the triggers → `../schemas/README.md`
 - Operating procedures → `../sops/README.md`

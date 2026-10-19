@@ -61,14 +61,14 @@ test("protected resource metadata advertises only the configured Supabase author
   });
 });
 
-test("MCP handshake and tools/list expose exactly six typed, annotated tools", async t => {
+test("MCP handshake and tools/list expose ten typed, annotated tools", async t => {
   const server = createMcpServer({ authenticateMcp: async () => makeContext() });
   const client = new Client({ name: "test-client", version: "1.0.0" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   t.after(async () => { await client.close(); await server.close(); });
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
   const tools = await client.listTools();
-  assert.deepEqual(tools.tools.map(tool => tool.name).sort(), ["apply_review_action", "create_review_request", "get_my_workspaces", "get_review", "get_review_activity", "list_reviews"].sort());
+  assert.deepEqual(tools.tools.map(tool => tool.name).sort(), ["apply_review_action", "complete_follow_up_task", "create_follow_up_task", "create_review_request", "get_my_workspaces", "get_review", "get_review_activity", "get_review_queue_summary", "list_follow_up_tasks", "list_reviews"].sort());
   const createTool = tools.tools.find(tool => tool.name === "create_review_request");
   assert.equal(createTool.annotations.readOnlyHint, false);
   assert.equal(createTool.inputSchema.properties.organization_id.format, "uuid");
@@ -78,6 +78,16 @@ test("MCP handshake and tools/list expose exactly six typed, annotated tools", a
   assert.equal(actionTool.annotations.destructiveHint, true, "review transitions must require host-side confirmation safeguards");
   assert.deepEqual(actionTool.inputSchema.properties.action.enum, ["start_review", "request_information", "mark_reviewed"]);
   assert.match(actionTool.description, /does not approve, decline, qualify, underwrite, price, fund, or submit/i);
+  const summaryTool = tools.tools.find(tool => tool.name === "get_review_queue_summary");
+  assert.equal(summaryTool.annotations.readOnlyHint, true);
+  const createTaskTool = tools.tools.find(tool => tool.name === "create_follow_up_task");
+  assert.equal(createTaskTool.annotations.readOnlyHint, false);
+  assert.equal(createTaskTool.annotations.idempotentHint, true);
+  assert.equal(createTaskTool.inputSchema.properties.task_type.enum.includes("request_information"), true);
+  assert.equal(tools.tools.find(tool => tool.name === "list_follow_up_tasks").annotations.readOnlyHint, true);
+  assert.equal(tools.tools.find(tool => tool.name === "complete_follow_up_task").annotations.idempotentHint, true);
+  assert.equal(tools.tools.find(tool => tool.name === "complete_follow_up_task").annotations.destructiveHint, true, "final task completion must retain MCP host confirmation safeguards");
+  assert.match(tools.tools.find(tool => tool.name === "complete_follow_up_task").description, /does not send a message or update an external CRM/i);
 });
 
 test("stateless Streamable HTTP endpoint completes initialize and tools/list without a session", async t => {
@@ -99,7 +109,7 @@ test("stateless Streamable HTTP endpoint completes initialize and tools/list wit
   t.after(async () => { await client.close(); await new Promise(resolve => httpServer.close(resolve)); });
   await client.connect(transport);
   const response = await client.listTools();
-  assert.equal(response.tools.length, 6);
+  assert.equal(response.tools.length, 10);
   const workspaces = await client.callTool({ name: "get_my_workspaces", arguments: {} });
   assert.equal(workspaces.structuredContent.workspaces[0].id, org);
   assert.ok(authentications >= 1);
@@ -158,6 +168,50 @@ test("apply_review_action enforces organization write permission, delegates vers
   assert.ok(calls.filter(call => call[0] === "rate-limit").length >= 4);
 });
 
+test("follow-up task MCP tools require organization permissions, rate-limit writes, and list scoped tasks", async t => {
+  const calls = [];
+  const task = { id: review, organization_id: org, review_id: review, assigned_to: "00000000-0000-4000-8000-000000000003", task_type: "call", title: "Prepare broker call", description: "", due_date: "2026-10-25", status: "open", created_by: "user-1", created_at: "2026-10-19T12:00:00.000Z", completed_by: null, completed_at: null, duplicate: false };
+  const context = makeContext({ user: { id: "00000000-0000-4000-8000-000000000099" }, db: { from(table) {
+    assert.equal(table, "brokerflow_follow_up_tasks");
+    const query = { select(columns, options) { calls.push(["select", columns, options]); return this; }, eq(key, value) { calls.push(["eq", key, value]); return this; }, lte(key, value) { calls.push(["lte", key, value]); return this; }, order() { return this; }, range(start, end) { calls.push(["range", start, end]); return this; }, then(resolve) { return Promise.resolve({ data: [task], count: 1, error: null }).then(resolve); } };
+    return query;
+  } } });
+  const server = createMcpServer({
+    authenticateMcp: async () => context,
+    rateLimit: async (...args) => calls.push(["rate-limit", ...args.slice(1)]),
+    createTask: async (_context, organizationId, input, actorId) => { calls.push(["create-task", organizationId, input, actorId]); return task; },
+    completeTask: async (_context, organizationId, taskId, key, actorId) => { calls.push(["complete-task", organizationId, taskId, key, actorId]); return { ...task, status: "completed", completed_by: actorId, completed_at: "2026-10-19T13:00:00.000Z" }; },
+  });
+  const client = new Client({ name: "follow-up-task-test-client", version: "1.0.0" });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  t.after(async () => { await client.close(); await server.close(); });
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+  const args = { organization_id: org, idempotency_key: "synthetic-mcp-task-key-001", title: task.title, task_type: task.task_type, assigned_to: task.assigned_to, review_id: review, due_date: task.due_date };
+  const created = await client.callTool({ name: "create_follow_up_task", arguments: args });
+  assert.equal(created.structuredContent.id, review);
+  assert.equal(calls.find(item => item[0] === "create-task")[3], "00000000-0000-4000-8000-000000000099");
+  assert.ok(calls.some(item => item[0] === "rate-limit" && item[1] === "review_create"));
+  const listed = await client.callTool({ name: "list_follow_up_tasks", arguments: { organization_id: org, status: "open", assigned_to: task.assigned_to, due_before: task.due_date } });
+  assert.equal(listed.structuredContent.items[0].assigned_to, task.assigned_to);
+  assert.ok(calls.some(item => item[0] === "eq" && item[1] === "organization_id" && item[2] === org));
+  assert.ok(calls.some(item => item[0] === "lte" && item[1] === "due_date" && item[2] === task.due_date));
+  const completed = await client.callTool({ name: "complete_follow_up_task", arguments: { organization_id: org, task_id: review, idempotency_key: "synthetic-mcp-complete-001" } });
+  assert.equal(completed.structuredContent.status, "completed");
+  assert.ok(calls.some(item => item[0] === "rate-limit" && item[1] === "review_action"));
+
+  const writesBeforeDenied = calls.filter(item => item[0] === "create-task").length;
+  context.workspaces = [{ ...workspace, canWrite: false }];
+  const denied = await client.callTool({ name: "create_follow_up_task", arguments: { ...args, idempotency_key: "synthetic-readonly-task-001" } });
+  assert.equal(denied.structuredContent.status, 403);
+  assert.equal(calls.filter(item => item[0] === "create-task").length, writesBeforeDenied);
+  context.workspaces = [];
+  const crossTenant = await client.callTool({ name: "list_follow_up_tasks", arguments: { organization_id: org } });
+  assert.equal(crossTenant.structuredContent.status, 403);
+  const summaryDenied = await client.callTool({ name: "get_review_queue_summary", arguments: { organization_id: org } });
+  assert.equal(summaryDenied.structuredContent.status, 403);
+});
+
 test("Vercel MCP route challenges missing tokens and keeps the canonical URL rewrites", async () => {
   const headers = {};
   const response = {
@@ -176,15 +230,16 @@ test("Vercel MCP route challenges missing tokens and keeps the canonical URL rew
   assert.ok(config.rewrites.some(route => route.source === "/oauth/consent" && route.destination === "/oauth-consent"));
 });
 
-test("private plugin package declares the HTTPS MCP endpoint and all three included workflow skills", async () => {
+test("private plugin package declares the HTTPS MCP endpoint and all five included workflow skills", async () => {
   const manifest = JSON.parse(await readFile(new URL("../plugin/plugin.json", import.meta.url), "utf8"));
   const mcp = JSON.parse(await readFile(new URL("../plugin/mcp.json", import.meta.url), "utf8"));
   assert.equal(manifest.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
+  assert.equal(manifest.version, "1.1.0");
   assert.match(manifest.name, /^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/);
   assert.equal(mcp.servers.brokerflow.type, "streamable-http");
   assert.equal(mcp.servers.brokerflow.url, "https://brokerflow-ai.vercel.app/mcp");
   const skills = manifest.extensions["com.openai.chatgpt"].skills;
-  assert.equal(skills.length, 3);
+  assert.equal(skills.length, 5);
   for (const skill of skills) await readFile(new URL(`../plugin/${skill.slice(2)}`, import.meta.url), "utf8");
   const evaluations = JSON.parse(await readFile(new URL("../plugin/evals/tool-selection-cases.json", import.meta.url), "utf8"));
   assert.ok(evaluations.some(item => item.expected_tool.startsWith("refuse_")));

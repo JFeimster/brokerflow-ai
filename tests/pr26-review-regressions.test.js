@@ -334,14 +334,14 @@ test("append failures preserve previously loaded review pages and allow retry", 
     const updated = [];
     const liveState = { update(resource, result) { updated.push(result.source); } };
     const window = { BrokerFlowData: { get: request } };
-    ${functionSource}
+    ${source.slice(start, end)}
     await loadReviewPage("100", true);
     const failure = { rows: datasets.reviews.map(x => x.id), error: reviewAppendError, cursor: reviewNextCursor, updated: [...updated], loading: reviewPageLoading };
     await loadReviewPage("100", true);
     return { failure, rows: datasets.reviews.map(x => x.id), error: reviewAppendError, cursor: reviewNextCursor, updated };
   })()
   `;
-  const output = await vm.runInNewContext(script.replace("${functionSource}", source.slice(start, end)), { request });
+  const output = await vm.runInNewContext(script, { request });
   assert.deepEqual(Array.from(output.failure.rows), ["review-1"]);
   assert.equal(output.failure.error, "Temporary outage");
   assert.equal(output.failure.cursor, "100");
@@ -352,16 +352,16 @@ test("append failures preserve previously loaded review pages and allow retry", 
   assert.equal(output.cursor, null);
   assert.deepEqual(Array.from(output.updated), ["live"]);
   assert.match(source, /const paginationError = live && reviewAppendError/);
-  assert.match(source, /${pagination}${paginationError}/);
+  assert.ok(source.includes("${pagination}${paginationError}"));
 });
 
 test("OpenAPI credit score range enum values are quoted YAML strings", () => {
   const schema = read("../schemas/brokerflow-review-ingestion.schema.yaml");
-  const match = schema.match(/credit_score_range:s*
-s*type: strings*
-s*enum: [([^]]+)]/);
-  assert.ok(match, "credit score range string enum must be present");
+  const start = schema.indexOf("credit_score_range:");
+  const end = schema.indexOf("monthly_revenue:", start);
+  assert.ok(start >= 0 && end > start, "credit score range enum must be present");
+  const section = schema.slice(start, end);
   for (const range of ["580_619", "620_659", "660_699", "700_739"]) {
-    assert.ok(match[1].includes('"' + range + '"'), "YAML numeric-looking value " + range + " must remain a quoted string");
+    assert.ok(section.includes('"' + range + '"'), "YAML numeric-looking value " + range + " must remain a quoted string");
   }
 });

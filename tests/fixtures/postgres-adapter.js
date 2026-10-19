@@ -11,8 +11,11 @@ export function postgresAdapter(pool) {
       await client.query("set role service_role");
       return await client.query(sql, values);
     } finally {
-      await client.query("reset role");
-      client.release();
+      try {
+        await client.query("reset role");
+      } finally {
+        client.release();
+      }
     }
   }
   return {

@@ -72,7 +72,7 @@ components:
         human_review_required: { const: true }
         credit_score_range:
           type: string
-          enum: [unknown, below_580, 580_619, 620_659, 660_699, 700_739, 740_plus]
+          enum: [unknown, below_580, "580_619", "620_659", "660_699", "700_739", 740_plus]
         monthly_revenue: { type: number, minimum: 0 }
         annual_revenue: { type: number, minimum: 0 }
         time_in_business_months: { type: integer, minimum: 0 }

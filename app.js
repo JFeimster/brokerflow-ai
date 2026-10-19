@@ -25,6 +25,7 @@
   let reviewNextCursor = null;
   let reviewTotalCount = 0;
   let reviewPageLoading = false;
+  let reviewAppendError = "";
   const money = value => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   function routeFromPath() { const route = location.pathname.replace(/^\/app\/?/, "").replace(/\/$/, ""); return titles[route] ? route : "dashboard"; }
@@ -56,13 +57,18 @@
     reviewLoadingGeneration = generation;
     const result = await window.BrokerFlowData.get("reviews", { cursor, priority: reviewFilter, search: reviewSearch });
     if (generation !== reviewQueryGeneration) return;
-    liveState.update("reviews", result);
     if (result.source === "live-error") {
-      if (!append) datasets.reviews = [];
+      if (append) reviewAppendError = result.error?.message || "Additional reviews could not be loaded.";
+      else {
+        liveState.update("reviews", result);
+        datasets.reviews = [];
+      }
       reviewPageLoading = false;
       reviewLoadingGeneration = null;
       return;
     }
+    reviewAppendError = "";
+    liveState.update("reviews", result);
     if (result.source === "live") {
       const rows = result.data || [];
       datasets.reviews = append ? [...datasets.reviews, ...rows.filter(row => !datasets.reviews.some(existing => existing.id === row.id))] : rows;
@@ -101,6 +107,7 @@
       liveReviewCounts = null;
       reviewNextCursor = null;
       reviewTotalCount = 0;
+      reviewAppendError = "";
       reviewQueryKey = null;
       reviewQueryGeneration++;
       return;
@@ -116,6 +123,7 @@
     if (refresh || reviewQueryKey !== queryKey) {
       reviewQueryKey = queryKey;
       reviewQueryGeneration++;
+      reviewAppendError = "";
       reviewNextCursor = null;
       reviewTotalCount = 0;
       liveReviewCounts = null;
@@ -185,8 +193,9 @@
     const canWrite = live && liveState.canWrite(window.BrokerFlowSession?.workspace);
     const summary = live && window.BrokerFlowSession?.workspace ? `<div class="queue-summary"><div><strong>${liveReviewCounts?.open??"—"}</strong><small>Open reviews</small></div><div><strong>${liveReviewCounts?.high_priority??"—"}</strong><small>High priority</small></div><div><strong>${liveReviewCounts?.reviewed??"—"}</strong><small>Reviewed</small></div><div class="summary-note">Live organization data</div></div>` : `<div class="queue-summary"><div><span class="summary-dot high-dot"></span><strong>${highCount}</strong><small>High priority</small></div><div><span class="summary-dot normal-dot"></span><strong>${standardCount}</strong><small>Standard review</small></div><div><span class="summary-dot done-dot"></span><strong>${doneCount}</strong><small>Completed today</small></div><div class="summary-note">All records on this page are illustrative sample data.</div></div>`;
     const pagination = live && reviewNextCursor !== null ? `<div class="table-bottom"><span>Showing ${datasets.reviews.length} of ${reviewTotalCount} matching reviews</span><button class="button button-quiet" data-action="load-more-reviews" ${reviewPageLoading ? "disabled" : ""}>${reviewPageLoading ? "Loading…" : "Load more reviews"}</button></div>` : live && window.BrokerFlowSession?.workspace ? `<div class="table-bottom"><span>Showing ${datasets.reviews.length} of ${reviewTotalCount} matching reviews</span></div>` : "";
+    const paginationError = live && reviewAppendError && window.BrokerFlowSession?.workspace ? `<p class="page-footnote" role="alert">Could not load more reviews: ${esc(reviewAppendError)}. The reviews already loaded remain available; retry Load more reviews.</p>` : "";
     const headingActions = live ? `${canWrite ? `<button class="button button-primary" data-action="new-review">＋ <span>New review</span></button>` : ""}<button class="button button-quiet" data-action="refresh">↻ <span>Refresh</span></button>` : `<button class="button button-quiet" data-action="refresh">↻ <span>Refresh</span></button>`;
-    return `${pageHeading(live ? "LIVE BROKER WORKSPACE" : "BROKER WORKSPACE", "Review queue", "These are operational review statuses. Lending decisions remain with your team.", headingActions)}${summary}<div class="toolbar"><div class="filter-tabs" role="tablist" aria-label="Filter review items">${["All items", "High", "Normal", "Low"].map(label => `<button role="tab" aria-selected="${reviewFilter === label}" class="filter-tab ${reviewFilter === label ? "selected" : ""}" data-review-filter="${label}">${label}</button>`).join("")}</div><label class="search-field"><span>⌕</span><input type="search" placeholder="Search queue" value="${esc(reviewSearch)}" data-local-search="review" aria-label="Search queue" maxlength="80" /></label></div><div class="review-list">${live && !window.BrokerFlowSession?.workspace ? `<div class="empty-state">Choose an authorized organization to view its review queue.</div>` : live && liveState.get("reviews") ? `<div class="empty-state" role="alert">Live review data could not be loaded. ${esc(liveState.get("reviews"))}</div>` : rows}${pagination}</div><p class="page-footnote">Review tools organize supplied information. They do not establish borrower eligibility, approval, or funding.</p>`;
+    return `${pageHeading(live ? "LIVE BROKER WORKSPACE" : "BROKER WORKSPACE", "Review queue", "These are operational review statuses. Lending decisions remain with your team.", headingActions)}${summary}<div class="toolbar"><div class="filter-tabs" role="tablist" aria-label="Filter review items">${["All items", "High", "Normal", "Low"].map(label => `<button role="tab" aria-selected="${reviewFilter === label}" class="filter-tab ${reviewFilter === label ? "selected" : ""}" data-review-filter="${label}">${label}</button>`).join("")}</div><label class="search-field"><span>⌕</span><input type="search" placeholder="Search queue" value="${esc(reviewSearch)}" data-local-search="review" aria-label="Search queue" maxlength="80" /></label></div><div class="review-list">${live && !window.BrokerFlowSession?.workspace ? `<div class="empty-state">Choose an authorized organization to view its review queue.</div>` : live && liveState.get("reviews") ? `<div class="empty-state" role="alert">Live review data could not be loaded. ${esc(liveState.get("reviews"))}</div>` : rows}${pagination}${paginationError}</div><p class="page-footnote">Review tools organize supplied information. They do not establish borrower eligibility, approval, or funding.</p>`;
   }
   function dealsView() {
     const stages = [{ key: "all", label: "All deals" }, { key: "intake", label: "Intake" }, { key: "documents", label: "Documents" }, { key: "review", label: "Review" }, { key: "matching", label: "Lender matching" }];

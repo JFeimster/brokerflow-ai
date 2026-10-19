@@ -1,0 +1,83 @@
+name: Authorized release merge
+
+on:
+  workflow_run:
+    workflows: [BrokerFlow CI]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: brokerflow-authorized-release-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  squash-merge:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_branch, 'codex/authorized-release/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge only the explicitly authorized release PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const sha = run.head_sha;
+            const prs = await github.paginate(github.rest.pulls.list, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${run.head_branch}`,
+              base: 'main',
+            });
+            const pr = prs.find((candidate) => candidate.head.sha === sha);
+            if (!pr) {
+              core.notice('No open main release PR matches this successful CI head SHA.');
+              return;
+            }
+            const labels = pr.labels.map((label) => label.name);
+            if (!labels.includes('release/production-activation')) {
+              core.notice('The release authorization label is absent; leaving the PR open.');
+              return;
+            }
+            const changed = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+            const restricted = changed.filter(({ filename }) =>
+              filename.startsWith('api/') ||
+              filename.startsWith('supabase/') ||
+              filename.startsWith('schemas/') ||
+              filename.startsWith('.github/workflows/') ||
+              /^\.env(?:\.|$)/i.test(filename) ||
+              /(^|\/)(?:billing|payments?)(?:\/|\.|$)/i.test(filename) ||
+              /secret|credential|key[-_]?rotation/i.test(filename)
+            );
+            if (restricted.length) {
+              core.notice(`Explicit owner authorization is required for restricted release paths: ${restricted.map((f) => f.filename).join(', ')}`);
+              return;
+            }
+            const head = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+            if (head.data.head.sha !== sha) {
+              core.notice('The PR head changed after CI; waiting for validation of the new SHA.');
+              return;
+            }
+            const result = await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              merge_method: 'squash',
+              sha,
+            });
+            core.notice(`Squash-merged authorized release PR #${pr.number} at ${result.data.sha}.`);

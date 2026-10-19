@@ -4,6 +4,8 @@ import { join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import yazl from "yazl";
 
+await import("./validate-plugin-assets.js");
+
 const root = resolve(fileURLToPath(new URL("../plugin/", import.meta.url)));
 const output = resolve(process.argv[2] || "dist/BrokerFlow-Private-Plugin.zip");
 

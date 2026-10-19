@@ -30,6 +30,7 @@
     "build": "node scripts/check-js.js && node -e \"JSON.parse(require('fs').readFileSync('vercel.json', 'utf8')); JSON.parse(require('fs').readFileSync('plugin/plugin.json', 'utf8'))\"",
     "preview": "serve .",
     "package:plugin": "node scripts/package-private-plugin.js",
+    "validate:plugin": "node scripts/validate-plugin-assets.js",
     "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
     "lint": "node scripts/check-js.js",
     "test": "node scripts/run-tests.js",

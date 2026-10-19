@@ -29,7 +29,7 @@ The 12 partner lifecycle Actions have a consolidated endpoint and operation map 
 
 ### Automation boundary
 
-The lender-fit routing action is automation-first: it can score/rank a scenario, select a route, create queue/workflow payloads, send alerts, and trigger downstream automation.
+The legacy REST lender-fit routing Action retains its existing automation response contract. The new MCP `route_lender_fit` tool uses the shared deterministic calculation without triggering outbound effects. Internal scores remain heuristics, not underwriting or current lender offers.
 
 Human review should only block final regulated steps: approval, denial, underwriting, formal pricing, funding, or lender submission. The lender-match review action exists for cases where a manual queue is required.
 
@@ -94,7 +94,7 @@ Every page composes from this section order (omit sections that do not apply):
 Proprietary / UNLICENSED. © Moonshine Capital / Distilled Funding. Internal and partner use only.
 ## Authenticated MCP and private plugin
 
-BrokerFlow now includes a stateless Streamable HTTP MCP foundation at `/mcp`, backed by authenticated review queue and follow-up task services, plus a portable private plugin package under [`plugin/`](plugin/). The MCP path is fail-closed until owner-authorized Supabase OAuth 2.1 setup is complete. See [`docs/MCP_ARCHITECTURE.md`](docs/MCP_ARCHITECTURE.md), [`docs/MCP_OAUTH_SETUP.md`](docs/MCP_OAUTH_SETUP.md), and [`docs/MCP_RELEASE_CHECKLIST.md`](docs/MCP_RELEASE_CHECKLIST.md). Build a Plugin Creator-ready ZIP with `npm run package:plugin`; it is not connected until a real authenticated MCP request is confirmed.
+BrokerFlow includes a stateless Streamable HTTP MCP endpoint at `/mcp`, authenticated review and follow-up services, and a portable private plugin package under [`plugin/`](plugin/). The MCP path fails closed until owner-authorized Supabase OAuth 2.1 setup is complete. See [`docs/MCP_ARCHITECTURE.md`](docs/MCP_ARCHITECTURE.md), [`docs/MCP_OAUTH_SETUP.md`](docs/MCP_OAUTH_SETUP.md), and [`docs/MCP_RELEASE_CHECKLIST.md`](docs/MCP_RELEASE_CHECKLIST.md). Build a validated Plugin Creator-ready ZIP with `npm run package:plugin`; packaging is not installation or live-authentication proof.
 
 The server registers seventeen tools, including the seven core operations: `capture_borrower_intake`, `route_lender_fit`, `request_lender_match_review`, `generate_document_checklist`, `trigger_missing_document_request`, `lookup_deal_status`, and `capture_partner_referral`. New writes require explicit confirmation; routing/checklists are preliminary and document follow-up stops at a tracked draft/internal task. Canonical platform-core leads, referrals and audit events are reused. The additive core-workflows migration remains separate from code release. See the [inspection inventory](docs/MCP_CORE_BUILD_INVENTORY.md), [tool catalog](docs/MCP_TOOL_CATALOG.md), and [synthetic examples](docs/MCP_CORE_TOOL_EXAMPLES.md).
 

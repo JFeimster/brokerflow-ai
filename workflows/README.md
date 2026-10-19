@@ -1,5 +1,7 @@
 # Workflows
 
+The n8n exports under [`n8n/`](n8n/README.md) are disabled, authenticated preview starters. They validate required field presence and return a minimal preview response. They do not access BrokerFlow storage, create CRM records, send messages, or submit applications. Configure a protected n8n credential before using a preview webhook; add a separately authorized adapter only after reviewing its data and side effects.
+
 This folder documents the **automation workflows** that the Loan Broker Automation Architect GPT (BrokerFlow AI) triggers and supports. A workflow is the logic that runs *after* a GPT Action fires — the n8n, Zapier, or Make automation that receives a webhook, processes the data, and routes it through your business.
 
 Where `/actions` defines what the GPT *sends*, `/workflows` defines what *happens next*: create the record, notify the broker, request documents, schedule reminders, and — critically — route every funding decision to a human.
@@ -8,7 +10,7 @@ Where `/actions` defines what the GPT *sends*, `/workflows` defines what *happen
 
 ## 📌 The Core Pattern
 
-Every workflow follows the same backbone:
+Documented workflow patterns describe possible integration designs. The checked-in n8n exports are preview-only; they do not implement this full pattern. Any live integration must be separately configured, authenticated, tested, and authorized:
 
     GPT Action (webhook)
       → Workflow receives payload
@@ -18,7 +20,7 @@ Every workflow follows the same backbone:
       → Flag human review where needed
       → Return a clear status to the GPT
 
-The GPT captures and routes. The workflow executes safe steps. A human makes funding decisions.
+Configured integrations can execute explicitly reviewed operational steps. The checked-in n8n previews only validate and respond; they perform no persistence or external communication. A human makes funding decisions.
 
 ---
 
@@ -100,7 +102,7 @@ Note the deliberate review gates: `ready_for_broker_review` and `lender_submissi
 | **Zapier** | Easiest to start, huge app library | Cost rises with volume |
 | **Make** | Visual, powerful branching, good value | Steeper learning curve |
 
-All three accept the no-auth webhook pattern. Start with whichever you already use.
+All three support webhook integrations, but authentication, storage, retention and side effects depend on the configured workflow. Use no-auth receivers only for intentionally public, minimized payloads; the checked-in n8n preview starters require a protected header credential.
 
 ---
 

@@ -15,6 +15,6 @@
 - [ ] Confirm new deal/request tables have RLS, no anon/authenticated direct access, service-only RPCs and current organization permission checks.
 - [ ] Verify the complete synthetic workflow through an actual private-plugin OAuth connection: capture intake → preliminary routing → linked human review → checklist → tracked missing-document task/draft → refreshed deal status → related referral attribution. Retain IDs and sanitized outcomes.
 - [ ] Test retry/conflict, viewer denial, foreign-organization denial, empty states and `delivery_status=not_sent` in that approved workspace.
-- [ ] Refresh/install private package version 1.2.0 with all ten skills. Preserve existing plugin identity, MCP resource audience, OAuth client allowlist, deployment protection and sharing scope.
+- [ ] Refresh/install private package version 1.3.0 with all ten skills, references, templates and evaluation cases. Preserve existing plugin identity, MCP resource audience, OAuth client allowlist, deployment protection and sharing scope.
 
 Single consolidated owner authorization for activation: approve the reviewed PR release, additive migration on the explicitly selected shared environment, any necessary environment-scoped OAuth configuration, and private-plugin refresh/synthetic live test. CI and the PR make none of those shared changes automatically. The implementation assignment authorizes code, isolated test data, CI and Preview validation; it is not production activation.

@@ -31,8 +31,22 @@ test("portable plugin contains ten correctly named skills and evaluation cases m
   const cases = JSON.parse(
     await readFile(new URL("evals/core-workflow-cases.json", root), "utf8"),
   );
+  const catalog = JSON.parse(
+    await readFile(new URL("evals/registered-tool-cases.json", root), "utf8"),
+  );
+  const selectionCases = JSON.parse(
+    await readFile(new URL("evals/tool-selection-cases.json", root), "utf8"),
+  );
   const client = await clientFor(t);
   const { tools } = await client.listTools();
+  const registeredNames = [...catalog.legacy_tools, ...catalog.core_tools].sort();
+  assert.equal(tools.length, catalog.expected_tool_count);
+  assert.deepEqual(tools.map((tool) => tool.name).sort(), registeredNames);
+  assert.equal(selectionCases.length, registeredNames.length);
+  assert.deepEqual(
+    selectionCases.map((item) => item.expected_tool).sort(),
+    registeredNames,
+  );
   assert.deepEqual(
     cases.map((item) => item.tool).sort(),
     [...coreNames].sort(),
@@ -45,4 +59,20 @@ test("portable plugin contains ten correctly named skills and evaluation cases m
   }
   assert.match(combined, /not_sent/);
   assert.match(combined, /not.*underwriting/i);
+});
+
+test("n8n workflow exports stay disabled and use protected preview webhooks", async () => {
+  const { readdir } = await import("node:fs/promises");
+  const directory = new URL("../../workflows/n8n/", import.meta.url);
+  const files = (await readdir(directory)).filter((file) => file.endsWith(".n8n.json"));
+  assert.equal(files.length, 6);
+  for (const file of files) {
+    const workflow = JSON.parse(await readFile(new URL(file, directory), "utf8"));
+    assert.notEqual(workflow.active, true, file);
+    if (file !== "no-auth-lender-match-review.n8n.json") {
+      const webhook = workflow.nodes.find((node) => node.type === "n8n-nodes-base.webhook");
+      assert.equal(webhook.parameters.authentication, "headerAuth", file);
+      assert.match(workflow.nodes.find((node) => node.type === "n8n-nodes-base.code").parameters.jsCode, /preview_only/);
+    }
+  }
 });

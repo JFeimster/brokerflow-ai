@@ -234,15 +234,15 @@ test("private plugin package declares the HTTPS MCP endpoint and all ten include
   const manifest = JSON.parse(await readFile(new URL("../plugin/plugin.json", import.meta.url), "utf8"));
   const mcp = JSON.parse(await readFile(new URL("../plugin/mcp.json", import.meta.url), "utf8"));
   assert.equal(manifest.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
-  assert.equal(manifest.version, "1.2.0");
+  assert.equal(manifest.version, "1.3.0");
   assert.match(manifest.name, /^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/);
   assert.equal(mcp.servers.brokerflow.type, "streamable-http");
   assert.equal(mcp.servers.brokerflow.url, "https://brokerflow-ai.vercel.app/mcp");
   const skills = manifest.extensions["com.openai.chatgpt"].skills;
   assert.equal(skills.length, 10);
   for (const skill of skills) await readFile(new URL(`../plugin/${skill.slice(2)}`, import.meta.url), "utf8");
-  const evaluations = JSON.parse(await readFile(new URL("../plugin/evals/tool-selection-cases.json", import.meta.url), "utf8"));
-  assert.ok(evaluations.some(item => item.expected_tool.startsWith("refuse_")));
+  const evaluations = JSON.parse(await readFile(new URL("../plugin/evals/security-boundary-cases.json", import.meta.url), "utf8"));
+  assert.ok(evaluations.some(item => /borrower decision/i.test(item.case)));
 });
 
 test("MCP tools enforce tenant and audit permissions and reuse idempotent rate-limited creation", async t => {

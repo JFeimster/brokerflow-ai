@@ -1,0 +1,97 @@
+{
+  "name": "BrokerFlow - Daily Pipeline Summary (Preview Only)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "brokerflow-pipeline-summary-preview",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode"
+      },
+      "id": "brokerflow-preview-webhook-5",
+      "name": "Authenticated Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURE_IN_N8N",
+          "name": "Configure BrokerFlow Workflow Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const input = $input.first().json.body ?? $input.first().json;\nconst required = [\"organization_id\",\"snapshot_generated_at\",\"stage_counts\"];\nconst missing = required.filter((key) => input[key] === undefined || input[key] === null || input[key] === \"\");\nreturn [{ json: {\n  success: missing.length === 0,\n  workflow: \"daily-pipeline-summary.n8n.json\",\n  mode: \"preview_only\",\n  missing_required_fields: missing,\n  next_step: \"Review counts from an authorized source; this template does not read the BrokerFlow database or deliver a digest.\",\n  external_write: \"not_configured\",\n  delivery_status: \"not_sent\"\n} }];"
+      },
+      "id": "brokerflow-preview-code-5",
+      "name": "Validate and Prepare Preview",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "brokerflow-preview-response-5",
+      "name": "Return Preview",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        520,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Authenticated Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate and Prepare Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate and Prepare Preview": {
+      "main": [
+        [
+          {
+            "node": "Return Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "versionId": "e11a9f5b-3d98-4c61-99aa-c37a438f025",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    {
+      "name": "brokerflow"
+    },
+    {
+      "name": "preview-only"
+    }
+  ]
+}

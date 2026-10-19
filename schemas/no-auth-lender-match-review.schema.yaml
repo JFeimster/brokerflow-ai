@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: BrokerFlow AI No-Auth Lender Match Review Action
   version: 1.0.0
-  description: Creates a controlled lender-match review request. This action does not approve, decline, underwrite, price, fund, or submit borrowers.
+  description: Legacy compatibility endpoint. It does not persist a private review record; use the protected BrokerFlow Review Ingestion Action for durable queue creation. This action does not approve, decline, underwrite, price, fund, or submit borrowers.
 servers:
   - url: https://brokerflow-ai.vercel.app
     description: Production Vercel deployment
@@ -12,8 +12,8 @@ paths:
   /api/no-auth/lender-match-review:
     post:
       operationId: requestLenderMatchReview
-      summary: Request lender match review
-      description: Queues a structured funding scenario for manual review when required.
+      summary: Send legacy lender match review request
+      description: Acknowledges a validated request and may forward it to a configured webhook. It does not persist the private review queue.
       tags:
         - No Auth
         - Lender Match Review
@@ -83,7 +83,7 @@ components:
           maxLength: 160
         business_name:
           type: string
-          maxLength: 180
+          maxLength: 160
         email:
           type: string
           format: email
@@ -144,7 +144,7 @@ components:
           description: Optional lightweight shared secret if enabled in Vercel.
     LenderMatchReviewSuccessResponse:
       type: object
-      required: [success, review_request_id, status, message, next_step]
+      required: [success, review_request_id, status, message, next_step, persisted]
       properties:
         success:
           type: boolean
@@ -159,6 +159,9 @@ components:
         next_step:
           type: string
           enum: [manual_review]
+        persisted:
+          type: boolean
+          const: false
     ErrorResponse:
       type: object
       required: [success, error, message]

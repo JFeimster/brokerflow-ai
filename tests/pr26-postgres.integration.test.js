@@ -1,0 +1,267 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import pg from "pg";
+
+const { Pool } = pg;
+const databaseUrl = process.env.DATABASE_URL;
+if (process.env.REQUIRE_POSTGRES_TESTS === "1" && !databaseUrl) {
+  throw new Error("DATABASE_URL is required when REQUIRE_POSTGRES_TESTS=1.");
+}
+const orgA = "20000000-0000-4000-8000-000000000001";
+const orgB = "20000000-0000-4000-8000-000000000002";
+const brokerA = "10000000-0000-4000-8000-000000000001";
+const viewerA = "10000000-0000-4000-8000-000000000002";
+const partnerA = "10000000-0000-4000-8000-000000000003";
+const brokerB = "10000000-0000-4000-8000-000000000004";
+const migrationPath = new URL("../supabase/migrations/20261018000100_brokerflow_reviews.sql", import.meta.url);
+const fixturePath = new URL("../supabase/tests/platform_core_baseline.sql", import.meta.url);
+
+function scenario(overrides = {}) {
+  return {
+    source: "custom_gpt",
+    action_type: "lender_match_review",
+    requester_name: "Synthetic broker intake",
+    borrower_type: "business",
+    business_name: `Synthetic Business ${randomUUID()}`,
+    loan_purpose: "equipment_financing",
+    requested_amount: 125000,
+    state: "NY",
+    urgency: "normal",
+    human_review_required: true,
+    ...overrides
+  };
+}
+
+async function createReview(client, orgId, actorId, key, reviewScenario = scenario()) {
+  const result = await client.query(
+    "select public.brokerflow_create_review($1::uuid,$2::uuid,$3::text,$4::jsonb) as result",
+    [orgId, actorId, key, JSON.stringify(reviewScenario)]
+  );
+  return result.rows[0].result;
+}
+
+async function action(client, orgId, reviewId, actorId, actionName, note, expectedVersion, key) {
+  const nextStatus = { start_review: "in_review", request_information: "needs_information", mark_reviewed: "reviewed" }[actionName];
+  const result = await client.query(
+    "select public.brokerflow_apply_review_action($1::uuid,$2::uuid,$3::uuid,$4::text,$5::text,$6::integer,$7::text,$8::text) as result",
+    [orgId, reviewId, actorId, actionName, note, expectedVersion, key, nextStatus]
+  );
+  return result.rows[0].result;
+}
+
+async function migrationBaselineSnapshot(pool) {
+  const tables = await pool.query(`
+    select c.relname as table_name,
+           json_agg(json_build_array(a.attname, format_type(a.atttypid, a.atttypmod), a.attnotnull) order by a.attnum) as columns
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    join pg_attribute a on a.attrelid = c.oid and a.attnum > 0 and not a.attisdropped
+    where n.nspname = 'public' and c.relkind = 'r'
+    group by c.relname order by c.relname`);
+  const policies = await pool.query("select tablename, policyname, permissive, roles, cmd, qual, with_check from pg_policies where schemaname='public' order by tablename, policyname");
+  return { tables: tables.rows, policies: policies.rows };
+}
+
+test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant scoping", { skip: !databaseUrl }, async t => {
+  const pool = new Pool({ connectionString: databaseUrl, max: 12 });
+  t.after(async () => pool.end());
+  const fixture = await readFile(fixturePath, "utf8");
+  const migration = await readFile(migrationPath, "utf8");
+  await pool.query(fixture);
+  const baseline = await migrationBaselineSnapshot(pool);
+  await pool.query(migration);
+
+  await t.test("migration adds only the two prefixed tables and leaves baseline tables and policies intact", async () => {
+    const after = await migrationBaselineSnapshot(pool);
+    assert.deepEqual(after.tables.filter(row => baseline.tables.some(base => base.table_name === row.table_name)), baseline.tables);
+    assert.deepEqual(after.policies, baseline.policies);
+    assert.deepEqual(after.tables.map(row => row.table_name), [...baseline.tables.map(row => row.table_name), "brokerflow_review_events", "brokerflow_review_requests"].sort());
+    const rls = await pool.query("select relname, relrowsecurity from pg_class where oid in ('public.brokerflow_review_requests'::regclass,'public.brokerflow_review_events'::regclass) order by relname");
+    assert.deepEqual(rls.rows, [
+      { relname: "brokerflow_review_events", relrowsecurity: true },
+      { relname: "brokerflow_review_requests", relrowsecurity: true }
+    ]);
+    const indexes = await pool.query("select indexname from pg_indexes where schemaname='public' and indexname like 'brokerflow_review_%_idx' order by indexname");
+    assert.deepEqual(indexes.rows.map(row => row.indexname), ["brokerflow_review_events_idx", "brokerflow_review_events_review_idx", "brokerflow_review_queue_idx"]);
+    const fks = await pool.query(`
+      select conrelid::regclass::text as table_name, confrelid::regclass::text as referenced_table
+      from pg_constraint where contype='f' and conrelid in ('public.brokerflow_review_requests'::regclass,'public.brokerflow_review_events'::regclass)
+      order by table_name, referenced_table`);
+    assert.deepEqual(fks.rows, [
+      { table_name: "brokerflow_review_events", referenced_table: "auth.users" },
+      { table_name: "brokerflow_review_events", referenced_table: "brokerflow_review_requests" },
+      { table_name: "brokerflow_review_events", referenced_table: "organizations" },
+      { table_name: "brokerflow_review_requests", referenced_table: "auth.users" },
+      { table_name: "brokerflow_review_requests", referenced_table: "organizations" }
+    ]);
+  });
+
+  await t.test("create is atomic, correctly attributed, idempotent under concurrency, and rejects key conflicts", async () => {
+    const key = `create-${randomUUID()}`;
+    const request = scenario();
+    const [one, two] = await Promise.all([
+      createReview(pool, orgA, brokerA, key, request),
+      createReview(pool, orgA, brokerA, key, request)
+    ]);
+    assert.equal(one.id, two.id);
+    assert.deepEqual([one.duplicate, two.duplicate].sort(), [false, true]);
+    const saved = await pool.query("select id, organization_id, created_by, status, version from public.brokerflow_review_requests where id=$1", [one.id]);
+    assert.deepEqual(saved.rows[0], { id: one.id, organization_id: orgA, created_by: brokerA, status: "queued_for_human_review", version: 1 });
+    const events = await pool.query("select event_type, actor_user_id, actor_source, new_status, version from public.brokerflow_review_events where review_id=$1", [one.id]);
+    assert.deepEqual(events.rows, [{ event_type: "review_created", actor_user_id: brokerA, actor_source: "user", new_status: "queued_for_human_review", version: 1 }]);
+    await assert.rejects(createReview(pool, orgA, brokerA, key, scenario({ requested_amount: 250000 })), error => error.code === "23505");
+    const count = await pool.query("select count(*)::int as count from public.brokerflow_review_events where review_id=$1", [one.id]);
+    assert.equal(count.rows[0].count, 1);
+  });
+
+  await t.test("constraints reject invalid records and enforce foreign keys and note limits", async () => {
+    const review = await createReview(pool, orgA, brokerA, `constraint-${randomUUID()}`);
+    await assert.rejects(pool.query("update public.brokerflow_review_requests set status='approved' where id=$1", [review.id]), error => error.code === "23514");
+    await assert.rejects(pool.query("update public.brokerflow_review_requests set requested_amount=0 where id=$1", [review.id]), error => error.code === "23514");
+    await assert.rejects(pool.query("update public.brokerflow_review_requests set organization_id=$2 where id=$1", [review.id, "90000000-0000-4000-8000-000000000001"]), error => error.code === "23503");
+    await assert.rejects(pool.query(`
+      insert into public.brokerflow_review_events(organization_id,review_id,event_type,actor_source,new_status,version,idempotency_hash,request_fingerprint,note)
+      values($1,$2,'review_started','user','in_review',2,'constraint-key','constraint-fingerprint',$3)`,
+    [orgA, review.id, "n".repeat(501)]), error => error.code === "23514");
+    await assert.rejects(pool.query(`
+      insert into public.brokerflow_review_events(organization_id,review_id,event_type,actor_source,new_status,version,idempotency_hash,request_fingerprint)
+      values($1,$2,'review_started','user','in_review',2,'orphan-key','orphan-fingerprint')`,
+    [orgA, "90000000-0000-4000-8000-000000000001"]), error => error.code === "23503");
+  });
+
+  await t.test("lifecycle persists each transition and returns the stored result after a lost response", async () => {
+    const review = await createReview(pool, orgA, brokerA, `lifecycle-${randomUUID()}`);
+    const startKey = `start-${randomUUID()}`;
+    const [first, concurrentReplay] = await Promise.all([
+      action(pool, orgA, review.id, brokerA, "start_review", "", 1, startKey),
+      action(pool, orgA, review.id, brokerA, "start_review", "", 1, startKey)
+    ]);
+    assert.deepEqual(concurrentReplay, first);
+    // The first result is intentionally treated as lost; replay must return that stored result.
+    const replay = await action(pool, orgA, review.id, brokerA, "start_review", "", 1, startKey);
+    assert.deepEqual(replay, first);
+    assert.equal(replay.status, "in_review");
+    await assert.rejects(action(pool, orgA, review.id, brokerA, "start_review", "different payload", 1, startKey), error => error.code === "23505");
+    const requested = await action(pool, orgA, review.id, brokerA, "request_information", "Please provide current equipment quote", 2, `info-${randomUUID()}`);
+    assert.equal(requested.status, "needs_information");
+    const resumed = await action(pool, orgA, review.id, brokerA, "start_review", "", 3, `resume-${randomUUID()}`);
+    assert.equal(resumed.status, "in_review");
+    const complete = await action(pool, orgA, review.id, brokerA, "mark_reviewed", "", 4, `complete-${randomUUID()}`);
+    assert.equal(complete.status, "reviewed");
+    assert.equal(complete.version, 5);
+    const events = await pool.query("select event_type, previous_status, new_status, note, version, actor_user_id, organization_id from public.brokerflow_review_events where review_id=$1 order by version", [review.id]);
+    assert.deepEqual(events.rows.map(row => [row.event_type, row.previous_status, row.new_status, row.version]), [
+      ["review_created", null, "queued_for_human_review", 1],
+      ["review_started", "queued_for_human_review", "in_review", 2],
+      ["information_requested", "in_review", "needs_information", 3],
+      ["review_started", "needs_information", "in_review", 4],
+      ["review_marked_reviewed", "in_review", "reviewed", 5]
+    ]);
+    assert.equal(events.rows[2].note, "Please provide current equipment quote");
+    assert.ok(events.rows.every(row => row.actor_user_id === brokerA && row.organization_id === orgA));
+  });
+
+  await t.test("invalid transitions and stale versions fail, while concurrent same-version writers serialize", async () => {
+    const invalid = await createReview(pool, orgA, brokerA, `invalid-${randomUUID()}`);
+    await assert.rejects(action(pool, orgA, invalid.id, brokerA, "mark_reviewed", "", 1, `bad-${randomUUID()}`), error => error.code === "22023");
+    const writers = await Promise.allSettled([
+      action(pool, orgA, invalid.id, brokerA, "start_review", "", 1, `concurrent-${randomUUID()}`),
+      action(pool, orgA, invalid.id, brokerA, "start_review", "", 1, `concurrent-${randomUUID()}`)
+    ]);
+    assert.equal(writers.filter(result => result.status === "fulfilled").length, 1);
+    assert.equal(writers.filter(result => result.status === "rejected" && result.reason.code === "40001").length, 1);
+    await assert.rejects(action(pool, orgA, invalid.id, brokerA, "request_information", "Need a document", 1, `stale-${randomUUID()}`), error => error.code === "40001");
+  });
+
+  await t.test("database rollback leaves neither a partially created review nor an orphaned transition event", async () => {
+    const client = await pool.connect();
+    const nameOnFailedCreate = `Synthetic rollback ${randomUUID()}`;
+    try {
+      await client.query(`create function app_private.reject_test_review_event() returns trigger language plpgsql as $$ begin if current_setting('brokerflow_test.fail_event', true) = 'on' then raise exception 'synthetic event insert failure'; end if; return new; end $$`);
+      await client.query("create trigger reject_test_review_event before insert on public.brokerflow_review_events for each row execute function app_private.reject_test_review_event()");
+      await client.query("begin");
+      await client.query("select set_config('brokerflow_test.fail_event','on',true)");
+      await assert.rejects(createReview(client, orgA, brokerA, `rollback-create-${randomUUID()}`, scenario({ business_name: nameOnFailedCreate })), /synthetic event insert failure/);
+      await client.query("rollback");
+      const absent = await pool.query("select count(*)::int as count from public.brokerflow_review_requests where business_name=$1", [nameOnFailedCreate]);
+      assert.equal(absent.rows[0].count, 0);
+
+      await client.query("begin");
+      await client.query("select set_config('brokerflow_test.fail_event','on',true)");
+      const review = await pool.query("select id from public.brokerflow_review_requests where organization_id=$1 and status='queued_for_human_review' order by created_at desc limit 1", [orgA]);
+      const before = review.rows[0];
+      await assert.rejects(action(client, orgA, before.id, brokerA, "start_review", "", 1, `rollback-action-${randomUUID()}`), /synthetic event insert failure/);
+      await client.query("rollback");
+      const after = await pool.query("select status, version from public.brokerflow_review_requests where id=$1", [before.id]);
+      assert.deepEqual(after.rows[0], { status: "queued_for_human_review", version: 1 });
+      const history = await pool.query("select count(*)::int as count from public.brokerflow_review_events where review_id=$1", [before.id]);
+      assert.equal(history.rows[0].count, 1);
+    } finally {
+      await client.query("rollback").catch(() => {});
+      await client.query("drop trigger if exists reject_test_review_event on public.brokerflow_review_events");
+      await client.query("drop function if exists app_private.reject_test_review_event()");
+      client.release();
+    }
+  });
+
+  await t.test("anonymous and authenticated roles cannot read or mutate review tables or execute privileged RPCs", async () => {
+    for (const role of ["anon", "authenticated"]) {
+      const privileges = await pool.query(`
+        select has_table_privilege($1,'public.brokerflow_review_requests','SELECT') as can_read_reviews,
+               has_table_privilege($1,'public.brokerflow_review_requests','INSERT') as can_insert_reviews,
+               has_table_privilege($1,'public.brokerflow_review_requests','DELETE') as can_delete_reviews,
+               has_table_privilege($1,'public.brokerflow_review_events','INSERT') as can_insert_events,
+               has_table_privilege($1,'public.brokerflow_review_events','UPDATE') as can_update_events,
+               has_table_privilege($1,'public.brokerflow_review_events','DELETE') as can_delete_events,
+               has_function_privilege($1,'public.brokerflow_create_review(uuid,uuid,text,jsonb)','EXECUTE') as can_create,
+               has_function_privilege($1,'public.brokerflow_apply_review_action(uuid,uuid,uuid,text,text,integer,text,text)','EXECUTE') as can_apply`, [role]);
+      assert.deepEqual(privileges.rows[0], { can_read_reviews: false, can_insert_reviews: false, can_delete_reviews: false, can_insert_events: false, can_update_events: false, can_delete_events: false, can_create: false, can_apply: false });
+    }
+    const service = await pool.query(`
+      select has_table_privilege('service_role','public.brokerflow_review_requests','SELECT') as can_read_reviews,
+             has_function_privilege('service_role','public.brokerflow_create_review(uuid,uuid,text,jsonb)','EXECUTE') as can_create,
+             has_function_privilege('service_role','public.brokerflow_apply_review_action(uuid,uuid,uuid,text,text,integer,text,text)','EXECUTE') as can_apply,
+             (select prosecdef from pg_proc where oid='public.brokerflow_create_review(uuid,uuid,text,jsonb)'::regprocedure) as create_is_definer`);
+    assert.deepEqual(service.rows[0], { can_read_reviews: true, can_create: true, can_apply: true, create_is_definer: true });
+    const client = await pool.connect();
+    try {
+      for (const role of ["anon", "authenticated"]) {
+        await client.query("reset role");
+        await client.query(`set role ${role}`);
+        await assert.rejects(client.query("select * from public.brokerflow_review_requests limit 1"), error => error.code === "42501");
+        await assert.rejects(client.query("select public.brokerflow_create_review($1,$2,$3,$4::jsonb)", [orgA, brokerA, randomUUID(), JSON.stringify(scenario())]), error => error.code === "42501");
+      }
+      await client.query("reset role");
+    } finally {
+      await client.query("reset role");
+      client.release();
+    }
+  });
+
+  await t.test("synthetic platform-core membership policies and RPC organization predicates stay scoped", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("begin");
+      await client.query("set local role authenticated");
+      await client.query("select set_config('request.jwt.claim.sub',$1,true)", [brokerA]);
+      const visibleOrganizations = await client.query("select id from public.organizations order by id");
+      assert.deepEqual(visibleOrganizations.rows.map(row => row.id), [orgA]);
+      for (const userId of [brokerA, viewerA, partnerA]) {
+        await client.query("select set_config('request.jwt.claim.sub',$1,true)", [userId]);
+        const permission = await client.query("select app_private.has_permission($1,'brokerflow.reviews.read') as allowed", [orgA]);
+        assert.equal(permission.rows[0].allowed, false);
+      }
+      await client.query("rollback");
+    } finally {
+      await client.query("rollback").catch(() => {});
+      client.release();
+    }
+    const reviewB = await createReview(pool, orgB, brokerB, `tenant-${randomUUID()}`);
+    await assert.rejects(action(pool, orgA, reviewB.id, brokerA, "start_review", "", 1, `cross-org-${randomUUID()}`), error => error.code === "P0002");
+    const organizationAReviews = await pool.query("select count(*)::int as count from public.brokerflow_review_requests where organization_id=$1", [orgA]);
+    const organizationBReviews = await pool.query("select count(*)::int as count from public.brokerflow_review_requests where organization_id=$1", [orgB]);
+    assert.ok(organizationAReviews.rows[0].count > 0);
+    assert.equal(organizationBReviews.rows[0].count, 1);
+  });
+});

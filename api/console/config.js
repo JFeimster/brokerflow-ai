@@ -1,0 +1,2 @@
+import { reply, method } from "../../lib/reviews/http.js";
+export default function handler(req,res){ if(!method(req,res,"GET")) return; const rawMode=process.env.BROKERFLOW_CONSOLE_MODE||"demo", validMode=["demo","live"].includes(rawMode), mode=rawMode==="demo"?"demo":"live"; return reply(res,200,{success:true,mode,configured:validMode&&Boolean(process.env.SUPABASE_URL&&process.env.SUPABASE_PUBLISHABLE_KEY),supabase_url:process.env.SUPABASE_URL||null,publishable_key:process.env.SUPABASE_PUBLISHABLE_KEY||null}); }

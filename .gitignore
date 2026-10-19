@@ -4,6 +4,7 @@
 
 # ----- Dependencies -----
 node_modules/
+.playwright-cli/
 .pnp/
 .pnp.js
 .yarn/

@@ -1,0 +1,28 @@
+name: Production configuration smoke check
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: brokerflow-production-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify live configuration and server-side Supabase connectivity
+        run: node scripts/production-config-smoke.js
+        env:
+          BROKERFLOW_PRODUCTION_URL: https://brokerflow-ai.vercel.app

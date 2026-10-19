@@ -1,15 +1,23 @@
-name: PR 26 PostgreSQL integration
+name: BrokerFlow CI
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
+concurrency:
+  group: brokerflow-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
+    name: Build, lint, unit, and PostgreSQL integration
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:17

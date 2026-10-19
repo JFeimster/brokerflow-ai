@@ -168,7 +168,7 @@ components:
       properties:
         success: { const: true }
         review_request_id: { type: string }
-        status: { const: queued_for_human_review }
+        status: { type: string, enum: [queued_for_human_review, in_review, needs_information, reviewed] }
         next_step: { const: manual_review }
         persisted: { const: true }
         duplicate: { type: boolean }

@@ -365,3 +365,20 @@ test("OpenAPI credit score range enum values are quoted YAML strings", () => {
     assert.ok(section.includes('"' + range + '"'), "YAML numeric-looking value " + range + " must remain a quoted string");
   }
 });
+
+test("protected ingestion contracts document successful replay with current status", () => {
+  const standalone = read("../schemas/brokerflow-review-ingestion.schema.yaml");
+  const combined = read("../schemas/no-auth-brokerflow-actions.combined.schema.yaml");
+  const standaloneResponse = standalone.split('        "200":')[1]?.split('        "401":')[0];
+  assert.ok(standaloneResponse, "standalone operation must document HTTP 200");
+  assert.match(standaloneResponse, /duplicate: \{ const: true \}/);
+  for (const status of ["queued_for_human_review", "in_review", "needs_information", "reviewed"]) {
+    assert.ok(standaloneResponse.includes(status), "standalone replay must accept " + status);
+  }
+  const sharedResponse = combined.split("    PersistedReviewResponse:")[1]?.split("    LenderMatchReviewRequest:")[0];
+  assert.ok(sharedResponse, "combined action must declare the persisted review response");
+  assert.match(sharedResponse, /status: \{ type: string, enum:/);
+  for (const status of ["queued_for_human_review", "in_review", "needs_information", "reviewed"]) {
+    assert.ok(sharedResponse.includes(status), "combined response must accept " + status);
+  }
+});

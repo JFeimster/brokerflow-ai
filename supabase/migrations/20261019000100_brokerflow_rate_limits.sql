@@ -11,7 +11,9 @@ create index if not exists brokerflow_rate_limits_window_idx
   on public.brokerflow_rate_limits (window_start);
 
 alter table public.brokerflow_rate_limits enable row level security;
-revoke all on public.brokerflow_rate_limits from anon, authenticated;
+revoke all on public.brokerflow_rate_limits from anon, authenticated, service_role;
+-- Supabase's public-schema default grants may otherwise allow service_role
+-- to write directly, bypassing the transactional SECURITY DEFINER RPC.
 grant select on public.brokerflow_rate_limits to service_role;
 
 create or replace function public.brokerflow_consume_rate_limit(

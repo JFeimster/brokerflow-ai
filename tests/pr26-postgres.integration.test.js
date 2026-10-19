@@ -259,8 +259,12 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
              has_function_privilege('service_role','public.brokerflow_create_review(uuid,uuid,text,jsonb)','EXECUTE') as can_create,
              has_function_privilege('service_role','public.brokerflow_apply_review_action(uuid,uuid,uuid,text,text,integer,text,text)','EXECUTE') as can_apply,
              has_function_privilege('service_role','public.brokerflow_consume_rate_limit(text,text,integer,integer)','EXECUTE') as can_rate_limit,
+             has_table_privilege('service_role','public.brokerflow_rate_limits','SELECT') as can_read_rate_limits,
+             has_table_privilege('service_role','public.brokerflow_rate_limits','INSERT') as can_insert_rate_limits,
+             has_table_privilege('service_role','public.brokerflow_rate_limits','UPDATE') as can_update_rate_limits,
+             has_table_privilege('service_role','public.brokerflow_rate_limits','DELETE') as can_delete_rate_limits,
              (select prosecdef from pg_proc where oid='public.brokerflow_create_review(uuid,uuid,text,jsonb)'::regprocedure) as create_is_definer`);
-    assert.deepEqual(service.rows[0], { can_read_reviews: true, can_create: true, can_apply: true, can_rate_limit: true, create_is_definer: true });
+    assert.deepEqual(service.rows[0], { can_read_reviews: true, can_create: true, can_apply: true, can_rate_limit: true, can_read_rate_limits: true, can_insert_rate_limits: false, can_update_rate_limits: false, can_delete_rate_limits: false, create_is_definer: true });
     const client = await pool.connect();
     try {
       for (const role of ["anon", "authenticated"]) {

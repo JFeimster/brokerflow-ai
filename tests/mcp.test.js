@@ -75,6 +75,7 @@ test("MCP handshake and tools/list expose exactly six typed, annotated tools", a
   assert.equal(tools.tools.find(tool => tool.name === "get_review_activity").annotations.readOnlyHint, true);
   const actionTool = tools.tools.find(tool => tool.name === "apply_review_action");
   assert.equal(actionTool.annotations.readOnlyHint, false);
+  assert.equal(actionTool.annotations.destructiveHint, true, "review transitions must require host-side confirmation safeguards");
   assert.deepEqual(actionTool.inputSchema.properties.action.enum, ["start_review", "request_information", "mark_reviewed"]);
   assert.match(actionTool.description, /does not approve, decline, qualify, underwrite, price, fund, or submit/i);
 });

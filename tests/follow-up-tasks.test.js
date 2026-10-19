@@ -40,7 +40,15 @@ test("task service maps idempotency and reference failures to safe public errors
 
 test("single-task query always scopes both organization and task and returns not found safely", async () => {
   const calls = [];
-  const task = { id: taskId, organization_id: org, title: "Call broker", status: "open" };
+  const task = {
+    id: taskId,
+    organization_id: org,
+    title: "Call broker",
+    status: "open",
+    due_date: new Date("2026-10-25T00:00:00Z"),
+    created_at: new Date("2026-10-19T12:00:00Z"),
+    completed_at: null,
+  };
   const context = {
     db: {
       from(table) {
@@ -62,7 +70,11 @@ test("single-task query always scopes both organization and task and returns not
       },
     },
   };
-  assert.deepEqual(await getFollowUpTask(context, org, taskId), task);
+  assert.deepEqual(await getFollowUpTask(context, org, taskId), {
+    ...task,
+    due_date: "2026-10-25",
+    created_at: "2026-10-19T12:00:00.000Z",
+  });
   assert.deepEqual(calls.slice(1), [
     { column: "organization_id", value: org },
     { column: "id", value: taskId },

@@ -632,5 +632,6 @@ test(
         assert.ok(flags.every((item) => item.relrowsecurity));
       },
     );
+    await client.closeWithServer();
   },
 );

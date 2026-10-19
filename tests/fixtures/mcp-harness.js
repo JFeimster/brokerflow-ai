@@ -49,10 +49,17 @@ export async function clientFor(t, ctx = context(), options = {}) {
     version: "1.0.0",
   });
   const [a, b] = InMemoryTransport.createLinkedPair();
-  t.after(async () => {
-    await client.close();
-    await server.close();
-  });
+  let closePromise;
+  client.closeWithServer = () => {
+    if (!closePromise) {
+      closePromise = (async () => {
+        await client.close();
+        await server.close();
+      })();
+    }
+    return closePromise;
+  };
+  t.after(client.closeWithServer);
   await Promise.all([server.connect(b), client.connect(a)]);
   return client;
 }

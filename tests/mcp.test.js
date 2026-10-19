@@ -61,18 +61,23 @@ test("protected resource metadata advertises only the configured Supabase author
   });
 });
 
-test("MCP handshake and tools/list expose exactly five typed, annotated tools", async t => {
+test("MCP handshake and tools/list expose exactly six typed, annotated tools", async t => {
   const server = createMcpServer({ authenticateMcp: async () => makeContext() });
   const client = new Client({ name: "test-client", version: "1.0.0" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   t.after(async () => { await client.close(); await server.close(); });
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
   const tools = await client.listTools();
-  assert.deepEqual(tools.tools.map(tool => tool.name).sort(), ["create_review_request", "get_my_workspaces", "get_review", "get_review_activity", "list_reviews"].sort());
+  assert.deepEqual(tools.tools.map(tool => tool.name).sort(), ["apply_review_action", "create_review_request", "get_my_workspaces", "get_review", "get_review_activity", "list_reviews"].sort());
   const createTool = tools.tools.find(tool => tool.name === "create_review_request");
   assert.equal(createTool.annotations.readOnlyHint, false);
   assert.equal(createTool.inputSchema.properties.organization_id.format, "uuid");
   assert.equal(tools.tools.find(tool => tool.name === "get_review_activity").annotations.readOnlyHint, true);
+  const actionTool = tools.tools.find(tool => tool.name === "apply_review_action");
+  assert.equal(actionTool.annotations.readOnlyHint, false);
+  assert.equal(actionTool.annotations.destructiveHint, true, "review transitions must require host-side confirmation safeguards");
+  assert.deepEqual(actionTool.inputSchema.properties.action.enum, ["start_review", "request_information", "mark_reviewed"]);
+  assert.match(actionTool.description, /does not approve, decline, qualify, underwrite, price, fund, or submit/i);
 });
 
 test("stateless Streamable HTTP endpoint completes initialize and tools/list without a session", async t => {
@@ -94,11 +99,63 @@ test("stateless Streamable HTTP endpoint completes initialize and tools/list wit
   t.after(async () => { await client.close(); await new Promise(resolve => httpServer.close(resolve)); });
   await client.connect(transport);
   const response = await client.listTools();
-  assert.equal(response.tools.length, 5);
+  assert.equal(response.tools.length, 6);
   const workspaces = await client.callTool({ name: "get_my_workspaces", arguments: {} });
   assert.equal(workspaces.structuredContent.workspaces[0].id, org);
   assert.ok(authentications >= 1);
   assert.equal(transport.sessionId, undefined);
+});
+
+test("apply_review_action enforces organization write permission, delegates versioned lifecycle actions, and replays safely", async t => {
+  const calls = [];
+  const responses = new Map();
+  const context = makeContext();
+  const server = createMcpServer({
+    authenticateMcp: async () => context,
+    rateLimit: async (...args) => calls.push(["rate-limit", ...args.slice(1)]),
+    apply: async (_context, organizationId, input) => {
+      calls.push(["apply", organizationId, input]);
+      if (input.expected_version !== 1) throw Object.assign(new Error("Review changed."), { status: 409 });
+      const previous = responses.get(input.idempotency_key);
+      if (previous) return { ...previous, duplicate: true };
+      const status = { start_review: "in_review", request_information: "needs_information", mark_reviewed: "reviewed" }[input.action];
+      const response = { id: review, review_request_id: "lmr_synthetic_stable", status, version: 2 };
+      responses.set(input.idempotency_key, response);
+      return response;
+    },
+  });
+  const client = new Client({ name: "action-test-client", version: "1.0.0" });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  t.after(async () => { await client.close(); await server.close(); });
+  await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+
+  for (const [index, action] of ["start_review", "request_information", "mark_reviewed"].entries()) {
+    const args = { organization_id: org, review_id: review, action, expected_version: 1, idempotency_key: `synthetic-action-key-${index}-0001`, ...(action === "request_information" ? { note: "Please provide the missing business details." } : {}) };
+    const result = await client.callTool({ name: "apply_review_action", arguments: args });
+    assert.equal(result.structuredContent.status, { start_review: "in_review", request_information: "needs_information", mark_reviewed: "reviewed" }[action]);
+    assert.equal(result.structuredContent.review_id, review);
+    assert.equal(result.structuredContent.version, 2);
+    assert.equal(calls.at(-1)[2].review_id, review);
+    if (action === "request_information") assert.equal(calls.at(-1)[2].note, args.note);
+    const replay = await client.callTool({ name: "apply_review_action", arguments: args });
+    assert.equal(replay.structuredContent.status, result.structuredContent.status);
+  }
+
+  const conflict = await client.callTool({ name: "apply_review_action", arguments: { organization_id: org, review_id: review, action: "start_review", expected_version: 2, idempotency_key: "synthetic-version-conflict-01" } });
+  assert.equal(conflict.isError, true);
+  assert.equal(conflict.structuredContent.status, 409);
+  const beforeDenied = calls.filter(call => call[0] === "apply").length;
+  context.workspaces = [{ ...workspace, canWrite: false }];
+  const denied = await client.callTool({ name: "apply_review_action", arguments: { organization_id: org, review_id: review, action: "start_review", expected_version: 1, idempotency_key: "synthetic-read-only-action-01" } });
+  assert.equal(denied.isError, true);
+  assert.equal(denied.structuredContent.status, 403);
+  assert.equal(calls.filter(call => call[0] === "apply").length, beforeDenied);
+  context.workspaces = [];
+  const crossOrganization = await client.callTool({ name: "apply_review_action", arguments: { organization_id: org, review_id: review, action: "start_review", expected_version: 1, idempotency_key: "synthetic-cross-org-action-01" } });
+  assert.equal(crossOrganization.isError, true);
+  assert.equal(crossOrganization.structuredContent.status, 403);
+  assert.equal(calls.filter(call => call[0] === "apply").length, beforeDenied);
+  assert.ok(calls.filter(call => call[0] === "rate-limit").length >= 4);
 });
 
 test("Vercel MCP route challenges missing tokens and keeps the canonical URL rewrites", async () => {

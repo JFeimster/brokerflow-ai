@@ -28,7 +28,7 @@ test(
     const pool = new pg.Pool({ connectionString: url.href, max: 12 });
     t.after(async () => {
       await pool.end();
-      await admin.query(`drop database ${name} with (force)`);
+      await admin.query(`drop database ${name}`);
       await admin.end();
     });
     await pool.query(

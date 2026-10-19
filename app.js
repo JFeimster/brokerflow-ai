@@ -314,8 +314,32 @@
   function openDeal(id) { const deal = datasets.deals.find(item => item.id === id); if (!deal) return; modal(`Deal <span class="modal-id">${esc(deal.id)}</span>`, `<div class="detail-entity">${initials(deal.company, deal.initials, deal.color)}<div><strong>${esc(deal.company)}</strong><small>${esc(deal.contact)} · Sample record</small></div><strong class="detail-amount">${money(deal.amount)}</strong></div><div class="detail-grid"><div><span>Workflow stage</span><strong>${esc(deal.stage)}</strong></div><div><span>Product</span><strong>${esc(deal.product)}</strong></div><div><span>Owner</span><strong>${esc(deal.owner)}</strong></div><div><span>Source</span><strong>${esc(deal.source)}</strong></div></div><div class="detail-section"><span>NEXT STEP</span><strong>${esc(deal.risk)}</strong><p>Use your authorized CRM or workflow system to take external action.</p></div><div class="modal-disclaimer">Sample record. Requested amount and workflow status do not indicate eligibility or approval.</div>`, `<button class="button button-primary" data-close-modal>Done</button>`); }
   function openPartner(name) { const partner = datasets.partners.find(item => item.name === name); if (!partner) return; modal(esc(partner.name), `<div class="detail-entity">${initials(partner.name, partner.initials, partner.color)}<div><strong>${esc(partner.type)}</strong><small>Sample partner record</small></div>${statusPill(partner.status)}</div><div class="detail-grid"><div><span>Recorded referrals</span><strong>${partner.referrals}</strong></div><div><span>Last activity</span><strong>${esc(partner.last)}</strong></div></div><div class="modal-disclaimer">Counts are illustrative. Partner attribution and compensation require verified records and human review.</div>`, `<button class="button button-primary" data-close-modal>Done</button>`); }
   function openIntegration(name) { modal(`Set up ${esc(name)}`, `<p class="modal-copy">This connector is shown as a setup preview. Authentication, data mapping and sync are not available in this sample console.</p><label class="modal-field">Connection label<input value="${esc(name)} workspace" /></label><div class="modal-disclaimer">Saving this preview will not connect an account, transmit records, or create credentials.</div>`, `<button class="button button-quiet" data-close-modal>Cancel</button><button class="button button-primary" data-demo-integration="${esc(name)}">Save preview</button>`); $('[data-demo-integration]').addEventListener("click", () => { const input = $(".modal-field input"); const saved = JSON.parse(localStorage.getItem("brokerflow-integration-previews") || "{}"); saved[name] = input.value.trim(); localStorage.setItem("brokerflow-integration-previews", JSON.stringify(saved)); closeModal(); toast(`${name} setup preview saved in this browser. No connection was made.`); }); }
+  function openLiveSignIn() {
+    modal(
+      "Sign in to the live review workspace",
+      `<p class="modal-copy">Enter the email for your invited broker account. We’ll send a one-time sign-in link to that address.</p><form id="live-sign-in-form"><label class="modal-field">Broker email<input id="live-sign-in-email" name="email" type="email" autocomplete="email" maxlength="254" required /></label></form>`,
+      `<button class="button button-quiet" data-close-modal>Cancel</button><button class="button button-primary" id="submit-live-sign-in" type="submit" form="live-sign-in-form">Send sign-in link</button>`,
+    );
+    const form = $("#live-sign-in-form");
+    const submit = $("#submit-live-sign-in");
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const email = $("#live-sign-in-email").value.trim();
+      if (!email) return;
+      submit.disabled = true;
+      try {
+        await window.BrokerFlowAuth.login(email);
+        closeModal();
+        toast("If this is an invited broker account, a sign-in link has been sent. Open it in this browser.");
+      } catch (error) {
+        submit.disabled = false;
+        toast(error.message || "Unable to send the sign-in link.");
+      }
+    });
+    $("#live-sign-in-email").focus();
+  }
   function handleAction(action) {
-    if (action === "sign-in") { const email=prompt("Enter your invited broker email address:"); if(!email)return; window.BrokerFlowAuth.login(email.trim()).then(()=>toast("Sign-in link sent. Open it in this browser to continue.")).catch(error=>toast(error.message)); return; }
+    if (action === "sign-in") { openLiveSignIn(); return; }
     if (action === "sign-out") { window.BrokerFlowAuth.signOut(); return; }
     if (action === "select-workspace") { const id=$("#live-org-select")?.value;const workspace=liveSession?.workspaces?.find(item=>item.id===id);if(!workspace){toast("Choose an organization you are authorized to access.");return;}window.BrokerFlowSession={...liveSession,workspace};liveError="";liveState.reset();render();return; }
     if (action === "new-review") { createLiveReview(); return; }

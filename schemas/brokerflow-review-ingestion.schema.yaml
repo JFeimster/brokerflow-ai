@@ -40,16 +40,38 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [success, review_request_id, status, next_step, persisted]
+                required: [success, review_request_id, status, next_step, persisted, duplicate]
                 properties:
                   success: { const: true }
                   review_request_id: { type: string }
                   status: { const: queued_for_human_review }
                   next_step: { const: manual_review }
                   persisted: { const: true }
-              example: { success: true, review_request_id: "lmr_opaque-reference", status: queued_for_human_review, next_step: manual_review, persisted: true }
+                  duplicate: { type: boolean, description: True when this idempotency key already created the returned review. }
+              example: { success: true, review_request_id: "lmr_opaque-reference", status: queued_for_human_review, next_step: manual_review, persisted: true, duplicate: false }
+        "200":
+          description: Existing review returned for an identical idempotent replay; no new review was created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, review_request_id, status, next_step, persisted, duplicate]
+                properties:
+                  success: { const: true }
+                  review_request_id: { type: string }
+                  status: { type: string, enum: [queued_for_human_review, in_review, needs_information, reviewed] }
+                  next_step: { const: manual_review }
+                  persisted: { const: true }
+                  duplicate: { const: true }
+              example: { success: true, review_request_id: "lmr_opaque-reference", status: reviewed, next_step: manual_review, persisted: true, duplicate: true }
         "401": { description: Missing or invalid integration credential. }
+        "422": { description: Invalid or incomplete review scenario. }
         "409": { description: Idempotency key reused with different content. }
+        "429":
+          description: Durable rate limit exceeded.
+          headers:
+            Retry-After:
+              schema: { type: integer, minimum: 1 }
         "503": { description: Owner setup or persistence service unavailable. }
 components:
   schemas:

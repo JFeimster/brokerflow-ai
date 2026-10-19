@@ -4,7 +4,7 @@
 
 | Action | Operation ID | API Endpoint | Schema | Purpose |
 | --- | --- | --- | --- | --- |
-| Persisted Lender Match Review Ingestion | `createPersistedLenderMatchReview` | `POST /api/ingest/lender-match-review` | `schemas/brokerflow-review-ingestion.schema.yaml` | Create a durable organization-scoped human review using a separate integration bearer secret and idempotency key. Requires explicit owner provisioning; does not make lending decisions. |
+| Persisted Lender Match Review Ingestion | `createPersistedLenderMatchReview` | `POST /api/ingest/lender-match-review` | `schemas/brokerflow-review-ingestion.schema.yaml`; included in `schemas/no-auth-brokerflow-actions.combined.schema.yaml` | Create a durable organization-scoped human review using a separate integration bearer secret and idempotency key. Requires explicit owner provisioning; does not make lending decisions. |
 
 ## No-Auth GPT Actions
 

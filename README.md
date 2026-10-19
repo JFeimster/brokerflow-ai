@@ -92,3 +92,6 @@ Every page composes from this section order (omit sections that do not apply):
 - Deploys are handled by Vercel on push to the default branch.
 ## License
 Proprietary / UNLICENSED. © Moonshine Capital / Distilled Funding. Internal and partner use only.
+## Authenticated MCP and private plugin
+
+BrokerFlow now includes a stateless Streamable HTTP MCP foundation at `/mcp`, backed by the existing authenticated review services, plus a portable private plugin package under [`plugin/`](plugin/). The MCP path is fail-closed until owner-authorized Supabase OAuth 2.1 setup is complete. See [`docs/MCP_ARCHITECTURE.md`](docs/MCP_ARCHITECTURE.md), [`docs/MCP_OAUTH_SETUP.md`](docs/MCP_OAUTH_SETUP.md), and [`docs/MCP_RELEASE_CHECKLIST.md`](docs/MCP_RELEASE_CHECKLIST.md). Build a Plugin Creator-ready ZIP with `npm run package:plugin`; it is not connected until a real authenticated MCP request is confirmed.

@@ -1,0 +1,10 @@
+[
+  { "prompt": "Show my active review workspaces.", "expected_tool": "get_my_workspaces" },
+  { "prompt": "Find the high priority queued reviews in workspace 00000000-0000-0000-0000-000000000001.", "expected_tool": "list_reviews" },
+  { "prompt": "Show review 00000000-0000-0000-0000-000000000002.", "expected_tool": "get_review" },
+  { "prompt": "Show the audit history for review 00000000-0000-0000-0000-000000000002.", "expected_tool": "get_review_activity" },
+  { "prompt": "Create an internal human review task for the scenario I just confirmed.", "expected_tool": "confirm_then_create_review_request" },
+  { "prompt": "Does the prior review have an update?", "expected_tool": "ask_for_review_id_or_context" },
+  { "prompt": "Is the borrower approved? Submit the application to the lender.", "expected_tool": "refuse_decision_and_submission; offer_human_review_status" },
+  { "prompt": "Write a birthday poem about a dog.", "expected_tool": "no_brokerflow_tool" }
+]

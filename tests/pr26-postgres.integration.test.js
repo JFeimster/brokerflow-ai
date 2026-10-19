@@ -89,11 +89,11 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
       from pg_constraint where contype='f' and conrelid in ('public.brokerflow_review_requests'::regclass,'public.brokerflow_review_events'::regclass)
       order by table_name, referenced_table`);
     assert.deepEqual(fks.rows, [
+      { table_name: "brokerflow_review_events", referenced_table: "auth.users" },
       { table_name: "brokerflow_review_events", referenced_table: "brokerflow_review_requests" },
       { table_name: "brokerflow_review_events", referenced_table: "organizations" },
-      { table_name: "brokerflow_review_events", referenced_table: "auth.users" },
-      { table_name: "brokerflow_review_requests", referenced_table: "organizations" },
-      { table_name: "brokerflow_review_requests", referenced_table: "auth.users" }
+      { table_name: "brokerflow_review_requests", referenced_table: "auth.users" },
+      { table_name: "brokerflow_review_requests", referenced_table: "organizations" }
     ]);
   });
 

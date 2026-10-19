@@ -4,7 +4,7 @@ The MCP endpoint is a stateless Streamable HTTP adapter at `/mcp` over the exist
 
 Supabase Auth verifies the bearer token. The MCP adapter additionally requires the configured issuer, a resource-specific audience, an OAuth `client_id`, and a matching subject. It then reloads active organization memberships and role permissions for every MCP request. An explicitly supplied organization ID is accepted only after that server-side check.
 
-The original Custom GPT Actions remain available. The web console, GPT Action endpoints, and MCP tools share review storage and the existing atomic create/action, idempotency, optimistic-version, and rate-limit services. Future n8n workflows may use the same authenticated service layer. The MCP V1 does not expose partner/CRM/lender integrations, document uploads, outbound messages, or lender submission.
+The original Custom GPT Actions remain available. The web console, GPT Action endpoints, and MCP tools share review storage and the existing atomic create/action, idempotency, optimistic-version, and rate-limit services. Queue summary counts run in organization-filtered database count queries. Follow-up tasks have a separate additive store with organization-scoped assignment and review references, idempotent service-only write RPCs, and actor-attributed task events. Future n8n workflows may use the same authenticated service layer. The MCP V1 does not expose partner/CRM/lender integrations, document uploads, outbound messages, or lender submission.
 
 ## Routes
 

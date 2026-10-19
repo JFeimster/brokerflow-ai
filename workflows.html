@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BrokerFlow Workflows | n8n preview starters</title>
+  <meta name="description" content="Review BrokerFlow's disabled n8n preview workflows for intake, missing documents, referrals, review, renewal reminders and pipeline summaries." />
+  <link rel="canonical" href="https://brokerflow-ai.vercel.app/workflows" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="site-header"><div class="container header-inner"><a class="brand" href="/"><span class="brand-mark">BF</span><span class="brand-name">BrokerFlow&nbsp;AI</span></a><button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="site-nav" id="primary-nav"><a href="/">Home</a><a href="/agents">Agent</a><a href="/actions">Actions</a><a href="/knowledge">Knowledge</a><a href="/workflows" aria-current="page">Workflows</a><a href="/plugin">Private plugin</a><a href="/docs">Docs</a></nav></div></header>
+  <main>
+    <section class="content-hero"><div class="container"><p class="eyebrow">AUTOMATION STARTERS</p><h1>Workflow previews for broker teams</h1><p class="lead">The repository includes disabled n8n examples to review and adapt. Each new starter validates required fields and returns a preview response.</p><p class="notice">The exports do not connect to BrokerFlow storage, update a CRM, send a message, schedule live reminders or submit an application. Configure authentication, data retention and integrations before any separately authorized use.</p></div></section>
+    <section class="section"><div class="container"><div class="card-grid">
+      <article class="card"><h2>Intake to CRM preview</h2><p>Checks a synthetic intake payload and reports missing required fields. No CRM write is configured.</p><a href="/workflows/n8n/borrower-intake-to-crm.n8n.json" download>Download n8n JSON</a></article>
+      <article class="card"><h2>Missing-document draft</h2><p>Validates reported missing item types and permission metadata. It does not contact a borrower.</p><a href="/workflows/n8n/missing-doc-reminder-workflow.n8n.json" download>Download n8n JSON</a></article>
+      <article class="card"><h2>Partner referral preview</h2><p>Checks organization, partner, referral and intake references. It does not persist attribution.</p><a href="/workflows/n8n/referral-partner-lead-routing.n8n.json" download>Download n8n JSON</a></article>
+      <article class="card"><h2>Human review webhook</h2><p>Existing REST webhook receipt example. Review its endpoint and shared-secret contract before configuring it.</p><a href="/workflows/n8n/no-auth-lender-match-review.n8n.json" download>Download n8n JSON</a></article>
+      <article class="card"><h2>Renewal reminder draft</h2><p>Checks supplied deal and date metadata. No schedule or outreach is activated.</p><a href="/workflows/n8n/renewal-reminder-workflow.n8n.json" download>Download n8n JSON</a></article>
+      <article class="card"><h2>Pipeline summary preview</h2><p>Accepts an authorized synthetic snapshot. It has no database reader or delivery target.</p><a href="/workflows/n8n/daily-pipeline-summary.n8n.json" download>Download n8n JSON</a></article>
+    </div><p class="note">New preview workflows are inactive and require an n8n header-auth credential. Review the execution-data retention settings and test only with synthetic minimized records.</p></div></section>
+    <section class="section section-alt"><div class="container"><h2>Workflow references</h2><p>Read the <a href="/workflows/n8n/README.md">n8n import notes</a> and <a href="/docs/MCP_CORE_TOOL_EXAMPLES.md">authenticated MCP synthetic sequence</a>. A preview response is not evidence of a saved record or delivered message.</p></div></section>
+  </main>
+  <footer class="site-footer"><div class="container footer-inner"><p>Draft and preview only until an owner configures and authorizes an integration.</p><nav class="footer-nav"><a href="/">Home</a><a href="/actions">Actions</a><a href="/plugin">Private plugin</a><a href="/docs">Docs</a></nav></div></footer>
+  <script src="/script.js"></script>
+</body>
+</html>

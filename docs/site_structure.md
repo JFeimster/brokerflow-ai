@@ -1,4 +1,8 @@
 brokerflow-ai/
+├── Public static routes: `/`, `/agents`, `/actions`, `/knowledge`, `/workflows`, `/plugin`, `/docs`
+│   ├── index.html, agents.html, actions.html, knowledge.html, workflows.html, plugin.html, docs.html
+│   ├── styles.css and script.js (shared responsive navigation)
+│   └── sitemap.xml (public canonical routes)
 ├── `README.md`
 ├── gpt-instructions.md
 ├── package.json
@@ -134,3 +138,5 @@ brokerflow-ai/
     ├── contribution-guide.md
     ├── action-build-guide.md
     └── gpt-configuration-notes.md
+
+The Markdown pages under `site/pages/` are editorial source. Vercel serves the static HTML route files directly with `cleanUrls`; it does not render Markdown at request time. `tests/site/public-routes.test.js` validates route and navigation links.

@@ -5,6 +5,8 @@ description: Prepare clear, privacy-safe drafts and internal tasks for review it
 
 # Missing information preparation
 
+See `../../references/safety-and-data-handling.md`; missing information and document status must be based on reported or authorized data.
+
 Use `get_my_workspaces` when the authorized organization is unclear. Start from reviews actually marked `needs_information`; inspect one selected item with `get_review` only when necessary. Use fields already present in the review to identify known gaps. If the record does not say what is missing, state that the gap is unknown and ask the broker what to request rather than inventing documents or facts.
 
 Draft a concise checklist or request for broker review. Exclude SSNs, account numbers, personal contact details, private documents, credentials, and unsupported claims. Clearly label the text as a draft. Never send it.

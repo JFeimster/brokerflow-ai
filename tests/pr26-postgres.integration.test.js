@@ -84,8 +84,17 @@ async function migrationBaselineSnapshot(pool) {
 }
 
 test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant scoping", { skip: !databaseUrl }, async t => {
-  const pool = new Pool({ connectionString: databaseUrl, max: 12 });
-  t.after(async () => pool.end());
+  const admin = new Pool({ connectionString: databaseUrl });
+  const databaseName = `brokerflow_legacy_${randomUUID().replaceAll("-", "")}`;
+  await admin.query(`create database ${databaseName}`);
+  const isolatedUrl = new URL(databaseUrl);
+  isolatedUrl.pathname = `/${databaseName}`;
+  const pool = new Pool({ connectionString: isolatedUrl.href, max: 12 });
+  t.after(async () => {
+    await pool.end();
+    await admin.query(`drop database ${databaseName} with (force)`);
+    await admin.end();
+  });
   const fixture = await readFile(fixturePath, "utf8");
   await pool.query(fixture);
   const baseline = await migrationBaselineSnapshot(pool);

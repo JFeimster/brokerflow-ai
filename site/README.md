@@ -55,8 +55,8 @@ Every page composes from this section order (omit sections that do not apply):
 - Use descriptive section headings; they become the page outline and anchor links.
 - Canonical domain: `https://brokerflow-ai.vercel.app`.
 ## Build & deploy
-- Pages are Markdown; the root front-end renders them. No build step is required for content edits.
-- Preview locally by opening `index.html`, or run the dev flow described in the root `README.md`.
-- Deploys are handled by Vercel on push to the default branch.
+- Public pages are static HTML at the repository root: `index.html`, `agents.html`, `actions.html`, `knowledge.html`, `workflows.html`, `plugin.html`, and `docs.html`. With Vercel `cleanUrls`, they resolve at `/`, `/agents`, `/actions`, `/knowledge`, `/workflows`, `/plugin`, and `/docs`.
+- `site/pages/*.md` keeps the editorial source for the public pages. Route and navigation checks live under `tests/site/` and run through `npm test`.
+- Preview locally with `npm run dev`. Deployments follow the repository's Vercel and GitHub release controls.
 ## License
 Proprietary / UNLICENSED. © Moonshine Capital / Distilled Funding. Internal and partner use only.

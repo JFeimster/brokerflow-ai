@@ -6,7 +6,7 @@ order: 1
 ---
 # BrokerFlow AI
 ## The AI operations layer for loan brokers
-BrokerFlow AI turns messy intake into broker-ready deals. It captures borrower details, keeps your CRM clean, chases missing documents, and routes each file to the right next step — so you spend your time placing deals, not pushing data.
+BrokerFlow AI organizes supplied intake, prepares preliminary routing and document guidance, and tracks confirmed internal review work — so broker teams can focus on the next human step.
 > BrokerFlow recommends, drafts, prepares, routes, and logs. It does not approve, decline, qualify, guarantee, or fund. Every decision stays with your broker and your lenders.
 [Get early access](#pricing) · [See how it works](#how-it-works)
 ## Built for
@@ -15,17 +15,17 @@ BrokerFlow AI turns messy intake into broker-ready deals. It captures borrower d
 - Funding shops standardizing how deals get prepped for lender submission.
 ## What it does
 - **Intake, structured.** Captures borrower and business details into clean, consistent records.
-- **CRM that stays current.** Upserts contacts and deals, advances review-safe stages, and logs notes automatically.
-- **Document chasing.** Tracks what is missing (bank statements, tax returns, P&L, and more) and prepares follow-ups.
+- **Operational records.** Saves confirmed intake, review, task and referral records in the authorized workspace.
+- **Document follow-up.** Returns preliminary checklists and tracks reported missing items with an internal task and draft.
 - **Broker-ready packaging.** Assembles each file so it is ready for broker review — never auto-decisioned.
-- **Follow-up on autopilot.** Creates tasks and reminders so no borrower goes cold.
+- **Accountable follow-up.** Keeps internal broker tasks visible; it does not send borrower messages.
 ## How it works
 1. **Capture.** A lead comes in through your form, inbox, or CRM. BrokerFlow structures the details.
-2. **Organize.** It upserts the contact and deal, sets a review-safe stage, and flags missing documents.
-3. **Prepare.** It drafts follow-ups, logs notes, and assembles a broker-review package.
-4. **Route.** It marks the deal *ready for broker review* and hands off — your broker decides what happens next.
+2. **Organize.** After confirmation, it stores intake and operational status within the selected workspace.
+3. **Prepare.** It returns preliminary routing and checklists, and can create a confirmed internal draft/task.
+4. **Route.** It hands the operational record to a broker; your broker decides what happens next.
 ## Demo
-See a live walkthrough of an intake moving from new lead to *ready for broker review*.
+See an illustrative walkthrough of a broker operations flow. Production access requires owner-approved authentication and release steps.
 <!-- embed: site/embed.html -->
 [Watch the demo](#demo)
 ## Use cases

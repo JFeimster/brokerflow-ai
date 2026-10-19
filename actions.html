@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BrokerFlow Actions | Authenticated broker workflows</title>
+  <meta name="description" content="Explore BrokerFlow's authenticated MCP tools and existing REST Actions for intake, preliminary routing, human review, documents, deals and referrals." />
+  <link rel="canonical" href="https://brokerflow-ai.vercel.app/actions" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="site-header"><div class="container header-inner"><a class="brand" href="/"><span class="brand-mark">BF</span><span class="brand-name">BrokerFlow&nbsp;AI</span></a><button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button><nav class="site-nav" id="primary-nav"><a href="/">Home</a><a href="/agents">Agent</a><a href="/actions" aria-current="page">Actions</a><a href="/knowledge">Knowledge</a><a href="/workflows">Workflows</a><a href="/plugin">Private plugin</a><a href="/docs">Docs</a></nav></div></header>
+  <main>
+    <section class="content-hero"><div class="container"><p class="eyebrow">OPERATIONS AND INTEGRATION</p><h1>BrokerFlow actions</h1><p class="lead">Authenticated MCP tools support organization-scoped broker operations. Existing REST Actions remain available with their established contracts.</p><p class="notice">BrokerFlow prepares and records operational work. It does not approve, decline, qualify, underwrite, price, submit, guarantee or fund a borrower.</p></div></section>
+    <section class="section"><div class="container"><h2 class="section-title">Authenticated MCP capabilities</h2><div class="card-grid">
+      <article class="card"><h3>Intake and routing</h3><p><code>capture_borrower_intake</code> records a confirmed, permissioned intake. <code>route_lender_fit</code> computes a read-only preliminary product path from supplied facts.</p></article>
+      <article class="card"><h3>Human review</h3><p><code>request_lender_match_review</code> creates an internal review record. Existing review queue, detail, activity and workflow tools remain available.</p></article>
+      <article class="card"><h3>Documents and deals</h3><p><code>generate_document_checklist</code> returns preliminary guidance. <code>trigger_missing_document_request</code> creates an internal task and draft; delivery remains <code>not_sent</code>. <code>lookup_deal_status</code> reads scoped operational state.</p></article>
+      <article class="card"><h3>Partner attribution</h3><p><code>capture_partner_referral</code> links a confirmed referral to a captured intake and active workspace partner. It does not calculate compensation or authorize payout.</p></article>
+    </div></div></section>
+    <section class="section section-alt"><div class="container"><h2>REST Action compatibility</h2><p>The existing OpenAPI Actions remain a separate integration surface. Their routes, response contracts and forwarding behavior are covered by compatibility tests. Read the <a href="/ACTION_INDEX.md">Action index</a> and <a href="/docs">MCP and release documentation</a> for the current inventory.</p><p>Private MCP access uses the existing Supabase OAuth flow and current organization memberships. This public page does not expose records or credentials. Shared migration and OAuth activation remain owner controlled.</p></div></section>
+  </main>
+  <footer class="site-footer"><div class="container footer-inner"><p>Operational support only. Lending decisions stay with people.</p><nav class="footer-nav"><a href="/">Home</a><a href="/plugin">Private plugin</a><a href="/docs">Docs</a><a href="/app/dashboard">Console</a></nav></div></footer>
+  <script src="/script.js"></script>
+</body>
+</html>

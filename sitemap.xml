@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://brokerflow-ai.vercel.app/</loc></url>
+  <url><loc>https://brokerflow-ai.vercel.app/agents</loc></url>
+  <url><loc>https://brokerflow-ai.vercel.app/actions</loc></url>
+  <url><loc>https://brokerflow-ai.vercel.app/knowledge</loc></url>
+  <url><loc>https://brokerflow-ai.vercel.app/workflows</loc></url>
+  <url><loc>https://brokerflow-ai.vercel.app/plugin</loc></url>
+  <url><loc>https://brokerflow-ai.vercel.app/docs</loc></url>
+</urlset>

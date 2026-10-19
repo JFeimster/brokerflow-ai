@@ -1,0 +1,24 @@
+{
+  "expected_tool_count": 17,
+  "legacy_tools": [
+    "get_my_workspaces",
+    "list_reviews",
+    "get_review_queue_summary",
+    "get_review",
+    "get_review_activity",
+    "create_review_request",
+    "apply_review_action",
+    "create_follow_up_task",
+    "list_follow_up_tasks",
+    "complete_follow_up_task"
+  ],
+  "core_tools": [
+    "capture_borrower_intake",
+    "route_lender_fit",
+    "request_lender_match_review",
+    "generate_document_checklist",
+    "trigger_missing_document_request",
+    "lookup_deal_status",
+    "capture_partner_referral"
+  ]
+}

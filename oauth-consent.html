@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Authorize BrokerFlow access</title>
+    <style>
+      :root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; color: #142231; background: #f3f6f8; }
+      body { margin: 0; padding: 2rem 1rem; }
+      main { box-sizing: border-box; max-width: 34rem; margin: 5vh auto; padding: 2rem; border: 1px solid #d8e0e7; border-radius: 1rem; background: white; box-shadow: 0 1rem 3rem #12283a12; }
+      h1 { margin-top: 0; font-size: 1.65rem; }
+      button, input { box-sizing: border-box; width: 100%; padding: .8rem 1rem; border-radius: .5rem; font: inherit; }
+      input { margin: .35rem 0 1rem; border: 1px solid #9eacb9; }
+      button { margin-top: .75rem; border: 0; color: white; background: #075d8c; cursor: pointer; }
+      button.secondary { color: #243747; background: #e8eef2; }
+      button:disabled { opacity: .6; cursor: wait; }
+      .muted { color: #4d5d6b; }
+      .error { color: #a32525; }
+      dl { display: grid; grid-template-columns: 7rem 1fr; gap: .5rem; overflow-wrap: anywhere; }
+      dt { font-weight: 650; }
+      dd { margin: 0; }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Authorize BrokerFlow access</h1>
+      <p class="muted">Review the requesting application and access details before you decide. BrokerFlow will still check your organization permissions for every operation.</p>
+      <p id="status" role="status" aria-live="polite">Loading authorization request…</p>
+      <section id="login" hidden>
+        <form id="login-form">
+          <label for="email">Email for your existing BrokerFlow account</label>
+          <input id="email" name="email" type="email" autocomplete="email" required>
+          <button type="submit">Email me a sign-in link</button>
+        </form>
+      </section>
+      <section id="consent" hidden>
+        <dl>
+          <dt>Application</dt><dd id="client"></dd>
+          <dt>Client ID</dt><dd id="client-id"></dd>
+          <dt>Redirect URL</dt><dd id="redirect"></dd>
+          <dt>Requested scopes</dt><dd id="scopes"></dd>
+        </dl>
+        <p class="muted">This grants the application a user access token. BrokerFlow tools only return workspace data your current membership permissions allow. You can deny access.</p>
+        <button id="approve" type="button">Approve access</button>
+        <button id="deny" class="secondary" type="button">Deny access</button>
+      </section>
+      <p id="error" class="error" role="alert" hidden></p>
+    </main>
+    <script type="module" src="/oauth-consent.js"></script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "brokerflow-ai",
+  "version": "1.0.0",
+  "description": "Private BrokerFlow broker operations tools for authorized review workflows.",
+  "author": { "name": "BrokerFlow AI" },
+  "homepage": "https://brokerflow-ai.vercel.app",
+  "repository": "https://github.com/JFeimster/brokerflow-ai",
+  "license": "UNLICENSED",
+  "keywords": ["brokerflow", "broker operations", "review workflow", "private plugin"],
+  "extensions": {
+    "com.openai.chatgpt": {
+      "mcp": "./mcp.json",
+      "skills": ["./skills/borrower-intake/SKILL.md", "./skills/review-operations/SKILL.md", "./skills/broker-automation-architect/SKILL.md"]
+    }
+  }
+}

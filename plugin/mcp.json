@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "brokerflow": {
+      "type": "streamable-http",
+      "url": "https://brokerflow-ai.vercel.app/mcp"
+    }
+  }
+}

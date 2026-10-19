@@ -7,6 +7,10 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/oauth/consent", "destination": "/oauth-consent" },
+    { "source": "/mcp", "destination": "/api/mcp" },
+    { "source": "/.well-known/oauth-protected-resource", "destination": "/api/mcp-metadata" },
+    { "source": "/.well-known/oauth-protected-resource/mcp", "destination": "/api/mcp-metadata" },
     { "source": "/api/no-auth/qualify-funding-lead", "destination": "/api/no-auth/lead-intake-actions" },
     { "source": "/api/no-auth/score-borrower-readiness", "destination": "/api/no-auth/lead-intake-actions" },
     { "source": "/api/no-auth/detect-missing-funding-info", "destination": "/api/no-auth/lead-intake-actions" },

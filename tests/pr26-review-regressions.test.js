@@ -268,3 +268,43 @@ test("protected ingestion rejects contact fields that its persistence allowlist 
     assert.throws(() => validateProtectedReview({ ...input, [field]: "unsupported" }), { status: 422 });
   }
 });
+
+test("dynamically injected profile modal dispatches sign-out and still closes normally", () => {
+  const source = read("../app.js");
+  const start = source.indexOf("function modal(");
+  const end = source.indexOf("function closeModal()", start);
+  assert.ok(start > 0 && end > start, "modal function must be present");
+  const modalSource = source.slice(start, end);
+  let html = "";
+  let onClick;
+  let closed = 0;
+  const dispatched = [];
+  const backdrop = {
+    addEventListener(name, listener) { if (name === "click") onClick = listener; }
+  };
+  const query = selector => selector === "#active-modal" && html ? backdrop : null;
+  const document = { body: { insertAdjacentHTML(_position, markup) { html = markup; } } };
+  vm.runInNewContext(modalSource + '\nmodal("Account", "Signed in", \'<button data-action="sign-out">Sign out</button>\');', {
+    $: query,
+    document,
+    handleAction(action) { dispatched.push(action); },
+    closeModal() { closed++; }
+  });
+  assert.match(html, /data-action="sign-out"/);
+  assert.equal(typeof onClick, "function");
+  const signOut = { id: "", closest(selector) { return selector === "[data-action]" ? { dataset: { action: "sign-out" } } : null; } };
+  onClick({ target: signOut });
+  assert.deepEqual(dispatched, ["sign-out"]);
+  assert.equal(closed, 0);
+  onClick({ target: { id: "active-modal", closest() { return null; } } });
+  assert.equal(closed, 1);
+});
+
+test("documented protected ingestion example passes the persistence allowlist", () => {
+  const documentation = read("../docs/pr26-live-review-queue.md");
+  const match = documentation.match(/--data '(\{[^\n]+\})'/);
+  assert.ok(match, "curl smoke test must contain JSON request body");
+  const payload = JSON.parse(match[1]);
+  assert.equal(Object.hasOwn(payload, "source"), false);
+  assert.equal(validateProtectedReview(payload).source, "custom_gpt");
+});

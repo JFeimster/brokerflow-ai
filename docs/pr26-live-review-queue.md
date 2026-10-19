@@ -59,7 +59,7 @@ curl -i https://<preview>/api/ingest/lender-match-review \
   -H "Authorization: Bearer <integration-key>" \
   -H "Idempotency-Key: <unique-random-value-at-least-16-chars>" \
   -H "Content-Type: application/json" \
-  --data '{"source":"custom_gpt","action_type":"lender_match_review","requester_name":"Broker intake","borrower_type":"business","business_name":"Example Business","loan_purpose":"equipment_financing","requested_amount":185000,"state":"NY","human_review_required":true}'
+  --data '{"action_type":"lender_match_review","requester_name":"Broker intake","borrower_type":"business","business_name":"Example Business","loan_purpose":"equipment_financing","requested_amount":185000,"state":"NY","human_review_required":true}'
 ```
 
 Never put live tokens or borrower data in committed test fixtures, terminal transcripts, or PR descriptions.

@@ -13,6 +13,7 @@
   window.BrokerFlowLiveState = {
     update,
     canWrite(workspace) { return workspace?.can_write === true; },
+    resolveReviewTarget(id, reviews = [], live = false) { return reviews.find(item => item.id === id) || (live ? { id } : null); },
     get(resource) { return errors[resource] || ""; },
     set(resource, message) { if (resource in errors) errors[resource] = message || ""; },
     reset() { errors.reviews = ""; errors.activity = ""; }

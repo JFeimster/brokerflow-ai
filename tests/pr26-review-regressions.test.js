@@ -6,6 +6,7 @@ import { webcrypto } from "node:crypto";
 import { TextEncoder } from "node:util";
 import { applyAction, requireWorkspace } from "../lib/reviews/service.js";
 import { applyReviewFilters, parseReviewQuery } from "../lib/reviews/query.js";
+import { validateProtectedReview } from "../lib/reviews/validation.js";
 
 const read = path => readFileSync(new URL(path, import.meta.url), "utf8");
 function browserContext(script, additions = {}) {
@@ -234,4 +235,36 @@ test("read-only workspaces retain read access but fail the server write gate; wr
   assert.throws(() => requireWorkspace(context, "org-1", true), { status: 403 });
   context.workspaces[0].canWrite = true;
   assert.equal(requireWorkspace(context, "org-1", true).canWrite, true);
+});
+
+test("live activity can open a review absent from the loaded queue; sample navigation still requires a row", () => {
+  const { window } = browserContext(read("../console-live-state.js"));
+  const state = window.BrokerFlowLiveState;
+  const loaded = [{ id: "review-loaded" }];
+  assert.deepEqual(state.resolveReviewTarget("review-loaded", loaded, true), loaded[0]);
+  assert.equal(state.resolveReviewTarget("review-outside-page", loaded, true).id, "review-outside-page");
+  assert.equal(state.resolveReviewTarget("review-outside-page", loaded, false), null);
+});
+
+test("all review actions reject notes longer than the database limit before calling persistence", async () => {
+  let rpcCalls = 0;
+  const context = { user: { id: "user-1" }, db: { async rpc() { rpcCalls++; return { data: {}, error: null }; } } };
+  for (const action of ["start_review", "request_information", "mark_reviewed"]) {
+    await assert.rejects(applyAction(context, "org-1", { review_id: "review-1", action, note: "x".repeat(501), expected_version: 1, idempotency_key: `note-limit-key-${action}` }), { status: 422 });
+  }
+  assert.equal(rpcCalls, 0);
+  for (const action of ["start_review", "request_information", "mark_reviewed"]) {
+    await applyAction(context, "org-1", { review_id: "review-1", action, note: "x".repeat(500), expected_version: 1, idempotency_key: `note-boundary-key-${action}` });
+  }
+  assert.equal(rpcCalls, 3);
+});
+
+test("protected ingestion rejects contact fields that its persistence allowlist cannot store", () => {
+  const input = { action_type: "lender_match_review", requester_name: "Broker intake", borrower_type: "business", business_name: "Example Co", loan_purpose: "equipment_financing", requested_amount: 185000, state: "NY", human_review_required: true };
+  const normalized = validateProtectedReview(input);
+  assert.equal(normalized.source, "custom_gpt");
+  assert.equal(normalized.business_name, "Example Co");
+  for (const field of ["borrower_name", "email", "phone", "consent_to_contact"]) {
+    assert.throws(() => validateProtectedReview({ ...input, [field]: "unsupported" }), { status: 422 });
+  }
 });

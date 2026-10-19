@@ -197,6 +197,8 @@ logging is descriptive only. Webhook delivery is not durably deduplicated.
 
 ## Partner lifecycle and integration references
 
+The authenticated MCP adapter additionally registers the seven core tools listed in [MCP_TOOL_CATALOG.md](docs/MCP_TOOL_CATALOG.md). These reuse shared routing/checklist computation and authenticated review/lead/referral services; the existing REST Actions and their operation IDs remain compatible. Persistent MCP calls require OAuth, current workspace permissions, confirmed intent and idempotency. MCP document follow-up creates a draft/task with `not_sent` delivery status. See [synthetic MCP examples](docs/MCP_CORE_TOOL_EXAMPLES.md) and the [release checklist](docs/MCP_RELEASE_CHECKLIST.md).
+
 - `knowledge/internal-partner-action-router.md` — select the canonical Action by intent.
 - `workflows/internal-partner-lifecycle-workflow.md` — prospect through referral and reactivation handoffs.
 - `docs/internal-partner-action-packs-overview.md` — endpoint, operation, auth, field, and handoff map for all 12 partner Actions.

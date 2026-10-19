@@ -5,6 +5,8 @@ description: Triage authorized BrokerFlow review queues, manage accountable foll
 
 # Review operations
 
+For a confirmed new lender-match review, use `request_lender_match_review` with `confirmed: true`, the validated scenario, an idempotency key and optional captured intake ID. This compatibility operation uses the same human-review records and retry behavior as `create_review_request`, which remains available. Use the exact captured scenario when linking an intake; resolve discrepancies with the broker. Creating or completing review workflow is never a borrower decision or lender submission.
+
 Use `get_my_workspaces` first when the authorized workspace is unclear. The user must select an organization; do not infer one from prior conversations. Use `get_review_queue_summary` for queue-wide status, urgency, age, and overdue counts. Use `list_reviews` with narrow filters and a modest page size, then `get_review` for one selected record. Use `list_follow_up_tasks` for task status and ownership. Continue pagination only when requested or needed to answer the question.
 
 Use `get_review_activity` only for an audit-history request. If it is denied, explain that the workspace has not granted audit access; do not attempt another tool or route to recover the events.

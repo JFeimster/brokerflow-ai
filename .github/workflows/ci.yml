@@ -42,6 +42,7 @@ jobs:
       - run: npm run build
       - run: npm run lint
       - run: npm test
+      - run: npm run package:plugin
       - run: npm run test:postgres
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/brokerflow_test

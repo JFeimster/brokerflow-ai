@@ -1,0 +1,15 @@
+{
+  "organization_id": "20000000-0000-4000-8000-000000000001",
+  "other_organization_id": "20000000-0000-4000-8000-000000000002",
+  "actor_id": "10000000-0000-4000-8000-000000000001",
+  "viewer_id": "10000000-0000-4000-8000-000000000002",
+  "partner_id": "50000000-0000-4000-8000-000000000001",
+  "intake": {
+    "external_reference": "synthetic-restaurant-equipment-2026-001",
+    "contact_name": "Synthetic Restaurant Operator",
+    "email": "synthetic-operator@example.test",
+    "assigned_to": "10000000-0000-4000-8000-000000000001",
+    "consent": { "status": "granted", "channels": ["email"], "source": "synthetic broker attestation", "captured_at": "2026-10-18T12:00:00Z" },
+    "scenario": { "borrower_type": "business", "business_name": "Synthetic Harbor Restaurant LLC", "loan_purpose": "equipment_financing", "requested_amount": 85000, "state": "ny", "monthly_revenue": 55000, "time_in_business_months": 36, "credit_score_range": "660_699", "urgency": "normal" }
+  }
+}

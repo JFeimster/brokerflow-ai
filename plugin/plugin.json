@@ -1,17 +1,36 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "brokerflow-ai",
-  "version": "1.1.0",
-  "description": "Private BrokerFlow broker operations tools for authorized review triage and accountable follow-up.",
-  "author": { "name": "BrokerFlow AI" },
+  "version": "1.2.0",
+  "description": "Private BrokerFlow intake, preliminary routing, human review, documents, deals and partner operations.",
+  "author": {
+    "name": "BrokerFlow AI"
+  },
   "homepage": "https://brokerflow-ai.vercel.app",
   "repository": "https://github.com/JFeimster/brokerflow-ai",
   "license": "UNLICENSED",
-  "keywords": ["brokerflow", "broker operations", "review workflow", "follow-up tasks", "private plugin"],
+  "keywords": [
+    "brokerflow",
+    "broker operations",
+    "review workflow",
+    "follow-up tasks",
+    "private plugin"
+  ],
   "extensions": {
     "com.openai.chatgpt": {
       "mcp": "./mcp.json",
-      "skills": ["./skills/borrower-intake/SKILL.md", "./skills/review-operations/SKILL.md", "./skills/queue-triage/SKILL.md", "./skills/missing-information-prep/SKILL.md", "./skills/broker-automation-architect/SKILL.md"]
+      "skills": [
+        "./skills/borrower-intake/SKILL.md",
+        "./skills/lender-fit-routing/SKILL.md",
+        "./skills/review-operations/SKILL.md",
+        "./skills/document-collection/SKILL.md",
+        "./skills/deal-operations/SKILL.md",
+        "./skills/borrower-follow-up/SKILL.md",
+        "./skills/partner-operations/SKILL.md",
+        "./skills/queue-triage/SKILL.md",
+        "./skills/missing-information-prep/SKILL.md",
+        "./skills/broker-automation-architect/SKILL.md"
+      ]
     }
   }
 }

@@ -1,0 +1,1198 @@
+{
+  "source_commit": "38665ba",
+  "routes": [
+    {
+      "input": {
+        "source": "webhook_test",
+        "action_type": "lender_fit_routing",
+        "borrower_type": "business",
+        "business_name": "Synthetic Harbor Restaurant LLC",
+        "loan_purpose": "equipment_financing",
+        "requested_amount": 85000,
+        "state": "ny",
+        "monthly_revenue": 55000,
+        "time_in_business_months": 36,
+        "credit_score_range": "660_699",
+        "urgency": "normal"
+      },
+      "output": {
+        "success": true,
+        "primary_route": "equipment_financing",
+        "secondary_routes": [
+          "business_working_capital"
+        ],
+        "fit_score": 85,
+        "fit_tier": "strong_fit",
+        "automation_actions": [
+          "create_equipment_financing_queue_item",
+          "send_broker_alert",
+          "create_document_checklist"
+        ],
+        "missing_information": [],
+        "next_step": "trigger_workflow"
+      },
+      "event": {
+        "success": true,
+        "scenario_id": null,
+        "source": "webhook_test",
+        "action_type": "lender_fit_routing",
+        "requester_name": null,
+        "borrower_type": "business",
+        "loan_purpose": "equipment_financing",
+        "requested_amount": 85000,
+        "state": "ny",
+        "credit_score_range": "660_699",
+        "monthly_revenue": 55000,
+        "annual_revenue": null,
+        "time_in_business_months": 36,
+        "property_type": null,
+        "occupancy_type": null,
+        "collateral_available": null,
+        "urgency": "normal",
+        "consent_to_contact": null,
+        "notes": null,
+        "compliance_notice": "Routing only. No approval, denial, underwriting, pricing, funding, or lender submission has been made.",
+        "primary_route": "equipment_financing",
+        "secondary_routes": [
+          "business_working_capital"
+        ],
+        "fit_score": 85,
+        "fit_tier": "strong_fit",
+        "automation_actions": [
+          "create_equipment_financing_queue_item",
+          "send_broker_alert",
+          "create_document_checklist"
+        ],
+        "missing_information": [],
+        "next_step": "trigger_workflow"
+      }
+    },
+    {
+      "input": {
+        "source": "webhook_test",
+        "action_type": "lender_fit_routing",
+        "borrower_type": "business",
+        "business_name": "Synthetic Harbor Restaurant LLC",
+        "loan_purpose": "business_working_capital",
+        "requested_amount": 85000,
+        "state": "ny",
+        "monthly_revenue": 55000,
+        "time_in_business_months": 36,
+        "credit_score_range": "660_699",
+        "urgency": "normal"
+      },
+      "output": {
+        "success": true,
+        "primary_route": "business_working_capital",
+        "secondary_routes": [
+          "sba_or_bank_review"
+        ],
+        "fit_score": 100,
+        "fit_tier": "strong_fit",
+        "automation_actions": [
+          "create_business_working_capital_queue_item",
+          "send_broker_alert",
+          "create_document_checklist"
+        ],
+        "missing_information": [],
+        "next_step": "trigger_workflow"
+      },
+      "event": {
+        "success": true,
+        "scenario_id": null,
+        "source": "webhook_test",
+        "action_type": "lender_fit_routing",
+        "requester_name": null,
+        "borrower_type": "business",
+        "loan_purpose": "business_working_capital",
+        "requested_amount": 85000,
+        "state": "ny",
+        "credit_score_range": "660_699",
+        "monthly_revenue": 55000,
+        "annual_revenue": null,
+        "time_in_business_months": 36,
+        "property_type": null,
+        "occupancy_type": null,
+        "collateral_available": null,
+        "urgency": "normal",
+        "consent_to_contact": null,
+        "notes": null,
+        "compliance_notice": "Routing only. No approval, denial, underwriting, pricing, funding, or lender submission has been made.",
+        "primary_route": "business_working_capital",
+        "secondary_routes": [
+          "sba_or_bank_review"
+        ],
+        "fit_score": 100,
+        "fit_tier": "strong_fit",
+        "automation_actions": [
+          "create_business_working_capital_queue_item",
+          "send_broker_alert",
+          "create_document_checklist"
+        ],
+        "missing_information": [],
+        "next_step": "trigger_workflow"
+      }
+    },
+    {
+      "input": {
+        "source": "webhook_test",
+        "action_type": "lender_fit_routing",
+        "borrower_type": "business",
+        "business_name": "Synthetic Harbor Restaurant LLC",
+        "loan_purpose": "commercial_real_estate",
+        "requested_amount": 85000,
+        "state": "ny",
+        "monthly_revenue": 55000,
+        "time_in_business_months": 36,
+        "credit_score_range": "660_699",
+        "urgency": "normal"
+      },
+      "output": {
+        "success": true,
+        "primary_route": "commercial_real_estate",
+        "secondary_routes": [
+          "bridge_or_private_lending"
+        ],
+        "fit_score": 65,
+        "fit_tier": "possible_fit",
+        "automation_actions": [
+          "create_commercial_real_estate_queue_item",
+          "send_broker_alert",
+          "create_document_checklist"
+        ],
+        "missing_information": [
+          "property_type",
+          "occupancy_type"
+        ],
+        "next_step": "trigger_workflow"
+      },
+      "event": {
+        "success": true,
+        "scenario_id": null,
+        "source": "webhook_test",
+        "action_type": "lender_fit_routing",
+        "requester_name": null,
+        "borrower_type": "business",
+        "loan_purpose": "commercial_real_estate",
+        "requested_amount": 85000,
+        "state": "ny",
+        "credit_score_range": "660_699",
+        "monthly_revenue": 55000,
+        "annual_revenue": null,
+        "time_in_business_months": 36,
+        "property_type": null,
+        "occupancy_type": null,
+        "collateral_available": null,
+        "urgency": "normal",
+        "consent_to_contact": null,
+        "notes": null,
+        "compliance_notice": "Routing only. No approval, denial, underwriting, pricing, funding, or lender submission has been made.",
+        "primary_route": "commercial_real_estate",
+        "secondary_routes": [
+          "bridge_or_private_lending"
+        ],
+        "fit_score": 65,
+        "fit_tier": "possible_fit",
+        "automation_actions": [
+          "create_commercial_real_estate_queue_item",
+          "send_broker_alert",
+          "create_document_checklist"
+        ],
+        "missing_information": [
+          "property_type",
+          "occupancy_type"
+        ],
+        "next_step": "trigger_workflow"
+      }
+    },
+    {
+      "input": {
+        "source": "webhook_test",
+        "action_type": "lender_fit_routing",
+        "borrower_type": "business",
+        "business_name": "Synthetic Harbor Restaurant LLC",
+        "loan_purpose": "residential_purchase",
+        "requested_amount": 85000,
+        "state": "ny",
+        "monthly_revenue": 55000,
+        "time_in_business_months": 36,
+        "credit_score_range": "660_699",
+        "urgency": "normal"
+      },
+      "output": {
+        "success": true,
+        "primary_route": "residential_mortgage",
+        "secondary_routes": [],
+        "fit_score": 65,
+        "fit_tier": "possible_fit",
+        "automation_actions": [
+          "create_residential_mortgage_queue_item",
+          "send_broker_alert",
+          "create_document_checklist"
+        ],
+        "missing_information": [
+          "property_type",
+          "occupancy_type"
+        ],
+        "next_step": "trigger_workflow"
+      },
+      "event": {
+        "success": true,
+        "scenario_id": null,
+        "source": "webhook_test",
+        "action_type": "lender_fit_routing",
+        "requester_name": null,
+        "borrower_type": "business",
+        "loan_purpose": "residential_purchase",
+        "requested_amount": 85000,
+        "state": "ny",
+        "credit_score_range": "660_699",
+        "monthly_revenue": 55000,
+        "annual_revenue": null,
+        "time_in_business_months": 36,
+        "property_type": null,
+        "occupancy_type": null,
+        "collateral_available": null,
+        "urgency": "normal",
+        "consent_to_contact": null,
+        "notes": null,
+        "compliance_notice": "Routing only. No approval, denial, underwriting, pricing, funding, or lender submission has been made.",
+        "primary_route": "residential_mortgage",
+        "secondary_routes": [],
+        "fit_score": 65,
+        "fit_tier": "possible_fit",
+        "automation_actions": [
+          "create_residential_mortgage_queue_item",
+          "send_broker_alert",
+          "create_document_checklist"
+        ],
+        "missing_information": [
+          "property_type",
+          "occupancy_type"
+        ],
+        "next_step": "trigger_workflow"
+      }
+    },
+    {
+      "input": {
+        "source": "webhook_test",
+        "action_type": "lender_fit_routing",
+        "borrower_type": "business",
+        "business_name": "Synthetic Harbor Restaurant LLC",
+        "loan_purpose": "other",
+        "requested_amount": 85000,
+        "state": "ny",
+        "monthly_revenue": 55000,
+        "time_in_business_months": 36,
+        "credit_score_range": "660_699",
+        "urgency": "normal"
+      },
+      "output": {
+        "success": true,
+        "primary_route": "manual_exception",
+        "secondary_routes": [],
+        "fit_score": 75,
+        "fit_tier": "strong_fit",
+        "automation_actions": [
+          "create_manual_exception_queue_item",
+          "send_broker_alert",
+          "create_document_checklist"
+        ],
+        "missing_information": [],
+        "next_step": "manual_exception_queue"
+      },
+      "event": {
+        "success": true,
+        "scenario_id": null,
+        "source": "webhook_test",
+        "action_type": "lender_fit_routing",
+        "requester_name": null,
+        "borrower_type": "business",
+        "loan_purpose": "other",
+        "requested_amount": 85000,
+        "state": "ny",
+        "credit_score_range": "660_699",
+        "monthly_revenue": 55000,
+        "annual_revenue": null,
+        "time_in_business_months": 36,
+        "property_type": null,
+        "occupancy_type": null,
+        "collateral_available": null,
+        "urgency": "normal",
+        "consent_to_contact": null,
+        "notes": null,
+        "compliance_notice": "Routing only. No approval, denial, underwriting, pricing, funding, or lender submission has been made.",
+        "primary_route": "manual_exception",
+        "secondary_routes": [],
+        "fit_score": 75,
+        "fit_tier": "strong_fit",
+        "automation_actions": [
+          "create_manual_exception_queue_item",
+          "send_broker_alert",
+          "create_document_checklist"
+        ],
+        "missing_information": [],
+        "next_step": "manual_exception_queue"
+      }
+    }
+  ],
+  "checklists": [
+    {
+      "input": {
+        "primary_route": "equipment_financing",
+        "requested_amount": 300000,
+        "credit_score_range": "below_580",
+        "urgency": "high"
+      },
+      "output": {
+        "route": "equipment_financing",
+        "checklist_items": [
+          {
+            "document_type": "equipment_invoice_or_quote",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "business_bank_statements_3_months",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "business_application",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "owner_id",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "entity_documents",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "tax_returns_or_financial_statements_optional_by_file_strength",
+            "required": true,
+            "status": "needed"
+          }
+        ],
+        "optional_items": [
+          {
+            "document_type": "credit_context_or_explanation_optional",
+            "required": false,
+            "status": "optional"
+          },
+          {
+            "document_type": "priority_contact_confirmation",
+            "required": false,
+            "status": "optional"
+          }
+        ],
+        "checklist_notes": [
+          "Checklist generated for equipment_financing.",
+          "Document checklist only; no underwriting, approval, funding, or lender submission has occurred."
+        ]
+      },
+      "audit": {
+        "submitted_documents": [
+          {
+            "document_type": "owner_id",
+            "status": "submitted",
+            "filename": null,
+            "notes": null
+          }
+        ],
+        "required_documents": [
+          "equipment_invoice_or_quote",
+          "business_bank_statements_3_months",
+          "business_application",
+          "owner_id",
+          "entity_documents",
+          "tax_returns_or_financial_statements_optional_by_file_strength"
+        ],
+        "submitted_required": [
+          "owner_id"
+        ],
+        "missing_documents": [
+          "equipment_invoice_or_quote",
+          "business_bank_statements_3_months",
+          "business_application",
+          "entity_documents",
+          "tax_returns_or_financial_statements_optional_by_file_strength"
+        ],
+        "extra_documents": [],
+        "completion_score": 17,
+        "audit_status": "missing_required_documents",
+        "next_step": "request_missing_documents"
+      },
+      "packet": {
+        "packet_status": "incomplete_packet",
+        "packet_sections": [
+          {
+            "section_id": "scenario_summary",
+            "title": "Scenario Summary",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "borrower_profile",
+            "title": "Borrower / Business Profile",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "funding_request",
+            "title": "Funding Request",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "document_index",
+            "title": "Document Index",
+            "status": "incomplete"
+          },
+          {
+            "section_id": "review_notes",
+            "title": "Broker Review Notes",
+            "status": "draft_ready"
+          }
+        ],
+        "document_audit": {
+          "submitted_documents": [],
+          "required_documents": [
+            "equipment_invoice_or_quote",
+            "business_bank_statements_3_months",
+            "business_application",
+            "owner_id",
+            "entity_documents",
+            "tax_returns_or_financial_statements_optional_by_file_strength"
+          ],
+          "submitted_required": [],
+          "missing_documents": [
+            "equipment_invoice_or_quote",
+            "business_bank_statements_3_months",
+            "business_application",
+            "owner_id",
+            "entity_documents",
+            "tax_returns_or_financial_statements_optional_by_file_strength"
+          ],
+          "extra_documents": [],
+          "completion_score": 0,
+          "audit_status": "missing_required_documents",
+          "next_step": "request_missing_documents"
+        },
+        "packet_notes": [
+          "Packet assembled for internal broker review.",
+          "No lender submission has been made by this action."
+        ],
+        "next_step": "request_missing_documents"
+      },
+      "summary": {
+        "file_summary": "Funding file summarized for equipment_financing.",
+        "route": "equipment_financing",
+        "strengths": [],
+        "gaps": [
+          "missing_required_documents",
+          "missing_state"
+        ],
+        "document_completion_score": 0,
+        "missing_documents": [
+          "equipment_invoice_or_quote",
+          "business_bank_statements_3_months",
+          "business_application",
+          "owner_id",
+          "entity_documents",
+          "tax_returns_or_financial_statements_optional_by_file_strength"
+        ],
+        "recommended_next_steps": [
+          "Request missing documents",
+          "Recheck packet before internal review"
+        ],
+        "compliance_notice": "Document organization support only. No approval, denial, underwriting, pricing, funding, or lender submission has been made."
+      }
+    },
+    {
+      "input": {
+        "primary_route": "business_working_capital",
+        "requested_amount": 300000,
+        "credit_score_range": "below_580",
+        "urgency": "high"
+      },
+      "output": {
+        "route": "business_working_capital",
+        "checklist_items": [
+          {
+            "document_type": "business_bank_statements_3_months",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "business_application",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "owner_id",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "voided_check",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "profit_and_loss_optional",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "tax_returns_or_financial_statements_optional_by_file_strength",
+            "required": true,
+            "status": "needed"
+          }
+        ],
+        "optional_items": [
+          {
+            "document_type": "credit_context_or_explanation_optional",
+            "required": false,
+            "status": "optional"
+          },
+          {
+            "document_type": "priority_contact_confirmation",
+            "required": false,
+            "status": "optional"
+          }
+        ],
+        "checklist_notes": [
+          "Checklist generated for business_working_capital.",
+          "Document checklist only; no underwriting, approval, funding, or lender submission has occurred."
+        ]
+      },
+      "audit": {
+        "submitted_documents": [
+          {
+            "document_type": "owner_id",
+            "status": "submitted",
+            "filename": null,
+            "notes": null
+          }
+        ],
+        "required_documents": [
+          "business_bank_statements_3_months",
+          "business_application",
+          "owner_id",
+          "voided_check",
+          "profit_and_loss_optional",
+          "tax_returns_or_financial_statements_optional_by_file_strength"
+        ],
+        "submitted_required": [
+          "owner_id"
+        ],
+        "missing_documents": [
+          "business_bank_statements_3_months",
+          "business_application",
+          "voided_check",
+          "profit_and_loss_optional",
+          "tax_returns_or_financial_statements_optional_by_file_strength"
+        ],
+        "extra_documents": [],
+        "completion_score": 17,
+        "audit_status": "missing_required_documents",
+        "next_step": "request_missing_documents"
+      },
+      "packet": {
+        "packet_status": "incomplete_packet",
+        "packet_sections": [
+          {
+            "section_id": "scenario_summary",
+            "title": "Scenario Summary",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "borrower_profile",
+            "title": "Borrower / Business Profile",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "funding_request",
+            "title": "Funding Request",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "document_index",
+            "title": "Document Index",
+            "status": "incomplete"
+          },
+          {
+            "section_id": "review_notes",
+            "title": "Broker Review Notes",
+            "status": "draft_ready"
+          }
+        ],
+        "document_audit": {
+          "submitted_documents": [],
+          "required_documents": [
+            "business_bank_statements_3_months",
+            "business_application",
+            "owner_id",
+            "voided_check",
+            "profit_and_loss_optional",
+            "tax_returns_or_financial_statements_optional_by_file_strength"
+          ],
+          "submitted_required": [],
+          "missing_documents": [
+            "business_bank_statements_3_months",
+            "business_application",
+            "owner_id",
+            "voided_check",
+            "profit_and_loss_optional",
+            "tax_returns_or_financial_statements_optional_by_file_strength"
+          ],
+          "extra_documents": [],
+          "completion_score": 0,
+          "audit_status": "missing_required_documents",
+          "next_step": "request_missing_documents"
+        },
+        "packet_notes": [
+          "Packet assembled for internal broker review.",
+          "No lender submission has been made by this action."
+        ],
+        "next_step": "request_missing_documents"
+      },
+      "summary": {
+        "file_summary": "Funding file summarized for business_working_capital.",
+        "route": "business_working_capital",
+        "strengths": [],
+        "gaps": [
+          "missing_required_documents",
+          "missing_state"
+        ],
+        "document_completion_score": 0,
+        "missing_documents": [
+          "business_bank_statements_3_months",
+          "business_application",
+          "owner_id",
+          "voided_check",
+          "profit_and_loss_optional",
+          "tax_returns_or_financial_statements_optional_by_file_strength"
+        ],
+        "recommended_next_steps": [
+          "Request missing documents",
+          "Recheck packet before internal review"
+        ],
+        "compliance_notice": "Document organization support only. No approval, denial, underwriting, pricing, funding, or lender submission has been made."
+      }
+    },
+    {
+      "input": {
+        "primary_route": "sba_or_bank_review",
+        "requested_amount": 300000,
+        "credit_score_range": "below_580",
+        "urgency": "high"
+      },
+      "output": {
+        "route": "sba_or_bank_review",
+        "checklist_items": [
+          {
+            "document_type": "business_bank_statements_6_months",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "tax_returns_2_years",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "profit_and_loss",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "balance_sheet",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "debt_schedule",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "entity_documents",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "owner_id",
+            "required": true,
+            "status": "needed"
+          }
+        ],
+        "optional_items": [
+          {
+            "document_type": "credit_context_or_explanation_optional",
+            "required": false,
+            "status": "optional"
+          },
+          {
+            "document_type": "priority_contact_confirmation",
+            "required": false,
+            "status": "optional"
+          }
+        ],
+        "checklist_notes": [
+          "Checklist generated for sba_or_bank_review.",
+          "Document checklist only; no underwriting, approval, funding, or lender submission has occurred."
+        ]
+      },
+      "audit": {
+        "submitted_documents": [
+          {
+            "document_type": "owner_id",
+            "status": "submitted",
+            "filename": null,
+            "notes": null
+          }
+        ],
+        "required_documents": [
+          "business_bank_statements_6_months",
+          "tax_returns_2_years",
+          "profit_and_loss",
+          "balance_sheet",
+          "debt_schedule",
+          "entity_documents",
+          "owner_id"
+        ],
+        "submitted_required": [
+          "owner_id"
+        ],
+        "missing_documents": [
+          "business_bank_statements_6_months",
+          "tax_returns_2_years",
+          "profit_and_loss",
+          "balance_sheet",
+          "debt_schedule",
+          "entity_documents"
+        ],
+        "extra_documents": [],
+        "completion_score": 14,
+        "audit_status": "missing_required_documents",
+        "next_step": "request_missing_documents"
+      },
+      "packet": {
+        "packet_status": "incomplete_packet",
+        "packet_sections": [
+          {
+            "section_id": "scenario_summary",
+            "title": "Scenario Summary",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "borrower_profile",
+            "title": "Borrower / Business Profile",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "funding_request",
+            "title": "Funding Request",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "document_index",
+            "title": "Document Index",
+            "status": "incomplete"
+          },
+          {
+            "section_id": "review_notes",
+            "title": "Broker Review Notes",
+            "status": "draft_ready"
+          }
+        ],
+        "document_audit": {
+          "submitted_documents": [],
+          "required_documents": [
+            "business_bank_statements_6_months",
+            "tax_returns_2_years",
+            "profit_and_loss",
+            "balance_sheet",
+            "debt_schedule",
+            "entity_documents",
+            "owner_id"
+          ],
+          "submitted_required": [],
+          "missing_documents": [
+            "business_bank_statements_6_months",
+            "tax_returns_2_years",
+            "profit_and_loss",
+            "balance_sheet",
+            "debt_schedule",
+            "entity_documents",
+            "owner_id"
+          ],
+          "extra_documents": [],
+          "completion_score": 0,
+          "audit_status": "missing_required_documents",
+          "next_step": "request_missing_documents"
+        },
+        "packet_notes": [
+          "Packet assembled for internal broker review.",
+          "No lender submission has been made by this action."
+        ],
+        "next_step": "request_missing_documents"
+      },
+      "summary": {
+        "file_summary": "Funding file summarized for sba_or_bank_review.",
+        "route": "sba_or_bank_review",
+        "strengths": [],
+        "gaps": [
+          "missing_required_documents",
+          "missing_state"
+        ],
+        "document_completion_score": 0,
+        "missing_documents": [
+          "business_bank_statements_6_months",
+          "tax_returns_2_years",
+          "profit_and_loss",
+          "balance_sheet",
+          "debt_schedule",
+          "entity_documents",
+          "owner_id"
+        ],
+        "recommended_next_steps": [
+          "Request missing documents",
+          "Recheck packet before internal review"
+        ],
+        "compliance_notice": "Document organization support only. No approval, denial, underwriting, pricing, funding, or lender submission has been made."
+      }
+    },
+    {
+      "input": {
+        "primary_route": "residential_mortgage",
+        "requested_amount": 300000,
+        "credit_score_range": "below_580",
+        "urgency": "high"
+      },
+      "output": {
+        "route": "residential_mortgage",
+        "checklist_items": [
+          {
+            "document_type": "loan_application",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "income_documents",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "bank_statements",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "credit_authorization",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "purchase_contract_if_applicable",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "id",
+            "required": true,
+            "status": "needed"
+          }
+        ],
+        "optional_items": [
+          {
+            "document_type": "credit_context_or_explanation_optional",
+            "required": false,
+            "status": "optional"
+          },
+          {
+            "document_type": "priority_contact_confirmation",
+            "required": false,
+            "status": "optional"
+          }
+        ],
+        "checklist_notes": [
+          "Checklist generated for residential_mortgage.",
+          "Document checklist only; no underwriting, approval, funding, or lender submission has occurred."
+        ]
+      },
+      "audit": {
+        "submitted_documents": [
+          {
+            "document_type": "owner_id",
+            "status": "submitted",
+            "filename": null,
+            "notes": null
+          }
+        ],
+        "required_documents": [
+          "loan_application",
+          "income_documents",
+          "bank_statements",
+          "credit_authorization",
+          "purchase_contract_if_applicable",
+          "id"
+        ],
+        "submitted_required": [],
+        "missing_documents": [
+          "loan_application",
+          "income_documents",
+          "bank_statements",
+          "credit_authorization",
+          "purchase_contract_if_applicable",
+          "id"
+        ],
+        "extra_documents": [
+          "owner_id"
+        ],
+        "completion_score": 0,
+        "audit_status": "missing_required_documents",
+        "next_step": "request_missing_documents"
+      },
+      "packet": {
+        "packet_status": "incomplete_packet",
+        "packet_sections": [
+          {
+            "section_id": "scenario_summary",
+            "title": "Scenario Summary",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "borrower_profile",
+            "title": "Borrower / Business Profile",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "funding_request",
+            "title": "Funding Request",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "document_index",
+            "title": "Document Index",
+            "status": "incomplete"
+          },
+          {
+            "section_id": "review_notes",
+            "title": "Broker Review Notes",
+            "status": "draft_ready"
+          }
+        ],
+        "document_audit": {
+          "submitted_documents": [],
+          "required_documents": [
+            "loan_application",
+            "income_documents",
+            "bank_statements",
+            "credit_authorization",
+            "purchase_contract_if_applicable",
+            "id"
+          ],
+          "submitted_required": [],
+          "missing_documents": [
+            "loan_application",
+            "income_documents",
+            "bank_statements",
+            "credit_authorization",
+            "purchase_contract_if_applicable",
+            "id"
+          ],
+          "extra_documents": [],
+          "completion_score": 0,
+          "audit_status": "missing_required_documents",
+          "next_step": "request_missing_documents"
+        },
+        "packet_notes": [
+          "Packet assembled for internal broker review.",
+          "No lender submission has been made by this action."
+        ],
+        "next_step": "request_missing_documents"
+      },
+      "summary": {
+        "file_summary": "Funding file summarized for residential_mortgage.",
+        "route": "residential_mortgage",
+        "strengths": [],
+        "gaps": [
+          "missing_required_documents",
+          "missing_state"
+        ],
+        "document_completion_score": 0,
+        "missing_documents": [
+          "loan_application",
+          "income_documents",
+          "bank_statements",
+          "credit_authorization",
+          "purchase_contract_if_applicable",
+          "id"
+        ],
+        "recommended_next_steps": [
+          "Request missing documents",
+          "Recheck packet before internal review"
+        ],
+        "compliance_notice": "Document organization support only. No approval, denial, underwriting, pricing, funding, or lender submission has been made."
+      }
+    },
+    {
+      "input": {
+        "primary_route": "manual_exception",
+        "requested_amount": 300000,
+        "credit_score_range": "below_580",
+        "urgency": "high"
+      },
+      "output": {
+        "route": "manual_exception",
+        "checklist_items": [
+          {
+            "document_type": "scenario_summary",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "known_documents",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "missing_information_list",
+            "required": true,
+            "status": "needed"
+          },
+          {
+            "document_type": "manual_review_notes",
+            "required": true,
+            "status": "needed"
+          }
+        ],
+        "optional_items": [
+          {
+            "document_type": "credit_context_or_explanation_optional",
+            "required": false,
+            "status": "optional"
+          },
+          {
+            "document_type": "priority_contact_confirmation",
+            "required": false,
+            "status": "optional"
+          }
+        ],
+        "checklist_notes": [
+          "Checklist generated for manual_exception.",
+          "Document checklist only; no underwriting, approval, funding, or lender submission has occurred."
+        ]
+      },
+      "audit": {
+        "submitted_documents": [
+          {
+            "document_type": "owner_id",
+            "status": "submitted",
+            "filename": null,
+            "notes": null
+          }
+        ],
+        "required_documents": [
+          "scenario_summary",
+          "known_documents",
+          "missing_information_list",
+          "manual_review_notes"
+        ],
+        "submitted_required": [],
+        "missing_documents": [
+          "scenario_summary",
+          "known_documents",
+          "missing_information_list",
+          "manual_review_notes"
+        ],
+        "extra_documents": [
+          "owner_id"
+        ],
+        "completion_score": 0,
+        "audit_status": "missing_required_documents",
+        "next_step": "request_missing_documents"
+      },
+      "packet": {
+        "packet_status": "incomplete_packet",
+        "packet_sections": [
+          {
+            "section_id": "scenario_summary",
+            "title": "Scenario Summary",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "borrower_profile",
+            "title": "Borrower / Business Profile",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "funding_request",
+            "title": "Funding Request",
+            "status": "draft_ready"
+          },
+          {
+            "section_id": "document_index",
+            "title": "Document Index",
+            "status": "incomplete"
+          },
+          {
+            "section_id": "review_notes",
+            "title": "Broker Review Notes",
+            "status": "draft_ready"
+          }
+        ],
+        "document_audit": {
+          "submitted_documents": [],
+          "required_documents": [
+            "scenario_summary",
+            "known_documents",
+            "missing_information_list",
+            "manual_review_notes"
+          ],
+          "submitted_required": [],
+          "missing_documents": [
+            "scenario_summary",
+            "known_documents",
+            "missing_information_list",
+            "manual_review_notes"
+          ],
+          "extra_documents": [],
+          "completion_score": 0,
+          "audit_status": "missing_required_documents",
+          "next_step": "request_missing_documents"
+        },
+        "packet_notes": [
+          "Packet assembled for internal broker review.",
+          "No lender submission has been made by this action."
+        ],
+        "next_step": "request_missing_documents"
+      },
+      "summary": {
+        "file_summary": "Funding file summarized for manual_exception.",
+        "route": "manual_exception",
+        "strengths": [],
+        "gaps": [
+          "missing_required_documents",
+          "missing_state"
+        ],
+        "document_completion_score": 0,
+        "missing_documents": [
+          "scenario_summary",
+          "known_documents",
+          "missing_information_list",
+          "manual_review_notes"
+        ],
+        "recommended_next_steps": [
+          "Request missing documents",
+          "Recheck packet before internal review"
+        ],
+        "compliance_notice": "Document organization support only. No approval, denial, underwriting, pricing, funding, or lender submission has been made."
+      }
+    }
+  ]
+}

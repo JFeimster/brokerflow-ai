@@ -79,6 +79,11 @@ begin
   v_fingerprint := encode(sha256(convert_to(p_task::text, 'UTF8')), 'hex');
   perform pg_advisory_xact_lock(hashtextextended(p_organization_id::text || '|' || p_actor_user_id::text || '|' || v_key, 0));
 
+  if not exists (
+    select 1 from public.memberships m join public.organizations o on o.id = m.organization_id
+    where m.organization_id = p_organization_id and m.user_id = p_actor_user_id and m.status = 'active' and o.status = 'active'
+  ) then raise exception 'active organization membership required' using errcode = '42501'; end if;
+
   select * into v_task from public.brokerflow_follow_up_tasks
    where organization_id = p_organization_id and created_by = p_actor_user_id and create_idempotency_hash = v_key;
   if found then
@@ -86,10 +91,6 @@ begin
     return (to_jsonb(v_task) - 'create_idempotency_hash' - 'create_request_fingerprint' - 'completion_idempotency_hash' - 'completion_request_fingerprint') || jsonb_build_object('duplicate', true);
   end if;
 
-  if not exists (
-    select 1 from public.memberships m join public.organizations o on o.id = m.organization_id
-    where m.organization_id = p_organization_id and m.user_id = p_actor_user_id and m.status = 'active' and o.status = 'active'
-  ) then raise exception 'active organization membership required' using errcode = '23503'; end if;
   if p_task->>'assigned_to' is not null and not exists (
     select 1 from public.memberships m where m.organization_id = p_organization_id and m.user_id = (p_task->>'assigned_to')::uuid and m.status = 'active'
   ) then raise exception 'active assigned owner membership required' using errcode = '23503'; end if;
@@ -138,6 +139,10 @@ begin
   end if;
   v_key := encode(sha256(convert_to(p_idempotency_key, 'UTF8')), 'hex');
   v_fingerprint := encode(sha256(convert_to(jsonb_build_object('task_id', p_task_id)::text, 'UTF8')), 'hex');
+  if not exists (
+    select 1 from public.memberships m join public.organizations o on o.id = m.organization_id
+    where m.organization_id = p_organization_id and m.user_id = p_actor_user_id and m.status = 'active' and o.status = 'active'
+  ) then raise exception 'active organization membership required' using errcode = '42501'; end if;
   select * into v_task from public.brokerflow_follow_up_tasks
    where organization_id = p_organization_id and id = p_task_id for update;
   if not found then raise exception 'task missing' using errcode = 'P0002'; end if;
@@ -149,10 +154,6 @@ begin
     raise exception 'task already completed' using errcode = '40001';
   end if;
 
-  if not exists (
-    select 1 from public.memberships m join public.organizations o on o.id = m.organization_id
-    where m.organization_id = p_organization_id and m.user_id = p_actor_user_id and m.status = 'active' and o.status = 'active'
-  ) then raise exception 'active organization membership required' using errcode = '23503'; end if;
   update public.brokerflow_follow_up_tasks
      set status = 'completed', completed_by = p_actor_user_id, completed_at = now(),
          completion_idempotency_hash = v_key, completion_request_fingerprint = v_fingerprint

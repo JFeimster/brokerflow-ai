@@ -34,4 +34,6 @@ test("task services call the organization-scoped atomic RPCs with validated attr
 test("task service maps idempotency and reference failures to safe public errors", async () => {
   const context = { user: { id: "user-1" }, db: { async rpc() { return { data: null, error: { code: "23503" } }; } } };
   await assert.rejects(createFollowUpTask(context, org, { title: "Call broker", task_type: "call", idempotency_key: "synthetic-task-key-003" }), { status: 422, code: "invalid_reference" });
+  context.db.rpc = async () => ({ data: null, error: { code: "42501" } });
+  await assert.rejects(completeFollowUpTask(context, org, taskId, "synthetic-task-complete-002"), { status: 403, code: "workspace_access_denied" });
 });

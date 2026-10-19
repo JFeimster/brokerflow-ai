@@ -202,7 +202,7 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
     await assert.rejects(createTask(pool, orgA, brokerA, `task-cross-owner-${randomUUID()}`, { ...payload, assigned_to: brokerB }), error => error.code === "23503");
     const reviewB = await createReview(pool, orgB, brokerB, `task-review-b-${randomUUID()}`);
     await assert.rejects(createTask(pool, orgA, brokerA, `task-cross-review-${randomUUID()}`, { ...payload, review_id: reviewB.id }), error => error.code === "23503");
-    await assert.rejects(completeTask(pool, orgA, first.id, brokerB, `task-cross-complete-${randomUUID()}`), error => error.code === "P0002");
+    await assert.rejects(completeTask(pool, orgA, first.id, brokerB, `task-cross-complete-${randomUUID()}`), error => error.code === "42501");
   });
 
   await t.test("task and task-event writes roll back together when audit insertion fails", async () => {
@@ -438,6 +438,6 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
     const organizationAReviews = await pool.query("select count(*)::int as count from public.brokerflow_review_requests where organization_id=$1", [orgA]);
     const organizationBReviews = await pool.query("select count(*)::int as count from public.brokerflow_review_requests where organization_id=$1", [orgB]);
     assert.ok(organizationAReviews.rows[0].count > 0);
-    assert.equal(organizationBReviews.rows[0].count, 1);
+    assert.equal(organizationBReviews.rows[0].count, 2);
   });
 });

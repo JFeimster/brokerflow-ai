@@ -56,8 +56,9 @@ test("public workflows and onboarding describe current effects and owner gates a
   const actions = await readFile(resolve(root, "actions.html"), "utf8");
   assert.match(workflows, /do not connect to BrokerFlow storage/i);
   assert.match(workflows, /Download n8n JSON/);
-  assert.match(plugin, /owner-approved migration and OAuth setup/i);
-  assert.match(plugin, /ten existing tools and seven core additions/i);
+  assert.match(plugin, /all seventeen then-registered tools were discovered/i);
+  assert.match(plugin, /refresh and live verification of that addition are pending/i);
+  assert.match(plugin, /all eighteen registered names/i);
   assert.match(actions, /not_sent/);
   assert.match(actions, /REST Actions remain available/i);
 });

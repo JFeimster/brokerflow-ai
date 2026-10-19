@@ -2,6 +2,18 @@
 
 Project and private plugin release history. The private plugin is distributed only through the owner-approved ChatGPT workspace; it is not a public marketplace listing.
 
+## 1.3.1 — 2026-10-19
+
+### Added
+
+- `get_follow_up_task`, a read-only, organization-scoped lookup for one internal task's allowlisted details, review link, assignee, due date, status, and attribution.
+- Task detail guidance and an evaluation case in the private plugin source package.
+
+### Release state
+
+- The repository source package is v1.3.1; the owner-managed ChatGPT workspace last confirmed plugin v1.3.0. Private refresh and live verification of this addition are pending.
+- No database migration is required. The existing task table is read through the authenticated organization-scoped service.
+
 ## 1.3.0 — 2026-10-19
 
 ### Added

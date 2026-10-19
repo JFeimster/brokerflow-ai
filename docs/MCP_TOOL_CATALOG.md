@@ -13,6 +13,7 @@ All tools require an OAuth bearer token for the MCP resource. Each tool reloads 
 | `apply_review_action` | `brokerflow.reviews.read` and `brokerflow.reviews.write` | Version-checked, idempotent human workflow transition with an attributable audit event. |
 | `create_follow_up_task` | `brokerflow.reviews.read` and `brokerflow.reviews.write` | Persistent, idempotent internal task creation with optional active member assignment and same-organization review link. |
 | `list_follow_up_tasks` | `brokerflow.reviews.read` | Filtered, paginated internal task list with owners, due dates, status, and creation/completion attribution. |
+| `get_follow_up_task` | `brokerflow.reviews.read` | Retrieve one allowlisted task by ID with review link, assignee, deadline, status, and attribution. Organization scope is rechecked on every call. |
 | `complete_follow_up_task` | `brokerflow.reviews.read` and `brokerflow.reviews.write` | Idempotent task completion with actor attribution and an audit event. |
 | `capture_borrower_intake` | Read + write | Confirmed canonical lead capture with consent/completeness, stable intake ID and linked operational deal; hashed retry protection. |
 | `route_lender_fit` | Read | Deterministic preliminary product paths, missing fields, flags and explicit legacy heuristic limitations; no outbound side effects. |
@@ -38,13 +39,12 @@ An explicit user request can authorize a permitted internal task create or compl
 
 ## Proposed MCP tools — prioritized backlog (not yet available)
 
-**Status:** All 40 entries below are **Proposed** (not implemented, registered, enabled, or in development merely by appearing here). This separate table is a roadmap; the ten tools above are the active V1 catalog. Numbering **11–50** is the recommended implementation order, based on day-to-day broker utility, prerequisite services, and operational risk. Ship small batches with verified authorization and production acceptance rather than activating all 40 together.
+**Status:** All entries below are **Proposed** (not implemented, registered, enabled, or in development merely by appearing here). This separate table is a roadmap; the active catalog above includes the ten original tools, seven core tools, and `get_follow_up_task`. Numbering **12–50** is the remaining recommended implementation order, based on day-to-day broker utility, prerequisite services, and operational risk. Ship small batches with verified authorization and production acceptance rather than activating all remaining tools together.
 
 **Planned waves:** **A** = operator task control; **B** = intake and canonical deal tracking; **C** = document-checklist metadata; **D** = verified lender-product reference; **E** = CRM, partner referrals and drafts; **F** = workflow reliability and operations analytics. Wave labels indicate proposed dependencies, **not** current implementation status.
 
 | Order | Proposed tool | Wave | Capability | Operator utility / intended contract | Dependency / release gate |
 | ---: | --- | --- | --- | --- | --- |
-| 11 | `get_follow_up_task` | A · Operator | Read | Retrieve one task, its review link, assignee, deadline, and current state. | Use allowlisted metadata and organization-scoped read access. |
 | 12 | `update_follow_up_task` | A · Operator | Write | Edit a task title, type, non-sensitive description, or due date. | Require expected version, idempotency, write permission, and audit event. |
 | 13 | `assign_follow_up_task` | A · Operator | Write | Assign or reassign an open task to an active workspace member. | Verify same-organization membership; capture prior/new owner. |
 | 14 | `reopen_follow_up_task` | A · Operator | Write | Reopen a completed task after an explicit operational request. | Version-check and record reason and actor; no borrower decision. |
@@ -95,4 +95,4 @@ An explicit user request can authorize a permitted internal task create or compl
 - **Decision boundary:** Queue urgency, document completeness, partner attribution, and lender-product comparisons are informational. No tool is authorized to make borrower creditworthiness, eligibility, underwriting, pricing, approval, denial, or funding decisions.
 - **Activation:** Only move a row to **In development** when implementation work starts; move it to **Active** only after schema/code, migrations (if needed), MCP tool discovery, scoped authenticated smoke tests, plugin packaging, and production validation pass. Update the active table above when a tool actually ships.
 
-**Next recommended implementation batch:** Orders **11–15** (single-task detail, update, assignment, reopen, and audit history), then **16–17** (safe batch-preview and approved application). Complete the existing V1 synthetic task create → list → complete acceptance test before beginning this backlog.
+**Next recommended implementation batch:** Orders **12–16** (task update, assignment, reopen, activity history, and safe batch preview), then **17–18** (approved batch application and intake completeness). Single-task reads were added as `get_follow_up_task`. The V1 synthetic task create → list → complete acceptance test passes through the active core-tool integration suite.

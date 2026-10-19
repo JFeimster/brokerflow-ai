@@ -39,7 +39,7 @@ test("portable plugin contains ten correctly named skills and evaluation cases m
   );
   const client = await clientFor(t);
   const { tools } = await client.listTools();
-  const registeredNames = [...catalog.legacy_tools, ...catalog.core_tools].sort();
+  const registeredNames = [...catalog.legacy_tools, ...catalog.core_tools, ...catalog.operations_tools].sort();
   assert.equal(tools.length, catalog.expected_tool_count);
   assert.deepEqual(tools.map((tool) => tool.name).sort(), registeredNames);
   assert.equal(selectionCases.length, registeredNames.length);

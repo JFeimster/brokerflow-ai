@@ -12,6 +12,10 @@
 8. Call `lookup_deal_status` to verify operational stage, review state and task state separately.
 9. For an authorized partner attribution, confirm the partner and intake reference, obtain confirmation, then call `capture_partner_referral`.
 
+## Follow-up task detail
+
+After `list_follow_up_tasks` identifies a task, call `get_follow_up_task` with its task ID and the same authorized workspace to inspect its review link, assigned owner, due date, and current status. This is a read-only lookup; use the existing confirmed task tools for mutations.
+
 ## Existing review queue work
 
 Use `get_review_queue_summary` before narrow pages from `list_reviews`; open a specific record with `get_review`. Use `get_review_activity` only when audit history is requested and the user has audit permission. A review status is an operational review state and never means approval or denial.

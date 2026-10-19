@@ -35,7 +35,7 @@ test("all ten legacy tool schemas, annotations and descriptions remain identical
 test("all seven requested names are discoverable with schemas, bounded reads and confirmed writes", async (t) => {
   const client = await clientFor(t);
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 17);
+  assert.equal(tools.length, 18);
   for (const name of coreNames) {
     const tool = tools.find((item) => item.name === name);
     assert.ok(tool, name);
@@ -53,6 +53,75 @@ test("all seven requested names are discoverable with schemas, bounded reads and
       assert.ok(tool.inputSchema.required.includes("idempotency_key"));
     }
   }
+});
+
+test("single follow-up task reads are authorized, organization scoped and available to read-only workspaces", async (t) => {
+  const task = {
+    id: "70000000-0000-4000-8000-000000000001",
+    organization_id: fixture.organization_id,
+    review_id: null,
+    assigned_to: fixture.actor_id,
+    task_type: "call",
+    title: "Prepare broker call",
+    description: "",
+    due_date: "2026-10-25",
+    status: "open",
+    created_by: fixture.actor_id,
+    created_at: "2026-10-19T12:00:00Z",
+    completed_by: null,
+    completed_at: null,
+  };
+  const scopes = [];
+  const ctx = context({
+    db: {
+      from(table) {
+        assert.equal(table, "brokerflow_follow_up_tasks");
+        const query = {
+          select() {
+            return this;
+          },
+          eq(column, value) {
+            scopes.push([column, value]);
+            return this;
+          },
+          async maybeSingle() {
+            return { data: task, error: null };
+          },
+        };
+        return query;
+      },
+    },
+  });
+  ctx.workspaces[0].canWrite = false;
+  const client = await clientFor(t, ctx);
+  const result = await client.callTool({
+    name: "get_follow_up_task",
+    arguments: {
+      organization_id: fixture.organization_id,
+      task_id: task.id,
+    },
+  });
+  assert.equal(result.isError, undefined);
+  assert.deepEqual(result.structuredContent, task);
+  assert.deepEqual(scopes, [
+    ["organization_id", fixture.organization_id],
+    ["id", task.id],
+  ]);
+
+  const denied = await client.callTool({
+    name: "get_follow_up_task",
+    arguments: {
+      organization_id: fixture.other_organization_id,
+      task_id: task.id,
+    },
+  });
+  assert.equal(denied.structuredContent.status, 403);
+  assert.equal(scopes.length, 2);
+  const invalid = await client.callTool({
+    name: "get_follow_up_task",
+    arguments: { organization_id: fixture.organization_id, task_id: "not-a-uuid" },
+  });
+  assert.equal(invalid.isError, true);
 });
 
 test("routing and checklists perform deterministic read-only computation with explicit limitations", async (t) => {

@@ -20,6 +20,10 @@ Local and CI validation is recorded in [`MCP_CORE_VALIDATION.md`](MCP_CORE_VALID
 - [ ] Verify retry/conflict behavior, viewer and cross-workspace denial, empty states, and `delivery_status=not_sent` using authenticated live calls.
 - [ ] Re-run the authenticated discovery and read smoke after any future OAuth, deployment, or plugin release change.
 
+## Subsequent task lookup update
+
+The v1.3.1 server/source package adds the read-only `get_follow_up_task` operation without a migration. It scopes the lookup to the active organization and returns allowlisted task metadata. The source plugin manifest is updated to v1.3.1; owner refresh and authenticated live verification of the new operation are separate from the completed v1.3.0 activation record above.
+
 ## Release boundaries
 
 The activation does not enable borrower-facing message delivery, lender submission, automated underwriting, approval, denial, formal pricing, or funding. Routing and checklist output remains preliminary. Missing-document requests stop at an internal task and borrower-facing draft. Keep protected documents with the secure upload provider and use only approved, scoped references.

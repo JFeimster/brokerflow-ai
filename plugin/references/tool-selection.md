@@ -6,7 +6,7 @@ Use `get_my_workspaces` to see current authorized organizations. Use `get_review
 
 ## Follow-up tasks
 
-Use `create_follow_up_task`, `list_follow_up_tasks`, and `complete_follow_up_task` for internal broker tasks. These do not send messages or sync a CRM. Apply the user's explicit request and current workspace write permission; do not create tasks implicitly from a recommendation.
+Use `create_follow_up_task`, `list_follow_up_tasks`, `get_follow_up_task`, and `complete_follow_up_task` for internal broker tasks. Use `get_follow_up_task` when a specific task ID needs detail, including its review link, assignee, deadline, and state. The operation requires workspace read permission and returns allowlisted metadata for only that task in the selected organization. Task operations do not send messages or sync a CRM. Apply the user's explicit request and current workspace write permission for mutations; do not create tasks implicitly from a recommendation.
 
 ## Seven core operations
 

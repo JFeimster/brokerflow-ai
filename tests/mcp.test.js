@@ -86,6 +86,7 @@ test("MCP handshake and tools/list expose ten typed, annotated tools", async t =
   assert.equal(createTaskTool.inputSchema.properties.task_type.enum.includes("request_information"), true);
   assert.equal(tools.tools.find(tool => tool.name === "list_follow_up_tasks").annotations.readOnlyHint, true);
   assert.equal(tools.tools.find(tool => tool.name === "complete_follow_up_task").annotations.idempotentHint, true);
+  assert.equal(tools.tools.find(tool => tool.name === "complete_follow_up_task").annotations.destructiveHint, true, "final task completion must retain MCP host confirmation safeguards");
   assert.match(tools.tools.find(tool => tool.name === "complete_follow_up_task").description, /does not send a message or update an external CRM/i);
 });
 

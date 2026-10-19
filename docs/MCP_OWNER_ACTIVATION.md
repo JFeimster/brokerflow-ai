@@ -1,31 +1,20 @@
-# Owner activation instructions
+# BrokerFlow MCP activation record
 
-This checklist covers the shared changes deliberately kept outside the code PR. It is a single consolidated owner release for the new authenticated workflows.
+This document records owner-confirmed activation of the seven core MCP capabilities following PRs #34 and #35.
 
-## 1. Apply the additive platform-core migration
+## Completed
 
-Confirm the target is the existing BrokerFlow `platform-core` project and inspect its migration history. The migration `20261019165744_brokerflow_core_workflows.sql` adds the deal and document-request records plus scoped service-only RPCs. Apply this migration once, after the already-applied review, rate-limit and follow-up-task migrations. Do not replay historical local migrations with timestamps that differ from the shared database history. Retain the migration command output and verify the new RPC and table grants/RLS before proceeding.
+- The additive migration `20261019165744_brokerflow_core_workflows.sql` was applied to the active Supabase platform-core project.
+- Supabase OAuth authentication is functioning for the existing private ChatGPT plugin connection.
+- Private plugin v1.3.0 was uploaded with its ten skills.
+- Authenticated ChatGPT discovery returned all seventeen registered tools.
+- Nine live read-only MCP calls completed successfully.
+- PRs #34 and #35 are merged to `main`; the Vercel deployment completed through the existing release process.
 
-## 2. Deploy to Preview and configure Preview OAuth
+These milestones were confirmed by the repository owner. Do not replay the additive migration or historical migrations. Keep credentials and OAuth client details in approved secret management, never in Git, logs, CLI arguments, or this document.
 
-Deploy the PR branch to its Vercel Preview. Configure only the Preview OAuth values needed by the existing Supabase OAuth 2.1 integration: the registered client/audience allowlist and exact Preview redirect/resource URLs. Reuse the existing server-side Supabase project configuration through the approved secret-management path; do not place secret values in Git, logs, CLI arguments or this checklist. Keep production environment values and production aliases unchanged.
+## Remaining live acceptance
 
-Check the protected-resource metadata, OAuth discovery and consent callback from the Preview hostname. Then make an unauthenticated `tools/list` request and confirm it is rejected with the expected OAuth challenge. A successful HTTP response alone does not prove authenticated discovery.
+The reported nine live calls were read-only. They establish OAuth and read access, but do not by themselves verify live persistent writes. In the authorized private test workspace, run the synthetic intake → preliminary routing → confirmed review → checklist → confirmed missing-document task/draft → deal lookup → confirmed partner referral sequence. Verify persisted IDs and state from a fresh authenticated connection, retries, tenant isolation, and `delivery_status: not_sent`; retain sanitized evidence only.
 
-## 3. Refresh the private plugin and run the synthetic acceptance flow
-
-Package the reviewed plugin release and install/refresh it only in the owner-approved private test workspace. Authenticate with a user whose active workspace has the required read, write and audit grants. Confirm `tools/list` exposes all seventeen tools: the ten compatibility tools and these seven additions:
-
-- `capture_borrower_intake`
-- `route_lender_fit`
-- `request_lender_match_review`
-- `generate_document_checklist`
-- `trigger_missing_document_request`
-- `lookup_deal_status`
-- `capture_partner_referral`
-
-Run the synthetic intake → preliminary routing → confirmed review → checklist → confirmed missing-document task/draft → deal lookup → confirmed partner referral sequence. Verify IDs and state from a fresh authenticated connection, confirm organization isolation and idempotent retry behavior, and retain sanitized outcomes only. Confirm a new document request remains `delivery_status: not_sent`; this release does not deliver borrower messages.
-
-## 4. Decide on production separately
-
-After Preview acceptance, review the production migration and release through the normal owner-controlled deployment process. Production OAuth allowlists, migration state, plugin refresh and any production release are separate from this PR and must be explicitly authorized. Do not enable borrower-facing delivery or lender submission as part of this activation.
+The source package and deployment preserve explicit confirmation for writes, current organization membership and permissions on each call, human review for financing decisions, no lender submission, and no borrower-facing delivery. Keep production OAuth, future plugin updates, and any later deployment within the normal release process.

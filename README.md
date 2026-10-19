@@ -44,6 +44,11 @@ site/
     knowledge.md       Knowledge base: how BrokerFlow reasons and what it knows
     workflows.md       Automations: n8n, Zapier, Make recipes and triggers
 ```
+
+## Release notes
+
+See [`CHANGELOG.md`](CHANGELOG.md) for the private plugin v1.3.0 feature and activation record. The current authenticated release state and follow-up checks are tracked in [`docs/MCP_RELEASE_CHECKLIST.md`](docs/MCP_RELEASE_CHECKLIST.md).
+
 ## Audience
 - Independent loan brokers and small brokerages who want an AI operations layer.
 - Funding shops (e.g. Moonshine Capital / Distilled Funding) standardizing intake and CRM hygiene.
@@ -94,9 +99,9 @@ Every page composes from this section order (omit sections that do not apply):
 Proprietary / UNLICENSED. © Moonshine Capital / Distilled Funding. Internal and partner use only.
 ## Authenticated MCP and private plugin
 
-BrokerFlow includes a stateless Streamable HTTP MCP endpoint at `/mcp`, authenticated review and follow-up services, and a portable private plugin package under [`plugin/`](plugin/). The MCP path fails closed until owner-authorized Supabase OAuth 2.1 setup is complete. See [`docs/MCP_ARCHITECTURE.md`](docs/MCP_ARCHITECTURE.md), [`docs/MCP_OAUTH_SETUP.md`](docs/MCP_OAUTH_SETUP.md), and [`docs/MCP_RELEASE_CHECKLIST.md`](docs/MCP_RELEASE_CHECKLIST.md). Build a validated Plugin Creator-ready ZIP with `npm run package:plugin`; packaging is not installation or live-authentication proof.
+BrokerFlow includes a stateless Streamable HTTP MCP endpoint at `https://brokerflow-ai.vercel.app/mcp`, authenticated review and follow-up services, and a portable private plugin package under [`plugin/`](plugin/). Supabase OAuth 2.1 is active. The owner-uploaded plugin v1.3.0 is connected in ChatGPT; all seventeen tools were discovered, and nine live read-only MCP calls succeeded. See [`docs/MCP_ARCHITECTURE.md`](docs/MCP_ARCHITECTURE.md), [`docs/MCP_OAUTH_SETUP.md`](docs/MCP_OAUTH_SETUP.md), and [`docs/MCP_RELEASE_CHECKLIST.md`](docs/MCP_RELEASE_CHECKLIST.md). Build a validated Plugin Creator-ready ZIP with `npm run package:plugin`; packaging itself is not installation or live-authentication proof.
 
-The server registers seventeen tools, including the seven core operations: `capture_borrower_intake`, `route_lender_fit`, `request_lender_match_review`, `generate_document_checklist`, `trigger_missing_document_request`, `lookup_deal_status`, and `capture_partner_referral`. New writes require explicit confirmation; routing/checklists are preliminary and document follow-up stops at a tracked draft/internal task. Canonical platform-core leads, referrals and audit events are reused. The additive core-workflows migration remains separate from code release. See the [inspection inventory](docs/MCP_CORE_BUILD_INVENTORY.md), [tool catalog](docs/MCP_TOOL_CATALOG.md), and [synthetic examples](docs/MCP_CORE_TOOL_EXAMPLES.md).
+The server registers seventeen tools, including the seven core operations: `capture_borrower_intake`, `route_lender_fit`, `request_lender_match_review`, `generate_document_checklist`, `trigger_missing_document_request`, `lookup_deal_status`, and `capture_partner_referral`. New writes require explicit confirmation; routing/checklists are preliminary and document follow-up stops at a tracked draft/internal task. Canonical platform-core leads, referrals and audit events are reused. The additive core-workflows migration has been applied to the active platform-core project. See the [inspection inventory](docs/MCP_CORE_BUILD_INVENTORY.md), [tool catalog](docs/MCP_TOOL_CATALOG.md), and [synthetic examples](docs/MCP_CORE_TOOL_EXAMPLES.md).
 
 `npm test` recursively discovers non-database tests under `tests/`, including MCP, REST compatibility, compliance and skill tests. `npm run test:postgres` runs both PostgreSQL suites with `DATABASE_URL` pointing to an isolated test server; the core suite creates and drops its own synthetic database. CI uses ephemeral PostgreSQL 17 and packages the private plugin. Never point integration tests at a shared or populated database.
 

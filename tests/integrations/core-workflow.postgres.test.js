@@ -198,6 +198,13 @@ test(
         assert.equal(request.status, "task_created");
         assert.equal(request.delivery_status, "not_sent");
         assert.equal(request.draft_status, "draft_prepared");
+        const task = await call("get_follow_up_task", {
+          task_id: request.task_id,
+        });
+        assert.equal(task.id, request.task_id);
+        assert.equal(task.organization_id, fixture.organization_id);
+        assert.equal(task.status, "open");
+        assert.equal(task.due_date, args.due_date);
         assert.ok(
           request.missing_documents.includes("equipment_invoice_or_quote"),
         );

@@ -40,7 +40,7 @@ try {
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
   const { tools } = await client.listTools();
   toolCount = tools.length;
-  const expectedNames = [...registered.legacy_tools, ...registered.core_tools].sort();
+  const expectedNames = [...registered.legacy_tools, ...registered.core_tools, ...registered.operations_tools].sort();
   assert.equal(tools.length, registered.expected_tool_count);
   assert.deepEqual(tools.map((tool) => tool.name).sort(), expectedNames);
 

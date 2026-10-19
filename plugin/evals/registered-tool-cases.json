@@ -1,5 +1,5 @@
 {
-  "expected_tool_count": 17,
+  "expected_tool_count": 18,
   "legacy_tools": [
     "get_my_workspaces",
     "list_reviews",
@@ -20,5 +20,8 @@
     "trigger_missing_document_request",
     "lookup_deal_status",
     "capture_partner_referral"
+  ],
+  "operations_tools": [
+    "get_follow_up_task"
   ]
 }

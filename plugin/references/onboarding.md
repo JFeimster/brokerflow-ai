@@ -4,7 +4,7 @@ This package connects to the existing BrokerFlow MCP server at `https://brokerfl
 
 1. Install or refresh this release only in an owner-approved private test workspace.
 2. Complete OAuth and call `get_my_workspaces`. Select the organization returned for the current user; never guess an organization ID.
-3. Call `tools/list` and verify the seventeen expected names against `references/tool-selection.md`.
+3. Call `tools/list` and verify the eighteen expected names against `references/tool-selection.md`.
 4. Start with read-only operations. For a persistent write, summarize the exact record and obtain explicit confirmation before setting `confirmed: true`. Keep an idempotency key stable for retries of that exact request.
 5. Run the synthetic sequence in `references/workflow-sequences.md`; use synthetic data only and verify the result from a new authenticated connection.
 

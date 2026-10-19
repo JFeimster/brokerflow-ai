@@ -8,6 +8,7 @@
   { "prompt": "Move this review to needs information and use the current version.", "expected_tool": "apply_review_action" },
   { "prompt": "Create an internal call task for this review, assigned to my selected owner.", "expected_tool": "create_follow_up_task" },
   { "prompt": "Show open follow-up tasks assigned to the selected owner.", "expected_tool": "list_follow_up_tasks" },
+  { "prompt": "Open follow-up task 00000000-0000-0000-0000-000000000004 and show its owner, deadline, and status.", "expected_tool": "get_follow_up_task" },
   { "prompt": "Mark follow-up task 00000000-0000-0000-0000-000000000004 complete.", "expected_tool": "complete_follow_up_task" },
   { "prompt": "Save the intake record I just confirmed.", "expected_tool": "capture_borrower_intake", "requires_confirmation": true },
   { "prompt": "Which preliminary product paths fit these supplied details?", "expected_tool": "route_lender_fit" },

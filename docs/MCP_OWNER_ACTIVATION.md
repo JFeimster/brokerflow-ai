@@ -17,4 +17,6 @@ These milestones were confirmed by the repository owner. Do not replay the addit
 
 The reported nine live calls were read-only. They establish OAuth and read access, but do not by themselves verify live persistent writes. In the authorized private test workspace, run the synthetic intake → preliminary routing → confirmed review → checklist → confirmed missing-document task/draft → deal lookup → confirmed partner referral sequence. Verify persisted IDs and state from a fresh authenticated connection, retries, tenant isolation, and `delivery_status: not_sent`; retain sanitized evidence only.
 
+The subsequent v1.3.1 source package adds `get_follow_up_task`, a read-only organization-scoped detail lookup. Its package refresh and live authenticated call are not part of the completed v1.3.0 activation evidence.
+
 The source package and deployment preserve explicit confirmation for writes, current organization membership and permissions on each call, human review for financing decisions, no lender submission, and no borrower-facing delivery. Keep production OAuth, future plugin updates, and any later deployment within the normal release process.

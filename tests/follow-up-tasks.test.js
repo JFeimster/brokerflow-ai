@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { validateTaskInput } from "../lib/follow-up-tasks/validation.js";
-import { createFollowUpTask, completeFollowUpTask } from "../lib/follow-up-tasks/service.js";
+import { createFollowUpTask, completeFollowUpTask, getFollowUpTask } from "../lib/follow-up-tasks/service.js";
 
 const org = "00000000-0000-4000-8000-000000000001";
 const taskId = "00000000-0000-4000-8000-000000000002";
@@ -36,4 +36,62 @@ test("task service maps idempotency and reference failures to safe public errors
   await assert.rejects(createFollowUpTask(context, org, { title: "Call broker", task_type: "call", idempotency_key: "synthetic-task-key-003" }), { status: 422, code: "invalid_reference" });
   context.db.rpc = async () => ({ data: null, error: { code: "42501" } });
   await assert.rejects(completeFollowUpTask(context, org, taskId, "synthetic-task-complete-002"), { status: 403, code: "workspace_access_denied" });
+});
+
+test("single-task query always scopes both organization and task and returns not found safely", async () => {
+  const calls = [];
+  const task = {
+    id: taskId,
+    organization_id: org,
+    title: "Call broker",
+    status: "open",
+    due_date: new Date("2026-10-25T00:00:00Z"),
+    created_at: new Date("2026-10-19T12:00:00Z"),
+    completed_at: null,
+  };
+  const context = {
+    db: {
+      from(table) {
+        calls.push({ table });
+        const query = {
+          select(columns) {
+            calls[0].columns = columns;
+            return this;
+          },
+          eq(column, value) {
+            calls.push({ column, value });
+            return this;
+          },
+          async maybeSingle() {
+            return { data: task, error: null };
+          },
+        };
+        return query;
+      },
+    },
+  };
+  assert.deepEqual(await getFollowUpTask(context, org, taskId), {
+    ...task,
+    due_date: "2026-10-25",
+    created_at: "2026-10-19T12:00:00.000Z",
+  });
+  assert.deepEqual(calls.slice(1), [
+    { column: "organization_id", value: org },
+    { column: "id", value: taskId },
+  ]);
+  context.db.from = () => ({
+    select() {
+      return this;
+    },
+    eq() {
+      return this;
+    },
+    async maybeSingle() {
+      return { data: null, error: null };
+    },
+  });
+  await assert.rejects(getFollowUpTask(context, org, taskId), {
+    status: 404,
+    code: "not_found",
+  });
 });

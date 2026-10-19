@@ -61,14 +61,14 @@ test("protected resource metadata advertises only the configured Supabase author
   });
 });
 
-test("MCP handshake and tools/list expose seventeen typed, annotated tools", async t => {
+test("MCP handshake and tools/list expose eighteen typed, annotated tools", async t => {
   const server = createMcpServer({ authenticateMcp: async () => makeContext() });
   const client = new Client({ name: "test-client", version: "1.0.0" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   t.after(async () => { await client.close(); await server.close(); });
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
   const tools = await client.listTools();
-  assert.deepEqual(tools.tools.map(tool => tool.name).sort(), ["apply_review_action", "complete_follow_up_task", "create_follow_up_task", "create_review_request", "get_my_workspaces", "get_review", "get_review_activity", "get_review_queue_summary", "list_follow_up_tasks", "list_reviews", "capture_borrower_intake", "route_lender_fit", "request_lender_match_review", "generate_document_checklist", "trigger_missing_document_request", "lookup_deal_status", "capture_partner_referral"].sort());
+  assert.deepEqual(tools.tools.map(tool => tool.name).sort(), ["apply_review_action", "complete_follow_up_task", "create_follow_up_task", "get_follow_up_task", "create_review_request", "get_my_workspaces", "get_review", "get_review_activity", "get_review_queue_summary", "list_follow_up_tasks", "list_reviews", "capture_borrower_intake", "route_lender_fit", "request_lender_match_review", "generate_document_checklist", "trigger_missing_document_request", "lookup_deal_status", "capture_partner_referral"].sort());
   const createTool = tools.tools.find(tool => tool.name === "create_review_request");
   assert.equal(createTool.annotations.readOnlyHint, false);
   assert.equal(createTool.inputSchema.properties.organization_id.format, "uuid");
@@ -85,6 +85,7 @@ test("MCP handshake and tools/list expose seventeen typed, annotated tools", asy
   assert.equal(createTaskTool.annotations.idempotentHint, true);
   assert.equal(createTaskTool.inputSchema.properties.task_type.enum.includes("request_information"), true);
   assert.equal(tools.tools.find(tool => tool.name === "list_follow_up_tasks").annotations.readOnlyHint, true);
+  assert.equal(tools.tools.find(tool => tool.name === "get_follow_up_task").annotations.readOnlyHint, true);
   assert.equal(tools.tools.find(tool => tool.name === "complete_follow_up_task").annotations.idempotentHint, true);
   assert.equal(tools.tools.find(tool => tool.name === "complete_follow_up_task").annotations.destructiveHint, true, "final task completion must retain MCP host confirmation safeguards");
   assert.match(tools.tools.find(tool => tool.name === "complete_follow_up_task").description, /does not send a message or update an external CRM/i);
@@ -109,7 +110,7 @@ test("stateless Streamable HTTP endpoint completes initialize and tools/list wit
   t.after(async () => { await client.close(); await new Promise(resolve => httpServer.close(resolve)); });
   await client.connect(transport);
   const response = await client.listTools();
-  assert.equal(response.tools.length, 17);
+  assert.equal(response.tools.length, 18);
   const workspaces = await client.callTool({ name: "get_my_workspaces", arguments: {} });
   assert.equal(workspaces.structuredContent.workspaces[0].id, org);
   assert.ok(authentications >= 1);
@@ -234,7 +235,7 @@ test("private plugin package declares the HTTPS MCP endpoint and all ten include
   const manifest = JSON.parse(await readFile(new URL("../plugin/plugin.json", import.meta.url), "utf8"));
   const mcp = JSON.parse(await readFile(new URL("../plugin/mcp.json", import.meta.url), "utf8"));
   assert.equal(manifest.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
-  assert.equal(manifest.version, "1.3.0");
+  assert.equal(manifest.version, "1.3.1");
   assert.match(manifest.name, /^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/);
   assert.equal(mcp.servers.brokerflow.type, "streamable-http");
   assert.equal(mcp.servers.brokerflow.url, "https://brokerflow-ai.vercel.app/mcp");

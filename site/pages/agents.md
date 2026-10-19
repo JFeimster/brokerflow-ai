@@ -15,9 +15,9 @@ Think of the agent as a tireless back-office coordinator:
 - It hands every file to a human at the point of decision.
 ## What it does
 - **Structures intake** into consistent contact and deal records.
-- **Maintains the CRM**: upserts contacts and deals, advances review-safe stages, logs notes.
-- **Tracks documents**: identifies missing items and records what has been received.
-- **Prepares follow-ups**: drafts borrower outreach and creates follow-up tasks.
+- **Tracks operational records**: saves confirmed intake, review, task and referral records through authorized services.
+- **Tracks documents**: returns preliminary checklists and stores reported missing-item metadata with an internal task.
+- **Prepares follow-ups**: drafts content without sending it.
 - **Packages for review**: assembles a clean file marked *ready for broker review*.
 ## What it will not do
 - It will not say a borrower is **approved**, **qualified**, **eligible**, or **guaranteed**.
@@ -52,9 +52,9 @@ The agent can write only **review-safe stages** and read the full pipeline.
 - not_moving_forward
 - closed
 ## Handoff
-When a deal is prepared, the agent marks it *ready for broker review* and stops. A human broker reviews the package, decides whether to submit, and owns every lender interaction. The agent resumes only for operational tasks — logging, follow-up, and CRM hygiene.
+When a deal is prepared, the agent marks the operational record for broker review. A human broker reviews the package, decides whether to submit, and owns every lender interaction. The agent resumes only for permitted internal operational tasks — logging and follow-up tracking.
 ## How to work with it
-- Give it intake details; it will structure and store them.
+- Give it intake details; after confirmation it can store an authorized record.
 - Ask it to chase missing documents; it will track and draft outreach.
 - Ask for a deal's status; it will read the pipeline and summarize.
 - Ask it to prepare a file for review; it will package and route.

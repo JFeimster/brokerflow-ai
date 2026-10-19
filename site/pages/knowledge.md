@@ -13,7 +13,7 @@ The knowledge base is split into a **core** set (the essentials every brokerage 
 | File | What it covers |
 | --- | --- |
 | `broker-intake-workflow-examples` | Reusable intake patterns for leads and applications |
-| `loan-document-checklist-templates` | Document checklists by product and stage |
+| `loan-document-checklist-templates` | Preliminary document guidance by product and scenario |
 | `crm-pipeline-stage-definitions` | Pipeline stages, statuses, and triggers |
 | `lender-matching-rules-framework` | Safe, preliminary lender-fit logic (never underwriting) |
 | `borrower-follow-up-email-sms-templates` | Borrower outreach by deal stage |
@@ -39,7 +39,7 @@ Deeper references for scaling teams: lead-source attribution, intake form field 
 The guardrails file governs everything else:
 - Never claim a borrower is approved, qualified, eligible, or guaranteed.
 - Frame lender fit as "possible match" or "potential fit", pending broker review.
-- Keep sensitive documents out of chat; pass metadata and secure links only.
+- Keep sensitive documents out of chat; MCP returns status metadata, not raw files.
 - Always route decision-bearing steps (lender submission, terms, declines) to a human.
 ## Footer
 [Home](./home.md) · [Agent](./agents.md) · [Actions](./actions.md) · [Workflows](./workflows.md)

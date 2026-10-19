@@ -3,7 +3,7 @@
 ---
 
 # BrokerFlow AI
-This repository contains the **BrokerFlow** broker operations platform, its public site, and the existing Loan Broker Automation Architect GPT Actions. The public homepage is served from `index.html`; the responsive operations console lives at `/app/*` and is implemented in `app.html`, `app.css`, `app.js`, and `data.js`. The console uses clearly labeled sample records until an authenticated data source is configured. The existing API Actions, schemas, workflows, and knowledge files remain the separate GPT integration surface.
+This repository contains the **BrokerFlow** broker operations platform, its public site, and the existing Loan Broker Automation Architect GPT Actions. Public pages resolve at `/`, `/agents`, `/actions`, `/knowledge`, `/workflows`, `/plugin`, and `/docs`; deployment routes are covered by `tests/site/public-routes.test.js`. The responsive operations console lives at `/app/*` and is implemented in `app.html`, `app.css`, `app.js`, and `data.js`. The console uses clearly labeled sample records until an authenticated data source is configured. Existing API Actions, authenticated MCP tools, workflows, and knowledge files remain distinct integration surfaces.
 > Compliance note: BrokerFlow AI **recommends, drafts, prepares, routes, and logs**. It never approves, declines, qualifies, guarantees, underwrites, or funds. All site copy uses review-safe language ("potential fit", "ready for broker review", "possible lender match", "based on information provided") and never says "approved", "guaranteed", "qualified", or "eligible".
 
 ---
@@ -87,9 +87,9 @@ Every page composes from this section order (omit sections that do not apply):
 - Use descriptive section headings; they become the page outline and anchor links.
 - Canonical domain: `https://brokerflow-ai.vercel.app`.
 ## Build & deploy
-- Pages are Markdown; the root front-end renders them. No build step is required for content edits.
-- Preview locally by opening `index.html`, or run the dev flow described in the root `README.md`.
-- Deploys are handled by Vercel on push to the default branch.
+- Public pages are static HTML at the repository root and resolve through Vercel clean URLs. Editorial source remains under `site/pages/`.
+- Route and navigation checks live under `tests/site/` and run with `npm test`.
+- Preview locally with `npm run dev`; Vercel Preview and production releases follow repository controls.
 ## License
 Proprietary / UNLICENSED. © Moonshine Capital / Distilled Funding. Internal and partner use only.
 ## Authenticated MCP and private plugin
@@ -99,3 +99,5 @@ BrokerFlow includes a stateless Streamable HTTP MCP endpoint at `/mcp`, authenti
 The server registers seventeen tools, including the seven core operations: `capture_borrower_intake`, `route_lender_fit`, `request_lender_match_review`, `generate_document_checklist`, `trigger_missing_document_request`, `lookup_deal_status`, and `capture_partner_referral`. New writes require explicit confirmation; routing/checklists are preliminary and document follow-up stops at a tracked draft/internal task. Canonical platform-core leads, referrals and audit events are reused. The additive core-workflows migration remains separate from code release. See the [inspection inventory](docs/MCP_CORE_BUILD_INVENTORY.md), [tool catalog](docs/MCP_TOOL_CATALOG.md), and [synthetic examples](docs/MCP_CORE_TOOL_EXAMPLES.md).
 
 `npm test` recursively discovers non-database tests under `tests/`, including MCP, REST compatibility, compliance and skill tests. `npm run test:postgres` runs both PostgreSQL suites with `DATABASE_URL` pointing to an isolated test server; the core suite creates and drops its own synthetic database. CI uses ephemeral PostgreSQL 17 and packages the private plugin. Never point integration tests at a shared or populated database.
+
+The public pages and static-route release checks are described in [`docs/WEB_RELEASE_CHECKLIST.md`](docs/WEB_RELEASE_CHECKLIST.md). The plugin onboarding page is [`/plugin`](https://brokerflow-ai.vercel.app/plugin); private plugin deployment and shared OAuth/database activation remain owner controlled.

@@ -5,7 +5,7 @@ slug: /workflows
 order: 5
 ---
 # Workflows
-Workflows are the automations that put BrokerFlow AI to work in the background. Each one wires a trigger to a series of steps — capture a lead, chase a document, route a match for review, send a daily summary — with a human checkpoint wherever a decision is involved. They ship as ready-to-adapt recipes for n8n, Zapier, and Make.
+Workflow guides describe possible integrations for n8n, Zapier, and Make. The checked-in n8n exports are inactive preview starters: they validate required fields and return a preview response. They do not persist BrokerFlow records, write to a CRM, contact borrowers or submit applications.
 > Every workflow that touches a decision pauses for a human. Automations prepare and route; they never approve, submit to a lender, or fund.
 ## How they're organized
 Workflows are grouped by the tool that runs them. Start with whichever platform you already use — the logic is the same across all three.
@@ -13,12 +13,12 @@ Workflows are grouped by the tool that runs them. Start with whichever platform 
 The most flexible option, best for teams that want full control:
 | Workflow | What it does |
 | --- | --- |
-| `borrower-intake-to-crm` | Capture a lead and create/update a clean CRM record |
-| `missing-doc-reminder-workflow` | Detect missing documents and send reminders |
-| `referral-partner-lead-routing` | Route partner-sourced leads with attribution |
-| `lender-match-review-request` | Send possible matches to a broker for review |
-| `renewal-reminder-workflow` | Trigger renewal follow-ups from a funded date |
-| `daily-pipeline-summary` | Send a daily pipeline digest to the team |
+| `borrower-intake-to-crm` | Validate a preview intake payload; CRM writing is not configured |
+| `missing-doc-reminder-workflow` | Validate reported document statuses; no reminder is sent |
+| `referral-partner-lead-routing` | Validate supplied attribution references; no record is written |
+| `no-auth-lender-match-review` | Existing REST webhook receipt example; inspect its contract before use |
+| `renewal-reminder-workflow` | Validate supplied renewal metadata; no schedule or outreach is active |
+| `daily-pipeline-summary` | Validate a supplied snapshot; no data reader or delivery is configured |
 ### Zapier
 The fastest way to get started for simpler stacks:
 - `borrower-intake-zap` — form submission to CRM record.
@@ -34,7 +34,7 @@ Every BrokerFlow recipe follows the same shape, so they're easy to read and adap
 1. **Trigger** — what starts it (form submission, schedule, status change).
 2. **Validate** — check required fields and prevent duplicates.
 3. **Act** — create/update records, request documents, log notes.
-4. **Follow up** — send borrower or partner communication.
+4. **Follow up** — prepare a draft; delivery needs a separately authorized integration.
 5. **Human review** — pause for a broker before anything decision-bearing.
 6. **Update** — advance to a review-safe stage and record the outcome.
 ## Starter recipes

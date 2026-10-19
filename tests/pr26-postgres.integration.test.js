@@ -15,7 +15,10 @@ const brokerA = "10000000-0000-4000-8000-000000000001";
 const viewerA = "10000000-0000-4000-8000-000000000002";
 const partnerA = "10000000-0000-4000-8000-000000000003";
 const brokerB = "10000000-0000-4000-8000-000000000004";
-const migrationPath = new URL("../supabase/migrations/20261018000100_brokerflow_reviews.sql", import.meta.url);
+const migrationPaths = [
+  new URL("../supabase/migrations/20261018000100_brokerflow_reviews.sql", import.meta.url),
+  new URL("../supabase/migrations/20261019000100_brokerflow_rate_limits.sql", import.meta.url)
+];
 const fixturePath = new URL("../supabase/tests/platform_core_baseline.sql", import.meta.url);
 
 function scenario(overrides = {}) {
@@ -67,18 +70,18 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
   const pool = new Pool({ connectionString: databaseUrl, max: 12 });
   t.after(async () => pool.end());
   const fixture = await readFile(fixturePath, "utf8");
-  const migration = await readFile(migrationPath, "utf8");
   await pool.query(fixture);
   const baseline = await migrationBaselineSnapshot(pool);
-  await pool.query(migration);
+  for (const migrationPath of migrationPaths) await pool.query(await readFile(migrationPath, "utf8"));
 
-  await t.test("migration adds only the two prefixed tables and leaves baseline tables and policies intact", async () => {
+  await t.test("migrations add only the three prefixed tables and leave baseline tables and policies intact", async () => {
     const after = await migrationBaselineSnapshot(pool);
     assert.deepEqual(after.tables.filter(row => baseline.tables.some(base => base.table_name === row.table_name)), baseline.tables);
     assert.deepEqual(after.policies, baseline.policies);
-    assert.deepEqual(after.tables.map(row => row.table_name), [...baseline.tables.map(row => row.table_name), "brokerflow_review_events", "brokerflow_review_requests"].sort());
-    const rls = await pool.query("select relname, relrowsecurity from pg_class where oid in ('public.brokerflow_review_requests'::regclass,'public.brokerflow_review_events'::regclass) order by relname");
+    assert.deepEqual(after.tables.map(row => row.table_name), [...baseline.tables.map(row => row.table_name), "brokerflow_rate_limits", "brokerflow_review_events", "brokerflow_review_requests"].sort());
+    const rls = await pool.query("select relname, relrowsecurity from pg_class where oid in ('public.brokerflow_review_requests'::regclass,'public.brokerflow_review_events'::regclass,'public.brokerflow_rate_limits'::regclass) order by relname");
     assert.deepEqual(rls.rows, [
+      { relname: "brokerflow_rate_limits", relrowsecurity: true },
       { relname: "brokerflow_review_events", relrowsecurity: true },
       { relname: "brokerflow_review_requests", relrowsecurity: true }
     ]);
@@ -97,6 +100,20 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
     ]);
   });
 
+  await t.test("PostgreSQL rate limiting is atomic under concurrent requests and isolates scopes", async () => {
+    const identity = `synthetic-integration-${randomUUID()}`;
+    const requests = await Promise.all(Array.from({ length: 24 }, () => pool.query(
+      "select public.brokerflow_consume_rate_limit('trusted_ingest',$1,7,60) as result", [identity]
+    )));
+    const results = requests.map(result => result.rows[0].result);
+    assert.equal(results.filter(result => result.allowed).length, 7);
+    assert.equal(results.filter(result => !result.allowed).length, 17);
+    const otherScope = await pool.query("select public.brokerflow_consume_rate_limit('review_create',$1,7,60) as result", [identity]);
+    assert.equal(otherScope.rows[0].result.allowed, true);
+    const stored = await pool.query("select request_count from public.brokerflow_rate_limits where scope='trusted_ingest' and identity_hash=encode(sha256(convert_to($1,'UTF8')),'hex')", [identity]);
+    assert.deepEqual(stored.rows, [{ request_count: 24 }]);
+  });
+
   await t.test("create is atomic, correctly attributed, idempotent under concurrency, and rejects key conflicts", async () => {
     const key = `create-${randomUUID()}`;
     const request = scenario();
@@ -113,6 +130,22 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
     await assert.rejects(createReview(pool, orgA, brokerA, key, scenario({ requested_amount: 250000 })), error => error.code === "23505");
     const count = await pool.query("select count(*)::int as count from public.brokerflow_review_events where review_id=$1", [one.id]);
     assert.equal(count.rows[0].count, 1);
+  });
+
+  await t.test("trusted integration intake is organization-bound and immediately visible in the human review queue", async () => {
+    const key = `trusted-ingest-${randomUUID()}`;
+    const request = scenario({ requester_name: "Synthetic trusted GPT intake", business_name: "Synthetic Intake LLC" });
+    const first = await createReview(pool, orgA, null, key, request);
+    const replay = await createReview(pool, orgA, null, key, request);
+    assert.equal(replay.id, first.id);
+    assert.equal(replay.duplicate, true);
+    assert.equal(first.status, "queued_for_human_review");
+    const queue = await pool.query("select review_request_id, organization_id, status, business_name from public.brokerflow_review_requests where review_request_id=$1 and organization_id=$2", [first.review_request_id, orgA]);
+    assert.deepEqual(queue.rows, [{ review_request_id: first.review_request_id, organization_id: orgA, status: "queued_for_human_review", business_name: "Synthetic Intake LLC" }]);
+    const event = await pool.query("select actor_user_id, actor_source, event_type, new_status from public.brokerflow_review_events where review_id=$1", [first.id]);
+    assert.deepEqual(event.rows, [{ actor_user_id: null, actor_source: "trusted_integration", event_type: "review_created", new_status: "queued_for_human_review" }]);
+    const otherOrganization = await pool.query("select count(*)::int as count from public.brokerflow_review_requests where review_request_id=$1 and organization_id=$2", [first.review_request_id, orgB]);
+    assert.equal(otherOrganization.rows[0].count, 0);
   });
 
   await t.test("constraints reject invalid records and enforce foreign keys and note limits", async () => {
@@ -205,7 +238,7 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
     }
   });
 
-  await t.test("anonymous and authenticated roles cannot read or mutate review tables or execute privileged RPCs", async () => {
+  await t.test("anonymous and authenticated roles cannot read or mutate review/rate-limit tables or execute privileged RPCs", async () => {
     for (const role of ["anon", "authenticated"]) {
       const privileges = await pool.query(`
         select has_table_privilege($1,'public.brokerflow_review_requests','SELECT') as can_read_reviews,
@@ -214,23 +247,29 @@ test("PostgreSQL 17 migration, transactions, concurrency, grants, and tenant sco
                has_table_privilege($1,'public.brokerflow_review_events','INSERT') as can_insert_events,
                has_table_privilege($1,'public.brokerflow_review_events','UPDATE') as can_update_events,
                has_table_privilege($1,'public.brokerflow_review_events','DELETE') as can_delete_events,
+               has_table_privilege($1,'public.brokerflow_rate_limits','SELECT') as can_read_rate_limits,
+               has_table_privilege($1,'public.brokerflow_rate_limits','INSERT') as can_insert_rate_limits,
                has_function_privilege($1,'public.brokerflow_create_review(uuid,uuid,text,jsonb)','EXECUTE') as can_create,
-               has_function_privilege($1,'public.brokerflow_apply_review_action(uuid,uuid,uuid,text,text,integer,text,text)','EXECUTE') as can_apply`, [role]);
-      assert.deepEqual(privileges.rows[0], { can_read_reviews: false, can_insert_reviews: false, can_delete_reviews: false, can_insert_events: false, can_update_events: false, can_delete_events: false, can_create: false, can_apply: false });
+               has_function_privilege($1,'public.brokerflow_apply_review_action(uuid,uuid,uuid,text,text,integer,text,text)','EXECUTE') as can_apply,
+               has_function_privilege($1,'public.brokerflow_consume_rate_limit(text,text,integer,integer)','EXECUTE') as can_rate_limit`, [role]);
+      assert.deepEqual(privileges.rows[0], { can_read_reviews: false, can_insert_reviews: false, can_delete_reviews: false, can_insert_events: false, can_update_events: false, can_delete_events: false, can_read_rate_limits: false, can_insert_rate_limits: false, can_create: false, can_apply: false, can_rate_limit: false });
     }
     const service = await pool.query(`
       select has_table_privilege('service_role','public.brokerflow_review_requests','SELECT') as can_read_reviews,
              has_function_privilege('service_role','public.brokerflow_create_review(uuid,uuid,text,jsonb)','EXECUTE') as can_create,
              has_function_privilege('service_role','public.brokerflow_apply_review_action(uuid,uuid,uuid,text,text,integer,text,text)','EXECUTE') as can_apply,
+             has_function_privilege('service_role','public.brokerflow_consume_rate_limit(text,text,integer,integer)','EXECUTE') as can_rate_limit,
              (select prosecdef from pg_proc where oid='public.brokerflow_create_review(uuid,uuid,text,jsonb)'::regprocedure) as create_is_definer`);
-    assert.deepEqual(service.rows[0], { can_read_reviews: true, can_create: true, can_apply: true, create_is_definer: true });
+    assert.deepEqual(service.rows[0], { can_read_reviews: true, can_create: true, can_apply: true, can_rate_limit: true, create_is_definer: true });
     const client = await pool.connect();
     try {
       for (const role of ["anon", "authenticated"]) {
         await client.query("reset role");
         await client.query(`set role ${role}`);
         await assert.rejects(client.query("select * from public.brokerflow_review_requests limit 1"), error => error.code === "42501");
+        await assert.rejects(client.query("select * from public.brokerflow_rate_limits limit 1"), error => error.code === "42501");
         await assert.rejects(client.query("select public.brokerflow_create_review($1,$2,$3,$4::jsonb)", [orgA, brokerA, randomUUID(), JSON.stringify(scenario())]), error => error.code === "42501");
+        await assert.rejects(client.query("select public.brokerflow_consume_rate_limit('trusted_ingest','test',60,60)"), error => error.code === "42501");
       }
       await client.query("reset role");
     } finally {

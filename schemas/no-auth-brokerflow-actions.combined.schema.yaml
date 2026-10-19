@@ -1,12 +1,59 @@
 openapi: 3.1.0
 info:
-  title: BrokerFlow AI No-Auth Actions
+  title: BrokerFlow AI Intake Actions
   version: 1.0.0
-  description: Combined no-auth BrokerFlow GPT Actions for lender match review and automated lender fit routing.
+  description: BrokerFlow GPT Actions containing legacy no-auth operations and a separately bearer-authenticated protected review intake operation.
 servers:
   - url: https://brokerflow-ai.vercel.app
     description: Production Vercel deployment
 paths:
+  /api/ingest/lender-match-review:
+    post:
+      operationId: createPersistedLenderMatchReview
+      summary: Persist a funding scenario for human review
+      description: Creates a durable organization-bound broker review using the server-configured trusted integration. A successful response confirms intake and review queuing only; it does not approve, deny, qualify, underwrite, price, submit, or fund a borrower. Use the same Idempotency-Key when retrying the same request.
+      security:
+        - IntegrationBearer: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Unique 16-200 character key for each new intake. Reuse the exact key and payload for retries.
+          schema: { type: string, minLength: 16, maxLength: 200 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProtectedReviewRequest" }
+            example:
+              action_type: lender_match_review
+              requester_name: Broker intake
+              borrower_type: business
+              business_name: Synthetic Equipment Co
+              loan_purpose: equipment_financing
+              requested_amount: 125000
+              state: NY
+              human_review_required: true
+      responses:
+        "201":
+          description: A new review and audit event were committed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PersistedReviewResponse" }
+        "200":
+          description: Idempotent replay of an existing review; no duplicate was created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PersistedReviewResponse" }
+        "401": { description: Missing or invalid integration bearer credential. }
+        "409": { description: Idempotency key was reused with different content. }
+        "422": { description: Invalid or incomplete review scenario. }
+        "429":
+          description: Rate limit exceeded.
+          headers:
+            Retry-After:
+              schema: { type: integer, minimum: 1 }
+        "503": { description: Integration or persistence service is unavailable. }
   /api/no-auth/lender-match-review:
     post:
       operationId: requestLenderMatchReview
@@ -86,7 +133,45 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 components:
+  securitySchemes:
+    IntegrationBearer:
+      type: http
+      scheme: bearer
   schemas:
+    ProtectedReviewRequest:
+      type: object
+      additionalProperties: false
+      required: [action_type, requester_name, borrower_type, loan_purpose, requested_amount, state, human_review_required]
+      properties:
+        action_type: { const: lender_match_review }
+        requester_name: { type: string, minLength: 1, maxLength: 200 }
+        borrower_type: { type: string, enum: [individual, business, real_estate_investor, commercial_borrower, referral_partner_lead, unknown] }
+        business_name: { type: string, maxLength: 160 }
+        loan_purpose: { type: string, enum: [business_working_capital, equipment_financing, commercial_real_estate, residential_purchase, residential_refinance, debt_consolidation, bridge_loan, construction, invoice_financing, sba_review, personal_loan, other] }
+        requested_amount: { type: number, exclusiveMinimum: 0, maximum: 1000000000 }
+        state: { type: string, minLength: 1, maxLength: 200 }
+        human_review_required: { const: true }
+        credit_score_range: { type: string, enum: [unknown, below_580, "580_619", "620_659", "660_699", "700_739", 740_plus] }
+        monthly_revenue: { type: number, minimum: 0 }
+        annual_revenue: { type: number, minimum: 0 }
+        time_in_business_months: { type: integer, minimum: 0 }
+        urgency: { type: string, enum: [low, normal, high, same_day] }
+        recommended_review_path: { type: string, enum: [business_funding_review, commercial_real_estate_review, residential_mortgage_review, equipment_financing_review, sba_or_bank_review, manual_exception_review, insufficient_information] }
+        employment_type: { type: string, enum: [employed, self_employed, business_owner, investor, retired, unemployed, unknown, other] }
+        property_type: { type: string, enum: [single_family, multifamily, condo, townhouse, mixed_use, commercial, land, construction, not_applicable, unknown, other] }
+        occupancy_type: { type: string, enum: [primary_residence, second_home, investment_property, owner_occupied_business, tenant_occupied, vacant, not_applicable, unknown] }
+        collateral_available: { type: boolean }
+        notes: { type: string, maxLength: 4000, description: Do not include direct personal identifiers or sensitive borrower records. }
+    PersistedReviewResponse:
+      type: object
+      required: [success, review_request_id, status, next_step, persisted, duplicate]
+      properties:
+        success: { const: true }
+        review_request_id: { type: string }
+        status: { const: queued_for_human_review }
+        next_step: { const: manual_review }
+        persisted: { const: true }
+        duplicate: { type: boolean }
     LenderMatchReviewRequest:
       type: object
       additionalProperties: false

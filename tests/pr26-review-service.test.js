@@ -5,7 +5,8 @@ import { jsonBody } from "../lib/reviews/http.js";
 import session from "../api/console/session.js";
 import reviews from "../api/console/reviews.js";
 import activity from "../api/console/activity.js";
-import ingest from "../api/ingest/lender-match-review.js";
+import ingest, { createIngestHandler } from "../api/ingest/lender-match-review.js";
+import { consumeRateLimit } from "../lib/reviews/rate-limit.js";
 import config from "../api/console/config.js";
 
 const valid = { source:"custom_gpt",action_type:"lender_match_review",requester_name:"Broker intake",borrower_type:"business",loan_purpose:"equipment_financing",requested_amount:185000,state:"NY",human_review_required:true };
@@ -53,6 +54,29 @@ test("JSON API bodies are capped before service validation",()=>{
 test("integration ingestion rejects absent credentials without persistence",async()=>{
   const res=response();await ingest({method:"POST",headers:{"content-type":"application/json",authorization:"Bearer invalid"},body:valid},res);
   assert.equal(res.statusCode,503);assert.equal(res.body.persisted,undefined);
+});
+test("protected ingestion authenticates, validates, scopes, persists, and returns a stable replay identifier",async()=>{
+  const prior={key:process.env.BROKERFLOW_INGEST_API_KEY,org:process.env.BROKERFLOW_INGEST_ORGANIZATION_ID};
+  process.env.BROKERFLOW_INGEST_API_KEY="synthetic-bearer-credential";process.env.BROKERFLOW_INGEST_ORGANIZATION_ID="org-synthetic";
+  const calls=[];let duplicate=false;
+  const db={from(table){assert.equal(table,"organizations");return{select(columns){assert.equal(columns,"id,status");return{eq(field,value){assert.equal(field,"id");assert.equal(value,"org-synthetic");return{async maybeSingle(){return{data:{id:value,status:"active"},error:null};}};}};}};}};
+  const handler=createIngestHandler({database:()=>db,consumeRateLimit:async(...args)=>calls.push(["limit",...args.slice(1)]),createReview:async(_context,org,scenario,key,actor)=>{calls.push(["create",org,scenario,key,actor]);return{review_request_id:"lmr_synthetic_stable",status:"queued_for_human_review",duplicate};}});
+  const protectedInput={...valid};delete protectedInput.source;
+  const req={method:"POST",headers:{"content-type":"application/json",authorization:"Bearer synthetic-bearer-credential","idempotency-key":"synthetic-intake-key-0001"},body:protectedInput};
+  try{
+    const first=response();await handler(req,first);assert.equal(first.statusCode,201);assert.equal(first.body.review_request_id,"lmr_synthetic_stable");assert.equal(first.body.duplicate,false);assert.equal(first.body.next_step,"manual_review");
+    duplicate=true;const replay=response();await handler(req,replay);assert.equal(replay.statusCode,200);assert.equal(replay.body.review_request_id,first.body.review_request_id);assert.equal(replay.body.duplicate,true);
+    assert.equal(calls.filter(call=>call[0]==="create").length,2);assert.ok(calls.every(call=>call[0]!=="create"||call[3]==="synthetic-intake-key-0001"));
+    const malformed=response();await handler({...req,body:{...valid,human_review_required:false}},malformed);assert.equal(malformed.statusCode,422);
+    const denied=response();await handler({...req,headers:{...req.headers,authorization:"Bearer wrong"}},denied);assert.equal(denied.statusCode,401);
+    assert.equal(calls.filter(call=>call[0]==="create").length,2);
+  }finally{if(prior.key===undefined)delete process.env.BROKERFLOW_INGEST_API_KEY;else process.env.BROKERFLOW_INGEST_API_KEY=prior.key;if(prior.org===undefined)delete process.env.BROKERFLOW_INGEST_ORGANIZATION_ID;else process.env.BROKERFLOW_INGEST_ORGANIZATION_ID=prior.org;}
+});
+test("durable rate-limit wrapper fails closed and returns 429 retry guidance",async()=>{
+  const args=[];const db={async rpc(name,input){args.push({name,input});return{data:{allowed:true,remaining:2,retry_after:60},error:null};}};
+  await consumeRateLimit(db,"trusted_ingest","synthetic-org",60,60);assert.equal(args[0].name,"brokerflow_consume_rate_limit");
+  db.rpc=async()=>({data:{allowed:false,retry_after:17},error:null});await assert.rejects(consumeRateLimit(db,"trusted_ingest","synthetic-org",60,60),error=>error.status===429&&error.retryAfter===17);
+  db.rpc=async()=>({data:null,error:new Error("db offline")});await assert.rejects(consumeRateLimit(db,"trusted_ingest","synthetic-org",60,60),{status:503});
 });
 test("live configuration stays live and fails closed when backend keys are missing",()=>{
   const oldMode=process.env.BROKERFLOW_CONSOLE_MODE,oldUrl=process.env.SUPABASE_URL,oldPublic=process.env.SUPABASE_PUBLISHABLE_KEY,oldSecret=process.env.SUPABASE_SECRET_KEY;

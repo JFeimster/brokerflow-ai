@@ -10,4 +10,6 @@ All tools require an OAuth bearer token for the MCP resource. Each tool reloads 
 | `get_review_activity` | `brokerflow.reviews.read` and `brokerflow.reviews.audit` | One review's audit events, paginated separately. |
 | `create_review_request` | `brokerflow.reviews.read` and `brokerflow.reviews.write` | Validated, idempotent, rate-limited request for human review. |
 
+`create_review_request` returns `review_id` (the UUID accepted by `get_review` and `get_review_activity`) and `review_request_id` (the stable external request reference). Use `review_id` for subsequent MCP reads.
+
 Creation is not a borrower decision and does not perform qualification, underwriting, approval, pricing, funding, or lender submission. No tool returns raw private documents, bank data, SSNs, credentials, or full conversation transcripts. Errors fail closed on missing backend configuration, permission changes, rate-limit failures, and persistence errors.

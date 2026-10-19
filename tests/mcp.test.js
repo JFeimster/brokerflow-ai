@@ -154,7 +154,7 @@ test("MCP tools enforce tenant and audit permissions and reuse idempotent rate-l
     rateLimit: async (...args) => calls.push(["rate-limit", ...args.slice(1)]),
     create: async (_context, organizationId, scenario, key, actor) => {
       calls.push(["create", organizationId, scenario.human_review_required, key, actor]);
-      const response = { review_request_id: "lmr_synthetic_stable", status: "queued_for_human_review", duplicate: duplicateReplay };
+      const response = { id: review, review_request_id: "lmr_synthetic_stable", status: "queued_for_human_review", duplicate: duplicateReplay };
       duplicateReplay = true;
       return response;
     },
@@ -182,12 +182,14 @@ test("MCP tools enforce tenant and audit permissions and reuse idempotent rate-l
     scenario: { action_type: "lender_match_review", requester_name: "Synthetic test", borrower_type: "business", loan_purpose: "equipment_financing", requested_amount: 10000, state: "NY", human_review_required: true },
   } });
   assert.equal(created.structuredContent.duplicate, false);
+  assert.equal(created.structuredContent.review_id, review);
   const replay = await client.callTool({ name: "create_review_request", arguments: {
     organization_id: org,
     idempotency_key: "synthetic-idempotency-key-0001",
     scenario: { action_type: "lender_match_review", requester_name: "Synthetic test", borrower_type: "business", loan_purpose: "equipment_financing", requested_amount: 10000, state: "NY", human_review_required: true },
   } });
   assert.equal(replay.structuredContent.review_request_id, created.structuredContent.review_request_id);
+  assert.equal(replay.structuredContent.review_id, created.structuredContent.review_id);
   assert.equal(replay.structuredContent.duplicate, true);
   assert.ok(calls.some(call => call[0] === "rate-limit" && call[1] === "review_create"));
   assert.ok(calls.some(call => call[0] === "create" && call[1] === org && call[2] === true));

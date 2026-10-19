@@ -61,14 +61,14 @@ test("protected resource metadata advertises only the configured Supabase author
   });
 });
 
-test("MCP handshake and tools/list expose ten typed, annotated tools", async t => {
+test("MCP handshake and tools/list expose seventeen typed, annotated tools", async t => {
   const server = createMcpServer({ authenticateMcp: async () => makeContext() });
   const client = new Client({ name: "test-client", version: "1.0.0" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   t.after(async () => { await client.close(); await server.close(); });
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
   const tools = await client.listTools();
-  assert.deepEqual(tools.tools.map(tool => tool.name).sort(), ["apply_review_action", "complete_follow_up_task", "create_follow_up_task", "create_review_request", "get_my_workspaces", "get_review", "get_review_activity", "get_review_queue_summary", "list_follow_up_tasks", "list_reviews"].sort());
+  assert.deepEqual(tools.tools.map(tool => tool.name).sort(), ["apply_review_action", "complete_follow_up_task", "create_follow_up_task", "create_review_request", "get_my_workspaces", "get_review", "get_review_activity", "get_review_queue_summary", "list_follow_up_tasks", "list_reviews", "capture_borrower_intake", "route_lender_fit", "request_lender_match_review", "generate_document_checklist", "trigger_missing_document_request", "lookup_deal_status", "capture_partner_referral"].sort());
   const createTool = tools.tools.find(tool => tool.name === "create_review_request");
   assert.equal(createTool.annotations.readOnlyHint, false);
   assert.equal(createTool.inputSchema.properties.organization_id.format, "uuid");
@@ -109,7 +109,7 @@ test("stateless Streamable HTTP endpoint completes initialize and tools/list wit
   t.after(async () => { await client.close(); await new Promise(resolve => httpServer.close(resolve)); });
   await client.connect(transport);
   const response = await client.listTools();
-  assert.equal(response.tools.length, 10);
+  assert.equal(response.tools.length, 17);
   const workspaces = await client.callTool({ name: "get_my_workspaces", arguments: {} });
   assert.equal(workspaces.structuredContent.workspaces[0].id, org);
   assert.ok(authentications >= 1);
@@ -230,16 +230,16 @@ test("Vercel MCP route challenges missing tokens and keeps the canonical URL rew
   assert.ok(config.rewrites.some(route => route.source === "/oauth/consent" && route.destination === "/oauth-consent"));
 });
 
-test("private plugin package declares the HTTPS MCP endpoint and all five included workflow skills", async () => {
+test("private plugin package declares the HTTPS MCP endpoint and all ten included workflow skills", async () => {
   const manifest = JSON.parse(await readFile(new URL("../plugin/plugin.json", import.meta.url), "utf8"));
   const mcp = JSON.parse(await readFile(new URL("../plugin/mcp.json", import.meta.url), "utf8"));
   assert.equal(manifest.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
-  assert.equal(manifest.version, "1.1.0");
+  assert.equal(manifest.version, "1.2.0");
   assert.match(manifest.name, /^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/);
   assert.equal(mcp.servers.brokerflow.type, "streamable-http");
   assert.equal(mcp.servers.brokerflow.url, "https://brokerflow-ai.vercel.app/mcp");
   const skills = manifest.extensions["com.openai.chatgpt"].skills;
-  assert.equal(skills.length, 5);
+  assert.equal(skills.length, 10);
   for (const skill of skills) await readFile(new URL(`../plugin/${skill.slice(2)}`, import.meta.url), "utf8");
   const evaluations = JSON.parse(await readFile(new URL("../plugin/evals/tool-selection-cases.json", import.meta.url), "utf8"));
   assert.ok(evaluations.some(item => item.expected_tool.startsWith("refuse_")));

@@ -1,4 +1,4 @@
-# BrokerFlow MCP V1 tool catalog
+# BrokerFlow MCP tool catalog
 
 All tools require an OAuth bearer token for the MCP resource. Each tool reloads the user's active workspace roles and permissions. Select an organization explicitly; its ID is never trusted without membership validation.
 
@@ -14,6 +14,13 @@ All tools require an OAuth bearer token for the MCP resource. Each tool reloads 
 | `create_follow_up_task` | `brokerflow.reviews.read` and `brokerflow.reviews.write` | Persistent, idempotent internal task creation with optional active member assignment and same-organization review link. |
 | `list_follow_up_tasks` | `brokerflow.reviews.read` | Filtered, paginated internal task list with owners, due dates, status, and creation/completion attribution. |
 | `complete_follow_up_task` | `brokerflow.reviews.read` and `brokerflow.reviews.write` | Idempotent task completion with actor attribution and an audit event. |
+| `capture_borrower_intake` | Read + write | Confirmed canonical lead capture with consent/completeness, stable intake ID and linked operational deal; hashed retry protection. |
+| `route_lender_fit` | Read | Deterministic preliminary product paths, missing fields, flags and explicit legacy heuristic limitations; no outbound side effects. |
+| `request_lender_match_review` | Read + write | Confirmed compatibility operation for `create_review_request`, with optional atomic intake/deal link; same review creation, identity and queue. |
+| `generate_document_checklist` | Read | Preliminary versioned checklist with names, categories, required/recommended indicators and broker-review notes. |
+| `trigger_missing_document_request` | Read + write | Confirmed missing-document task and retained checklist/draft snapshot; user-reported metadata only; no sending. |
+| `lookup_deal_status` | Read | Bounded deal or intake lookup/page, operational stage, owner, linked review/task states, last activity and next action. |
+| `capture_partner_referral` | Read + write | Confirmed canonical referral/lead attribution; active same-workspace partner; consent and natural-key deduplication. |
 
 `create_review_request` returns `review_id` (the UUID accepted by `get_review` and `get_review_activity`) and `review_request_id` (the stable external request reference). Use `review_id` for subsequent MCP reads.
 

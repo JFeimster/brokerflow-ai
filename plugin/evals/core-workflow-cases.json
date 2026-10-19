@@ -1,0 +1,38 @@
+[
+  {
+    "prompt": "Capture this intake and create its operational deal using the summary I confirmed.",
+    "tool": "capture_borrower_intake",
+    "write": true
+  },
+  {
+    "prompt": "Which preliminary product path does this supplied scenario follow?",
+    "tool": "route_lender_fit",
+    "write": false
+  },
+  {
+    "prompt": "Create the internal lender-match review I confirmed for this intake.",
+    "tool": "request_lender_match_review",
+    "write": true
+  },
+  {
+    "prompt": "What documents should I collect for this scenario?",
+    "tool": "generate_document_checklist",
+    "write": false
+  },
+  {
+    "prompt": "Track the missing-document task and prepare the draft I confirmed.",
+    "tool": "trigger_missing_document_request",
+    "write": true,
+    "delivery_status": "not_sent"
+  },
+  {
+    "prompt": "What are the current deal stage and review task status?",
+    "tool": "lookup_deal_status",
+    "write": false
+  },
+  {
+    "prompt": "Record the partner referral and contact permission I confirmed.",
+    "tool": "capture_partner_referral",
+    "write": true
+  }
+]
